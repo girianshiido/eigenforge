@@ -7,6 +7,10 @@ linéaire des classes préparatoires MPSI et MP.
 
 - production manuelle et automatique de coordonnées ;
 - bouton d’émission animé avec impulsion, onde et réponse tactile ;
+- carte mathématique progressive : ressource brute en dimension 0, direction
+  portée par \(u\) avec l’Émetteur, puis base \(B=(u,v)\) avec la Chambre ;
+- animations lentes des directions, du plan et des grilles, avec un champ
+  circulaire conservant ses proportions sur ordinateur et téléphone ;
 - Émetteur vectoriel, Chambre des bases et Transformateur linéaire ;
 - paliers de production ×2 à 10, 25 et 50 instruments, avec une première
   progression calibrée jusqu’au changement de base ;

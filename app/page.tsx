@@ -490,10 +490,10 @@ export default function Home() {
 
   const rate = useMemo(() => production(game), [game]);
   const manualPower = useMemo(() => clickPower(game), [game]);
-  // Le réseau actif repart de l'espace nul après un changement de base. Dès
-  // qu'une première coordonnée est émise, il contient une direction non nulle.
+  // Les clics forgent une ressource brute. Les objets géométriques n'apparaissent
+  // qu'avec les ateliers qui leur donnent une signification mathématique.
   const spaceDimension =
-    game.runTotal > 0 ? (game.instruments[1] > 0 ? 2 : 1) : 0;
+    game.instruments[1] > 0 ? 2 : game.instruments[0] > 0 ? 1 : 0;
 
   useEffect(() => {
     const restored = restoreState(window.localStorage.getItem(SAVE_KEY));
@@ -703,13 +703,13 @@ export default function Home() {
   const mission =
     game.allTime < 15
       ? {
-          title: "Tracer la première direction",
-          text: "Émettez 15 coordonnées pour provoquer la première anomalie.",
+          title: "Alimenter la forge",
+          text: "Forgez 15 coordonnées pour provoquer la première anomalie.",
           progress: Math.min(100, (game.allTime / 15) * 100),
         }
       : game.instruments[0] === 0
         ? {
-            title: "Automatiser l’émission",
+            title: "Créer la première direction",
             text: "Construisez votre premier Émetteur vectoriel.",
             progress: Math.min(100, (game.coordinates / instrumentCost(0, 0)) * 100),
           }
@@ -831,7 +831,12 @@ export default function Home() {
               <div className="star-field" aria-hidden="true" />
               <div className="coordinate-grid" aria-hidden="true" />
               <div
-                className={`plane plane-one ${game.instruments[1] > 0 ? "visible" : ""}`}
+                className={`line-space ${spaceDimension === 1 ? "visible" : ""}`}
+                style={{ "--angle": "-28deg" } as CSSProperties}
+                aria-hidden="true"
+              />
+              <div
+                className={`plane plane-one ${spaceDimension >= 2 ? "visible" : ""}`}
                 aria-hidden="true"
               />
               <div
@@ -839,7 +844,7 @@ export default function Home() {
                 aria-hidden="true"
               />
               <div
-                className={`vector-line vector-one ${spaceDimension >= 1 ? "visible" : ""}`}
+                className={`vector-line vector-one ${game.instruments[0] > 0 ? "visible" : ""}`}
                 style={{ "--angle": "-28deg", "--length": "35%" } as CSSProperties}
                 aria-hidden="true"
               >
@@ -860,11 +865,10 @@ export default function Home() {
                 <span>f(u)</span>
               </div>
 
-              {spaceDimension >= 1 && (
-                <div className="axis-label axis-x" aria-hidden="true">e₁</div>
-              )}
               {spaceDimension >= 2 && (
-                <div className="axis-label axis-y" aria-hidden="true">e₂</div>
+                <div className="basis-indicator" aria-hidden="true">
+                  B = (u, v)
+                </div>
               )}
               {spaceDimension === 0 && (
                 <div className="zero-space-label" aria-hidden="true">E = {"{0}"}</div>
@@ -875,14 +879,24 @@ export default function Home() {
                 type="button"
                 onClick={emitVector}
                 disabled={!hydrated}
-                aria-label="Émettre un vecteur"
+                aria-label={
+                  spaceDimension === 0
+                    ? "Forger des coordonnées"
+                    : "Émettre un vecteur"
+                }
               >
                 {emitBurst > 0 && (
                   <span className="core-impact" key={emitBurst} aria-hidden="true" />
                 )}
                 <span className="core-orbit" aria-hidden="true" />
-                <span className="core-glyph" aria-hidden="true">→</span>
-                <strong>Émettre un vecteur</strong>
+                <span className="core-glyph" aria-hidden="true">
+                  {spaceDimension === 0 ? "✦" : "→"}
+                </span>
+                <strong>
+                  {spaceDimension === 0
+                    ? "Forger des coordonnées"
+                    : "Émettre un vecteur"}
+                </strong>
                 <small>+{formatNumber(manualPower)} coordonnées</small>
               </button>
 

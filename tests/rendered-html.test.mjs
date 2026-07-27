@@ -31,7 +31,7 @@ test("renders the game shell and finished metadata", async () => {
   const html = await response.text();
   assert.match(html, /<title>EIGENFORGE<\/title>/i);
   assert.match(html, /EIGENFORGE/);
-  assert.match(html, /Émettre un vecteur/);
+  assert.match(html, /Forger des coordonnées/);
   assert.match(html, /Architecture productive/);
   assert.match(html, /Anomalies mathématiques/);
   assert.match(html, /Maîtrise et invariants/);
@@ -82,13 +82,24 @@ test("keeps the network diagram consistent with its displayed dimension", async 
     new URL("../app/page.tsx", import.meta.url),
     "utf8",
   );
+  const styles = await readFile(
+    new URL("../app/globals.css", import.meta.url),
+    "utf8",
+  );
 
   assert.match(page, /const spaceDimension/);
-  assert.match(page, /game\.runTotal > 0/);
-  assert.match(page, /spaceDimension >= 1/);
+  assert.match(page, /game\.instruments\[0\] > 0 \? 1 : 0/);
+  assert.doesNotMatch(page, /game\.runTotal > 0 \?/);
+  assert.match(page, /vector-one \$\{game\.instruments\[0\] > 0/);
   assert.match(page, /spaceDimension >= 2/);
   assert.match(page, /spaceDimension === 0/);
   assert.match(page, /E = \{"\{0\}"\}/);
+  assert.match(page, /B = \(u, v\)/);
+  assert.match(page, /Forger des coordonnées/);
+  assert.doesNotMatch(page, /className="axis-label/);
+  assert.match(styles, /\.network-stage::before[\s\S]*aspect-ratio: 1/);
+  assert.match(styles, /@keyframes vectorGlow/);
+  assert.match(styles, /@keyframes planeBreath/);
 });
 
 test("exports a GitHub Pages build under the repository path", async () => {
