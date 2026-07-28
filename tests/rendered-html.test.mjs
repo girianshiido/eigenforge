@@ -31,8 +31,14 @@ test("renders the unlimited exercise laboratory from the shared catalogue", asyn
   assert.match(html, /Laboratoire d’exercices/);
   assert.match(html, /Tester toutes les perturbations, sans limite/);
   assert.match(html, /Tout le catalogue/);
-  assert.match(html, /Jusqu’à ℝ²/);
-  assert.match(html, /Jusqu’à ℝ³/);
+  assert.match(
+    html,
+    /Jusqu’à ℝ<sup class="math-superscript">2<\/sup>/,
+  );
+  assert.match(
+    html,
+    /Jusqu’à ℝ<sup class="math-superscript">3<\/sup>/,
+  );
   assert.match(html, /Retour au jeu/);
 
   const laboratory = await readFile(
@@ -228,10 +234,15 @@ test("renders matrices as responsive grids instead of flattened text", async () 
 
   assert.match(page, /<MathExpression text=\{question\.formula\}/);
   assert.match(page, /<MathExpression text=\{choice\.text\}/);
+  assert.match(page, /<MathExpression text=\{question\.geometry\}/);
+  assert.match(page, /<MathExpression text=\{question\.trap\}/);
+  assert.match(page, /<MathExpression text=\{instrument\.mark\}/);
   assert.match(renderer, /className="math-matrix-grid"/);
   assert.match(renderer, /className="math-column-vector"/);
   assert.match(renderer, /className="math-subscript"/);
-  assert.match(renderer, /SUBSCRIPT_PATTERN/);
+  assert.match(renderer, /className="math-superscript"/);
+  assert.match(renderer, /INLINE_SCRIPT_PATTERN/);
+  assert.match(renderer, /SUPERSCRIPT_CHARACTERS/);
   assert.match(renderer, /rawSubscript\.replace\("-", "−"\)/);
   assert.match(renderer, /Vecteur colonne/);
   assert.match(renderer, /--matrix-columns/);
@@ -242,6 +253,7 @@ test("renders matrices as responsive grids instead of flattened text", async () 
   assert.match(styles, /\.math-matrix::before/);
   assert.match(styles, /\.math-column-vector::before/);
   assert.match(styles, /\.math-subscript/);
+  assert.match(styles, /\.math-superscript/);
   assert.match(styles, /\.matrix-operator/);
   assert.match(styles, /\.spectral-marker/);
 });

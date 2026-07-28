@@ -216,10 +216,13 @@ export default function ExerciseLab() {
             </label>
             {familyId !== "all" && (
               <p className="lab-family-description">
-                {
-                  EXERCISE_FAMILIES.find((family) => family.id === familyId)
-                    ?.description
-                }
+                <MathExpression
+                  text={
+                    EXERCISE_FAMILIES.find(
+                      (family) => family.id === familyId,
+                    )?.description ?? ""
+                  }
+                />
               </p>
             )}
           </section>
@@ -238,13 +241,14 @@ export default function ExerciseLab() {
                   onClick={() => selectDimension(value)}
                   key={value}
                 >
-                  {value === 2 ? "Jusqu’à ℝ²" : "Jusqu’à ℝ³"}
+                  <MathExpression
+                    text={value === 2 ? "Jusqu’à ℝ²" : "Jusqu’à ℝ³"}
+                  />
                 </button>
               ))}
             </div>
             <p className="lab-control-note">
-              Certains thèmes restent naturellement en ℝ², même lorsque ℝ³ est
-              disponible.
+              <MathExpression text="Certains thèmes restent naturellement en ℝ², même lorsque ℝ³ est disponible." />
             </p>
           </section>
         </aside>
@@ -313,11 +317,11 @@ export default function ExerciseLab() {
                 <div className="lab-correction-notes">
                   <div>
                     <span>Lecture géométrique</span>
-                    <p>{question.geometry}</p>
+                    <p><MathExpression text={question.geometry} /></p>
                   </div>
                   <div>
                     <span>Piège à éviter</span>
-                    <p>{question.trap}</p>
+                    <p><MathExpression text={question.trap} /></p>
                   </div>
                 </div>
               </section>

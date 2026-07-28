@@ -1336,7 +1336,7 @@ export default function Home() {
                           key={instrument.name}
                         >
                           <div className="instrument-mark" aria-hidden="true">
-                            {instrument.mark}
+                            <MathExpression text={instrument.mark} />
                           </div>
                           <div className="instrument-copy">
                             <div className="instrument-title">
@@ -1594,16 +1594,16 @@ export default function Home() {
                     key={protocol.name}
                   >
                     <div className="protocol-mark" aria-hidden="true">
-                      {protocol.mark}
+                      <MathExpression text={protocol.mark} />
                     </div>
                     <div className="protocol-copy">
                       <div>
                         <span>Niveau {level}/{protocol.maxLevel}</span>
                         <h4>{protocol.name}</h4>
                       </div>
-                      <p>{protocol.description}</p>
+                      <p><MathExpression text={protocol.description} /></p>
                       <strong className="protocol-effect">
-                        {protocolEffect(index, level)}
+                        <MathExpression text={protocolEffect(index, level)} />
                       </strong>
                       <div className="protocol-levels" aria-label={`Niveau ${level} sur ${protocol.maxLevel}`}>
                         {Array.from({ length: protocol.maxLevel }, (_, item) => (
@@ -1715,11 +1715,11 @@ export default function Home() {
                 <div className="correction-columns">
                   <div>
                     <span>Lecture géométrique</span>
-                    <p>{question.geometry}</p>
+                    <p><MathExpression text={question.geometry} /></p>
                   </div>
                   <div>
                     <span>Point de vigilance</span>
-                    <p>{question.trap}</p>
+                    <p><MathExpression text={question.trap} /></p>
                   </div>
                 </div>
                 <button type="button" onClick={closeQuestion}>

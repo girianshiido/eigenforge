@@ -64,13 +64,21 @@ button:focus-visible {
   white-space: pre-wrap;
 }
 
-.math-subscript {
+.math-subscript,
+.math-superscript {
   display: inline-block;
   margin-left: 0.025em;
   font-size: 0.64em;
   line-height: 0;
-  vertical-align: -0.38em;
   white-space: nowrap;
+}
+
+.math-subscript {
+  vertical-align: -0.38em;
+}
+
+.math-superscript {
+  vertical-align: 0.58em;
 }
 
 .math-matrix,

@@ -6,28 +6,90 @@ type MathExpressionProps = {
 };
 
 const STRUCTURED_MATH_PATTERN = /⟦([^⟧]+)⟧|⟪([^⟫]+)⟫/g;
-const SUBSCRIPT_PATTERN = /_(\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])/g;
+const INLINE_SCRIPT_PATTERN =
+  /_(\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])|([₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎]+)|([⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾]+)/g;
+const SUBSCRIPT_CHARACTERS: Record<string, string> = {
+  "₀": "0",
+  "₁": "1",
+  "₂": "2",
+  "₃": "3",
+  "₄": "4",
+  "₅": "5",
+  "₆": "6",
+  "₇": "7",
+  "₈": "8",
+  "₉": "9",
+  "₊": "+",
+  "₋": "−",
+  "₌": "=",
+  "₍": "(",
+  "₎": ")",
+};
+const SUPERSCRIPT_CHARACTERS: Record<string, string> = {
+  "⁰": "0",
+  "¹": "1",
+  "²": "2",
+  "³": "3",
+  "⁴": "4",
+  "⁵": "5",
+  "⁶": "6",
+  "⁷": "7",
+  "⁸": "8",
+  "⁹": "9",
+  "⁺": "+",
+  "⁻": "−",
+  "⁼": "=",
+  "⁽": "(",
+  "⁾": ")",
+};
+
+function normalizeScript(
+  source: string,
+  characters: Record<string, string>,
+) {
+  return Array.from(source, (character) => characters[character] ?? character).join(
+    "",
+  );
+}
 
 function PlainMath({ source }: { source: string }) {
   const parts: ReactNode[] = [];
   let previousEnd = 0;
 
-  for (const match of source.matchAll(SUBSCRIPT_PATTERN)) {
+  for (const match of source.matchAll(INLINE_SCRIPT_PATTERN)) {
     const start = match.index ?? 0;
     if (start > previousEnd) {
       parts.push(source.slice(previousEnd, start));
     }
 
-    const rawSubscript = match[1].replace(/^\{|\}$/g, "");
-    const subscript = rawSubscript.replace("-", "−");
-    parts.push(
-      <sub
-        className="math-subscript"
-        key={`subscript-${start}-${subscript}`}
-      >
-        {subscript}
-      </sub>,
-    );
+    if (match[3] !== undefined) {
+      const superscript = normalizeScript(
+        match[3],
+        SUPERSCRIPT_CHARACTERS,
+      );
+      parts.push(
+        <sup
+          className="math-superscript"
+          key={`superscript-${start}-${superscript}`}
+        >
+          {superscript}
+        </sup>,
+      );
+    } else {
+      const rawSubscript = (match[1] ?? match[2]).replace(/^\{|\}$/g, "");
+      const subscript =
+        match[2] === undefined
+          ? rawSubscript.replace("-", "−")
+          : normalizeScript(rawSubscript, SUBSCRIPT_CHARACTERS);
+      parts.push(
+        <sub
+          className="math-subscript"
+          key={`subscript-${start}-${subscript}`}
+        >
+          {subscript}
+        </sub>,
+      );
+    }
     previousEnd = start + match[0].length;
   }
 
