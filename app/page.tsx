@@ -5,10 +5,12 @@ import {
   INSTRUMENT_MILESTONES,
   INSTRUMENTS,
   basePassiveProduction,
+  correctAnomalyRewardMultiplier,
   instrumentCost,
   invariantGain,
   milestoneMultiplier,
   nextInvariantThreshold,
+  resonanceDecayRate,
 } from "./game-balance";
 
 type Sector = "vectors" | "bases" | "applications";
@@ -81,6 +83,10 @@ const GAME_TABS: Array<{
   { id: "anomalies", label: "Anomalies", shortLabel: "Anomalies", mark: "◉" },
   { id: "atlas", label: "Atlas", shortLabel: "Atlas", mark: "✦" },
 ];
+
+const WORKSHOP_CHAPTERS = Array.from(
+  new Set(INSTRUMENTS.map((instrument) => instrument.chapter)),
+);
 
 function randomInt(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -583,7 +589,11 @@ export default function Home() {
           coordinates: previous.coordinates + gain,
           runTotal: previous.runTotal + gain,
           allTime: previous.allTime + gain,
-          resonance: Math.max(0, previous.resonance - elapsed * 8),
+          resonance: Math.max(
+            0,
+            previous.resonance -
+              elapsed * resonanceDecayRate(previous.instruments),
+          ),
           anomalies,
           nextAnomalyAt,
           lastTick: now,
@@ -619,7 +629,7 @@ export default function Home() {
     setIsEmitting(false);
     window.requestAnimationFrame(() => {
       setIsEmitting(true);
-      window.setTimeout(() => setIsEmitting(false), 620);
+      window.setTimeout(() => setIsEmitting(false), 760);
     });
     setGame((previous) => {
       const gain = clickPower(previous);
@@ -661,7 +671,7 @@ export default function Home() {
     if (game.anomalies <= 0) return;
     const sectors: Sector[] = ["vectors"];
     if (game.instruments[1] > 0) sectors.push("bases");
-    if (game.instruments[2] > 0) {
+    if (game.instruments[8] > 0) {
       sectors.push("applications");
     }
     const weakest = [...sectors].sort(
@@ -675,7 +685,11 @@ export default function Home() {
   function chooseAnswer(index: number) {
     if (!question || answer) return;
     const isCorrect = question.choices[index].correct;
-    const reward = Math.max(isCorrect ? 24 : 5, rate * (isCorrect ? 20 : 5));
+    const reward =
+      Math.max(isCorrect ? 24 : 5, rate * (isCorrect ? 20 : 5)) *
+      (isCorrect
+        ? correctAnomalyRewardMultiplier(game.instruments)
+        : 1);
     setAnswer({ choice: index, correct: isCorrect, reward });
     setGame((previous) => {
       const now = Date.now();
@@ -742,10 +756,16 @@ export default function Home() {
   const unlockedSectorCount =
     1 +
     (game.instruments[1] > 0 ? 1 : 0) +
-    (game.instruments[2] > 0 ? 1 : 0);
+    (game.instruments[8] > 0 ? 1 : 0);
   const nextWorkshopIndex = game.instruments.findIndex((count) => count === 0);
   const nextWorkshop =
     nextWorkshopIndex >= 0 ? INSTRUMENTS[nextWorkshopIndex] : null;
+  const missionNumber = Math.min(
+    INSTRUMENTS.length + 1,
+    game.instruments.reduce((sum, item) => sum + (item > 0 ? 1 : 0), 0) + 1,
+  )
+    .toString()
+    .padStart(2, "0");
   const nextAnomalySeconds = Math.max(
     0,
     Math.ceil((game.nextAnomalyAt - Date.now()) / 1000),
@@ -777,7 +797,7 @@ export default function Home() {
             }
           : {
               title: "Préparer un changement de base",
-              text: "Renforcez les huit ateliers et stabilisez les anomalies.",
+              text: "Renforcez les douze ateliers et stabilisez les anomalies.",
               progress: Math.min(
                 100,
                 (game.runTotal / nextInvariantThreshold(0)) * 100,
@@ -859,7 +879,18 @@ export default function Home() {
               </div>
             </div>
 
-            <div className={`network-stage dimension-${spaceDimension}`}>
+            <div
+              className={[
+                "network-stage",
+                `dimension-${spaceDimension}`,
+                game.instruments[8] > 0 ? "has-transform" : "",
+                game.instruments[9] > 0 ? "has-kernel" : "",
+                game.instruments[10] > 0 ? "has-image" : "",
+                game.instruments[11] > 0 ? "rank-balanced" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+            >
               <div className="star-field" aria-hidden="true" />
               <div className="coordinate-grid" aria-hidden="true" />
               <div
@@ -875,6 +906,22 @@ export default function Home() {
                 className={`depth-grid ${spaceDimension >= 3 ? "visible" : ""}`}
                 aria-hidden="true"
               />
+              <div
+                className={`transform-grid ${game.instruments[8] > 0 ? "visible" : ""}`}
+                aria-hidden="true"
+              />
+              <div
+                className={`kernel-space ${game.instruments[9] > 0 ? "visible" : ""}`}
+                aria-hidden="true"
+              >
+                <span>Ker(f)</span>
+              </div>
+              <div
+                className={`image-space ${game.instruments[10] > 0 ? "visible" : ""}`}
+                aria-hidden="true"
+              >
+                <span>Im(f)</span>
+              </div>
               <div
                 className={`vector-line vector-one ${game.instruments[0] > 0 ? "visible" : ""}`}
                 style={{ "--angle": "-28deg", "--length": "35%" } as CSSProperties}
@@ -904,6 +951,15 @@ export default function Home() {
                   aria-hidden="true"
                 >
                   <span>u</span>
+                </div>
+              )}
+              {isEmitting && game.instruments[8] > 0 && (
+                <div
+                  className="mapped-vector"
+                  key={`mapped-${emitBurst}`}
+                  aria-hidden="true"
+                >
+                  <span>f(u)</span>
                 </div>
               )}
 
@@ -955,7 +1011,7 @@ export default function Home() {
             </div>
 
             <div className="mission-card">
-              <div className="mission-index">0{Math.min(9, game.instruments.reduce((sum, item) => sum + (item > 0 ? 1 : 0), 0) + 1)}</div>
+              <div className="mission-index">{missionNumber}</div>
               <div className="mission-copy">
                 <p>Mission active</p>
                 <h3>{mission.title}</h3>
@@ -989,7 +1045,7 @@ export default function Home() {
           </div>
 
           <div className="instrument-list">
-            {["Construction de l’espace", "Familles et rang"].map(
+            {WORKSHOP_CHAPTERS.map(
               (chapter, chapterIndex) => (
                 <section className="workshop-sector" key={chapter}>
                   <div className="workshop-sector-heading">
@@ -1153,7 +1209,7 @@ export default function Home() {
                 <span className={game.instruments[1] === 0 ? "locked" : ""}>
                   Bases
                 </span>
-                <span className={game.instruments[2] === 0 ? "locked" : ""}>
+                <span className={game.instruments[8] === 0 ? "locked" : ""}>
                   Applications
                 </span>
               </div>
@@ -1188,7 +1244,7 @@ export default function Home() {
                 sector === "bases"
                   ? game.instruments[1] === 0
                   : sector === "applications"
-                    ? game.instruments[2] === 0
+                    ? game.instruments[8] === 0
                     : false;
               return (
                 <div className={`mastery-row ${locked ? "locked" : ""}`} key={sector}>

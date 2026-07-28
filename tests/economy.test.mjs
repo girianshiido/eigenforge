@@ -4,10 +4,12 @@ import test from "node:test";
 import {
   INSTRUMENTS,
   basePassiveProduction,
+  correctAnomalyRewardMultiplier,
   instrumentCost,
   invariantGain,
   milestoneMultiplier,
   nextInvariantThreshold,
+  resonanceDecayRate,
 } from "../app/game-balance.ts";
 
 test("instrument milestones double passive production at 10, 25 and 50", () => {
@@ -35,6 +37,42 @@ test("advanced workshops add distinct family and rank synergies", () => {
       testedFamilies +
         INSTRUMENTS[6].baseProduction +
         INSTRUMENTS[7].baseProduction,
+  );
+});
+
+test("linear-map workshops transform production, resonance and anomaly rewards", () => {
+  const baseline = basePassiveProduction([
+    1, 1, 1, 1,
+    1, 1, 1, 1,
+    0, 0, 0, 0,
+  ]);
+  const transformed = basePassiveProduction([
+    1, 1, 1, 1,
+    1, 1, 1, 1,
+    1, 0, 0, 0,
+  ]);
+  const balanced = basePassiveProduction([
+    1, 1, 1, 1,
+    1, 1, 1, 1,
+    1, 1, 1, 1,
+  ]);
+
+  assert.ok(transformed > baseline + INSTRUMENTS[8].baseProduction);
+  assert.ok(resonanceDecayRate([0, 0, 0, 0, 0, 0, 0, 0, 0, 1]) < 8);
+  assert.equal(
+    correctAnomalyRewardMultiplier([
+      0, 0, 0, 0,
+      0, 0, 0, 0,
+      0, 0, 1,
+    ]),
+    1.03,
+  );
+  assert.ok(
+    balanced >
+      transformed +
+        INSTRUMENTS[9].baseProduction +
+        INSTRUMENTS[10].baseProduction +
+        INSTRUMENTS[11].baseProduction,
   );
 });
 

@@ -91,6 +91,50 @@ export const INSTRUMENTS = [
     unlock: 40_000_000,
     sector: "Rang",
   },
+  {
+    name: "Transformateur linéaire",
+    mark: "f",
+    description: "Applique f au réseau et réinjecte 4 % de la production du cycle Familles.",
+    chapter: "Applications linéaires",
+    mission: "Activer la transformation",
+    baseCost: 120_000_000,
+    baseProduction: 55_000,
+    unlock: 160_000_000,
+    sector: "Application",
+  },
+  {
+    name: "Chambre du noyau",
+    mark: "Ker",
+    description: "Isole les directions écrasées et ralentit de 4 % la dissipation de résonance.",
+    chapter: "Applications linéaires",
+    mission: "Isoler le noyau",
+    baseCost: 600_000_000,
+    baseProduction: 230_000,
+    unlock: 750_000_000,
+    sector: "Noyau",
+  },
+  {
+    name: "Forge de l’image",
+    mark: "Im",
+    description: "Canalise les directions atteintes et augmente de 3 % les récompenses des réponses justes.",
+    chapter: "Applications linéaires",
+    mission: "Forger l’image",
+    baseCost: 3_000_000_000,
+    baseProduction: 1_000_000,
+    unlock: 3_500_000_000,
+    sector: "Image",
+  },
+  {
+    name: "Balance du rang",
+    mark: "rg f",
+    description: "Équilibre noyau et image selon le théorème du rang, puis amplifie toute la production de 2 %.",
+    chapter: "Applications linéaires",
+    mission: "Équilibrer le rang",
+    baseCost: 15_000_000_000,
+    baseProduction: 4_500_000,
+    unlock: 18_000_000_000,
+    sector: "Théorème du rang",
+  },
 ] as const;
 
 export function milestoneMultiplier(owned: number) {
@@ -115,17 +159,34 @@ export function basePassiveProduction(
     .slice(0, STRUCTURAL_WORKSHOP_COUNT)
     .reduce((sum, output) => sum + output, 0);
   const familyOutput = outputs
-    .slice(STRUCTURAL_WORKSHOP_COUNT)
+    .slice(STRUCTURAL_WORKSHOP_COUNT, 8)
+    .reduce((sum, output) => sum + output, 0);
+  const applicationOutput = outputs
+    .slice(8)
     .reduce((sum, output) => sum + output, 0);
   const directionalMultiplier = 1 + (instruments[4] ?? 0) * 0.04;
   const familyMultiplier = 1 + (instruments[5] ?? 0) * 0.03;
   const rankMultiplier = 1 + (instruments[7] ?? 0) * 0.02;
+  const transformationMultiplier = 1 + (instruments[8] ?? 0) * 0.04;
+  const rankTheoremMultiplier = 1 + (instruments[11] ?? 0) * 0.02;
 
   return (
     (directionalOutput * directionalMultiplier +
-      familyOutput * familyMultiplier) *
-    rankMultiplier
+      familyOutput * familyMultiplier * transformationMultiplier +
+      applicationOutput) *
+    rankMultiplier *
+    rankTheoremMultiplier
   );
+}
+
+export function resonanceDecayRate(instruments: readonly number[]) {
+  return 8 / (1 + (instruments[9] ?? 0) * 0.04);
+}
+
+export function correctAnomalyRewardMultiplier(
+  instruments: readonly number[],
+) {
+  return 1 + (instruments[10] ?? 0) * 0.03;
 }
 
 export function invariantGain(runTotal: number) {

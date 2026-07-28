@@ -107,12 +107,38 @@ test("keeps the network diagram consistent with its displayed dimension", async 
   assert.match(page, /className=\{`forged-vector dimension-\$\{spaceDimension\}`\}/);
   assert.match(page, /Forger des coordonnées/);
   assert.match(page, /Forger un vecteur/);
-  assert.doesNotMatch(page, /<span>f\(u\)<\/span>/);
+  assert.match(page, /className="mapped-vector"/);
+  assert.match(page, /<span>f\(u\)<\/span>/);
+  assert.doesNotMatch(page, /vector-three[\s\S]{0,260}<span>f\(u\)<\/span>/);
+  assert.match(page, /className=\{`kernel-space/);
+  assert.match(page, /className=\{`image-space/);
   assert.doesNotMatch(page, /className="axis-label/);
   assert.match(styles, /\.network-stage::before[\s\S]*aspect-ratio: 1/);
   assert.match(styles, /@keyframes vectorGlow/);
   assert.match(styles, /@keyframes planeBreath/);
   assert.match(styles, /@keyframes forgedVector/);
+  assert.match(styles, /@keyframes mappedVector/);
+});
+
+test("ships three ordered workshop cycles with linear-map mechanics", async () => {
+  const balance = await readFile(
+    new URL("../app/game-balance.ts", import.meta.url),
+    "utf8",
+  );
+  const page = await readFile(
+    new URL("../app/page.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(balance, /name: "Transformateur linéaire"/);
+  assert.match(balance, /name: "Chambre du noyau"/);
+  assert.match(balance, /name: "Forge de l’image"/);
+  assert.match(balance, /name: "Balance du rang"/);
+  assert.match(balance, /chapter: "Applications linéaires"/);
+  assert.match(balance, /resonanceDecayRate/);
+  assert.match(balance, /correctAnomalyRewardMultiplier/);
+  assert.match(page, /const WORKSHOP_CHAPTERS/);
+  assert.match(page, /game\.instruments\[8\] > 0/);
 });
 
 test("keeps vertical scrolling while blocking selection and zoom gestures", async () => {

@@ -812,6 +812,94 @@ button:disabled {
   animation: depthDrift 11s linear infinite;
 }
 
+.transform-grid {
+  position: absolute;
+  z-index: 1;
+  width: 62%;
+  height: 42%;
+  left: 19%;
+  top: 28%;
+  opacity: 0;
+  transform: rotate(18deg) skewY(-11deg) scale(0.76);
+  background-image:
+    linear-gradient(rgba(155, 141, 197, 0.3) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(229, 122, 103, 0.24) 1px, transparent 1px);
+  background-size: 38px 30px;
+  mask-image: radial-gradient(ellipse, black 14%, transparent 72%);
+  transition: opacity 900ms ease, transform 1100ms ease;
+}
+
+.transform-grid.visible {
+  opacity: 0.3;
+  transform: rotate(18deg) skewY(-11deg) scale(1);
+  animation: transformFlow 9s linear infinite;
+}
+
+.kernel-space,
+.image-space {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 50%;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 700ms ease, transform 900ms ease;
+}
+
+.kernel-space {
+  --subspace-angle: -66deg;
+  width: 55%;
+  height: 1px;
+  transform: translate(-50%, -50%) rotate(var(--subspace-angle)) scaleX(0.5);
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(229, 122, 103, 0.55) 0 7px,
+    transparent 7px 13px
+  );
+}
+
+.kernel-space.visible {
+  opacity: 0.46;
+  transform: translate(-50%, -50%) rotate(var(--subspace-angle)) scaleX(1);
+  animation: kernelPulse 6s ease-in-out infinite;
+}
+
+.image-space {
+  --subspace-angle: 42deg;
+  width: 38%;
+  height: 2px;
+  transform: rotate(var(--subspace-angle)) scaleX(0.5);
+  transform-origin: left center;
+  background: linear-gradient(90deg, rgba(159, 197, 158, 0.78), transparent);
+}
+
+.image-space.visible {
+  opacity: 0.58;
+  transform: rotate(var(--subspace-angle)) scaleX(1);
+  animation: imagePulse 5.4s ease-in-out infinite;
+}
+
+.kernel-space span,
+.image-space span {
+  position: absolute;
+  color: var(--ivory-muted);
+  font-family: Georgia, serif;
+  font-size: 10px;
+  font-style: italic;
+  white-space: nowrap;
+  transform: rotate(calc(-1 * var(--subspace-angle)));
+}
+
+.kernel-space span {
+  left: 7px;
+  top: -19px;
+}
+
+.image-space span {
+  right: 4px;
+  top: -20px;
+}
+
 .vector-line {
   --angle: 0deg;
   --length: 30%;
@@ -954,6 +1042,54 @@ button:disabled {
   font-size: 13px;
   font-style: italic;
   transform: rotate(calc(-1 * var(--forge-angle)));
+}
+
+.mapped-vector {
+  --map-angle: 42deg;
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  top: 50%;
+  width: 27%;
+  height: 2px;
+  color: var(--sage);
+  transform: rotate(var(--map-angle)) scaleX(0);
+  transform-origin: left center;
+  background: linear-gradient(90deg, #b9ddb7, rgba(159, 197, 158, 0.18));
+  filter: drop-shadow(0 0 7px rgba(159, 197, 158, 0.65));
+  pointer-events: none;
+  animation: mappedVector 620ms 140ms ease-out both;
+}
+
+.network-stage.rank-balanced {
+  border-color: rgba(159, 197, 158, 0.3);
+  box-shadow:
+    var(--shadow),
+    inset 0 0 90px rgba(1, 8, 12, 0.48),
+    inset 0 0 36px rgba(159, 197, 158, 0.035);
+}
+
+.mapped-vector::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  top: -4px;
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 9px solid #b9ddb7;
+}
+
+.mapped-vector span {
+  position: absolute;
+  right: 2px;
+  top: -22px;
+  color: #b9ddb7;
+  font-family: Georgia, serif;
+  font-size: 13px;
+  font-style: italic;
+  transform: rotate(calc(-1 * var(--map-angle)));
 }
 
 .core-button {
@@ -1766,6 +1902,34 @@ footer {
   }
 }
 
+@keyframes transformFlow {
+  0% {
+    opacity: 0.24;
+    background-position: 0 0;
+  }
+  50% {
+    opacity: 0.36;
+  }
+  100% {
+    opacity: 0.24;
+    background-position: 38px 30px;
+  }
+}
+
+@keyframes kernelPulse {
+  50% {
+    opacity: 0.68;
+    filter: drop-shadow(0 0 6px rgba(229, 122, 103, 0.26));
+  }
+}
+
+@keyframes imagePulse {
+  50% {
+    opacity: 0.82;
+    filter: drop-shadow(0 0 8px rgba(159, 197, 158, 0.28));
+  }
+}
+
 @keyframes forgedVector {
   0% {
     opacity: 0;
@@ -1782,6 +1946,25 @@ footer {
   100% {
     opacity: 0;
     transform: rotate(var(--forge-angle)) scaleX(1.14);
+  }
+}
+
+@keyframes mappedVector {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--map-angle)) scaleX(0.08);
+  }
+  24% {
+    opacity: 1;
+    transform: rotate(var(--map-angle)) scaleX(1);
+  }
+  72% {
+    opacity: 0.92;
+    transform: rotate(var(--map-angle)) scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--map-angle)) scaleX(1.14);
   }
 }
 
