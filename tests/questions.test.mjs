@@ -428,6 +428,7 @@ test("polynomial reduction covers annihilators, minimal polynomial, Cayley-Hamil
   const characteristicBlockSizes = new Set();
   let sawNonUnitCoupling = false;
   let sawNonTriangularMatrix = false;
+  const cayleyTemplates = new Set();
 
   for (let index = 0; index < 400; index += 1) {
     const annihilator = annihilatingPolynomialQuestion();
@@ -444,11 +445,25 @@ test("polynomial reduction covers annihilators, minimal polynomial, Cayley-Hamil
 
     const cayleyHamilton = cayleyHamiltonQuestion();
     assertWellFormed(cayleyHamilton);
-    assert.match(cayleyHamilton.formula, /χ_A\(X\)/);
-    assert.match(
-      cayleyHamilton.choices.find((choice) => choice.correct).text,
-      /^A² = /,
-    );
+    const cayleyTemplate = cayleyHamilton.id.split("-")[2];
+    cayleyTemplates.add(cayleyTemplate);
+    const cayleyAnswer = cayleyHamilton.choices.find(
+      (choice) => choice.correct,
+    ).text;
+    if (cayleyTemplate === "IDENTITY") {
+      assert.match(cayleyHamilton.formula, /^χ_A\(X\)/);
+      assert.doesNotMatch(cayleyHamilton.formula, /⟦/);
+      assert.match(cayleyAnswer, /^χ_A\(A\) = /);
+    } else if (cayleyTemplate === "ANNULATOR") {
+      assert.match(cayleyHamilton.formula, /⟦/);
+      assert.doesNotMatch(cayleyHamilton.formula, /χ_A\(X\)/);
+    } else if (cayleyTemplate === "EQUIVALENT") {
+      assert.match(cayleyHamilton.formula, /^P\(X\)/);
+      assert.match(cayleyAnswer, /^A = A² − \d+I$/);
+    } else {
+      assert.equal(parseMatrix(cayleyHamilton.formula).length, 3);
+      assert.match(cayleyAnswer, /= 0$/);
+    }
 
     const characteristicSpace = characteristicSubspaceQuestion();
     assertWellFormed(characteristicSpace);
@@ -494,6 +509,10 @@ test("polynomial reduction covers annihilators, minimal polynomial, Cayley-Hamil
   assert.deepEqual(characteristicBlockSizes, new Set([2, 3, 4]));
   assert.equal(sawNonUnitCoupling, true);
   assert.equal(sawNonTriangularMatrix, true);
+  assert.deepEqual(
+    cayleyTemplates,
+    new Set(["IDENTITY", "ANNULATOR", "EQUIVALENT", "ORDER3"]),
+  );
 });
 
 test("image exercises genuinely determine images in dimensions two and three", () => {

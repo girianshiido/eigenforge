@@ -179,6 +179,25 @@ function shiftedMatrix(root: number) {
   return root > 0 ? `A − ${magnitude}I` : `A + ${magnitude}I`;
 }
 
+function matrixRootFactor(root: number) {
+  const magnitude = Math.abs(root) === 1 ? "" : `${Math.abs(root)}`;
+  return root > 0 ? `(A − ${magnitude}I)` : `(A + ${magnitude}I)`;
+}
+
+function cayleyHamiltonIdentity2(trace: number, determinant: number) {
+  let result = "χ_A(A) = A²";
+  if (trace !== 0) {
+    const magnitude = Math.abs(trace) === 1 ? "" : `${Math.abs(trace)}`;
+    result += trace > 0 ? ` − ${magnitude}A` : ` + ${magnitude}A`;
+  }
+  if (determinant !== 0) {
+    const magnitude =
+      Math.abs(determinant) === 1 ? "" : `${Math.abs(determinant)}`;
+    result += determinant > 0 ? ` + ${magnitude}I` : ` − ${magnitude}I`;
+  }
+  return `${result} = 0`;
+}
+
 function choices(correct: string, distractors: string[]) {
   const unique = Array.from(new Set([correct, ...distractors]));
   let offset = 1;
@@ -1667,31 +1686,105 @@ export function minimalPolynomialQuestion(): Question {
 }
 
 export function cayleyHamiltonQuestion(): Question {
+  const template = randomInt(0, 3);
+
+  if (template === 2) {
+    const constant = randomInt(2, 6);
+    const answer = `A = A² − ${constant}I`;
+    return {
+      id: `M-CAYLEY-EQUIVALENT-${Date.now()}-${randomInt(100, 999)}`,
+      sector: "matrices",
+      eyebrow: "MP · Polynôme annulateur",
+      prompt: "Quelle relation est équivalente à P(A) = 0 ?",
+      formula: `P(X) = X² − X − ${constant}`,
+      choices: choices(answer, [
+        `A = A² + ${constant}I`,
+        `A² = A − ${constant}I`,
+        `A = ${constant}A² − I`,
+      ]),
+      explanation: `P(A) = 0 signifie A² − A − ${constant}I = 0. En isolant A, on obtient ${answer}.`,
+      geometry:
+        "Une relation annulative replie les puissances de A sur les puissances de degré inférieur.",
+      trap:
+        "Le terme constant du polynôme devient un multiple de la matrice identité.",
+    };
+  }
+
+  if (template === 3) {
+    const eigenvalues = sample([-4, -3, -2, -1, 1, 2, 3, 4], 3);
+    let outsider = nonZero();
+    while (eigenvalues.includes(outsider)) outsider = randomInt(-6, 6) || 5;
+    const factors = eigenvalues.map(matrixRootFactor);
+    const answer = `${factors.join("")} = 0`;
+    return {
+      id: `M-CAYLEY-ORDER3-${Date.now()}-${randomInt(100, 999)}`,
+      sector: "matrices",
+      eyebrow: "MP · Cayley-Hamilton · Dimension 3",
+      prompt: "Quelle relation de Cayley-Hamilton vérifie A ?",
+      formula: `A = ${matrix([
+        [eigenvalues[0], nonZero(), randomInt(-3, 3)],
+        [0, eigenvalues[1], nonZero()],
+        [0, 0, eigenvalues[2]],
+      ])}`,
+      choices: choices(answer, [
+        `${matrixRootFactor(-eigenvalues[0])}${factors[1]}${factors[2]} = 0`,
+        `${factors[0]}${factors[1]} = 0`,
+        `${factors[0]}${factors[1]}${matrixRootFactor(outsider)} = 0`,
+      ]),
+      explanation: `A est triangulaire, donc χ_A(X) = ${eigenvalues.map(polynomialRootFactor).join("")}. Le théorème donne χ_A(A) = ${answer}`,
+      geometry:
+        "En dimension 3, Cayley-Hamilton ramène toutes les puissances de A à une combinaison de I, A et A².",
+      trap:
+        "Chaque valeur propre doit apparaître avec sa multiplicité dans le polynôme caractéristique.",
+    };
+  }
+
   let eigenvalues = sample([-4, -3, -2, -1, 1, 2, 3, 4], 2);
   while (eigenvalues[0] + eigenvalues[1] === 0) {
     eigenvalues = sample([-4, -3, -2, -1, 1, 2, 3, 4], 2);
   }
   const trace = eigenvalues[0] + eigenvalues[1];
   const determinant = eigenvalues[0] * eigenvalues[1];
-  const relation = (a: number, b: number) =>
-    `A² = ${formatLinearExpression([[a, "A"], [b, "I"]])}`;
-  const answer = relation(trace, -determinant);
+  const characteristic = characteristicPolynomial2(trace, determinant);
+
+  if (template === 1) {
+    const answer = `${polynomialRootFactor(eigenvalues[0])}${polynomialRootFactor(eigenvalues[1])}`;
+    return {
+      id: `M-CAYLEY-ANNULATOR-${Date.now()}-${randomInt(100, 999)}`,
+      sector: "matrices",
+      eyebrow: "MP · Cayley-Hamilton",
+      prompt: "Lequel de ces polynômes annule A d’après Cayley-Hamilton ?",
+      formula: `A = ${matrix([
+        [eigenvalues[0], nonZero()],
+        [0, eigenvalues[1]],
+      ])}`,
+      choices: choices(answer, [
+        polynomialRootFactor(eigenvalues[0]),
+        polynomialRootFactor(eigenvalues[1]),
+        `${polynomialRootFactor(-eigenvalues[0])}${polynomialRootFactor(eigenvalues[1])}`,
+      ]),
+      explanation: `On calcule χ_A(X) = ${answer}. Le théorème de Cayley-Hamilton affirme alors χ_A(A) = 0.`,
+      geometry:
+        "Le polynôme caractéristique annule simultanément toutes les composantes spectrales.",
+      trap:
+        "Ici, le polynôme caractéristique doit être calculé à partir de A : il n’est pas fourni.",
+    };
+  }
+
+  const answer = cayleyHamiltonIdentity2(trace, determinant);
 
   return {
-    id: `M-CAYLEY-${Date.now()}-${randomInt(100, 999)}`,
+    id: `M-CAYLEY-IDENTITY-${Date.now()}-${randomInt(100, 999)}`,
     sector: "matrices",
     eyebrow: "MP · Cayley-Hamilton",
-    prompt: "Quelle relation vérifie A d’après le théorème de Cayley-Hamilton ?",
-    formula: `A = ${matrix([
-      [eigenvalues[0], nonZero()],
-      [0, eigenvalues[1]],
-    ])},   χ_A(X) = ${characteristicPolynomial2(trace, determinant)}`,
+    prompt: "Quelle identité affirme le théorème de Cayley-Hamilton ?",
+    formula: `χ_A(X) = ${characteristic}`,
     choices: choices(answer, [
-      relation(-trace, -determinant),
-      relation(trace, determinant),
-      relation(-trace, determinant),
+      cayleyHamiltonIdentity2(-trace, determinant),
+      cayleyHamiltonIdentity2(trace, -determinant),
+      `χ_A(0) = ${determinant}I`,
     ]),
-    explanation: `Cayley-Hamilton donne χ_A(A) = 0. En isolant A² dans cette relation, on obtient ${answer}.`,
+    explanation: `La véritable assertion du théorème est χ_A(A) = 0. En remplaçant X par A dans χ_A, on obtient ${answer}.`,
     geometry:
       "Les puissances élevées de A se replient sur l’espace engendré par I et A.",
     trap:
