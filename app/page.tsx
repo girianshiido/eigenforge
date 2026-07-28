@@ -61,6 +61,13 @@ type AnswerState = {
   reward: number;
 };
 
+type EmittedVectorVisual = {
+  angle: number;
+  length: number;
+  mappedAngle: number;
+  mappedLength: number;
+};
+
 const SAVE_KEY = "reseau-des-espaces-v1";
 
 const INITIAL_STATE: GameState = {
@@ -556,6 +563,13 @@ export default function Home() {
   );
   const [emitBurst, setEmitBurst] = useState(0);
   const [isEmitting, setIsEmitting] = useState(false);
+  const [emittedVector, setEmittedVector] =
+    useState<EmittedVectorVisual>({
+      angle: -28,
+      length: 26,
+      mappedAngle: 42,
+      mappedLength: 27,
+    });
 
   const rate = useMemo(() => production(game), [game]);
   const manualPower = useMemo(() => clickPower(game), [game]);
@@ -571,9 +585,11 @@ export default function Home() {
           : game.instruments[0] > 0
             ? 1
             : 0;
-  const basisVectors = ["e₁", "e₂", "e₃"].slice(0, spaceDimension);
-  const spaceGeneratorList =
-    spaceDimension >= 4 ? "e₁, …, e₄" : basisVectors.join(", ");
+  const basisVectors = ["e₁", "e₂", "e₃", "e₄"].slice(
+    0,
+    spaceDimension,
+  );
+  const spaceGeneratorList = basisVectors.join(", ");
 
   useEffect(() => {
     const preventGesture = (event: Event) => event.preventDefault();
@@ -687,6 +703,26 @@ export default function Home() {
 
   function emitVector() {
     if (!hydrated) return;
+    setEmittedVector((previous) => {
+      let angle =
+        spaceDimension === 1
+          ? previous.angle === -28
+            ? 152
+            : -28
+          : randomInt(-165, 194);
+      const angularGap = Math.abs(
+        ((angle - previous.angle + 540) % 360) - 180,
+      );
+      if (spaceDimension > 1 && angularGap < 18) {
+        angle = ((angle + 48 + 180) % 360) - 180;
+      }
+      return {
+        angle,
+        length: randomInt(19, 34),
+        mappedAngle: angle + randomInt(38, 128),
+        mappedLength: randomInt(18, 32),
+      };
+    });
     setEmitBurst((current) => current + 1);
     setIsEmitting(false);
     window.requestAnimationFrame(() => {
@@ -1075,11 +1111,24 @@ export default function Home() {
               >
                 <span>e₃</span>
               </div>
+              <div
+                className={`vector-line vector-four ${game.instruments[3] > 0 ? "visible" : ""}`}
+                style={{ "--angle": "148deg", "--length": "31%" } as CSSProperties}
+                aria-label="Projection visuelle du quatrième vecteur de base e 4"
+              >
+                <span>e₄</span>
+              </div>
 
               {isEmitting && spaceDimension > 0 && (
                 <div
                   className={`forged-vector dimension-${spaceDimension}`}
                   key={`vector-${emitBurst}`}
+                  style={
+                    {
+                      "--forge-angle": `${emittedVector.angle}deg`,
+                      "--forge-length": `${emittedVector.length}%`,
+                    } as CSSProperties
+                  }
                   aria-hidden="true"
                 >
                   <span>u</span>
@@ -1089,6 +1138,12 @@ export default function Home() {
                 <div
                   className="mapped-vector"
                   key={`mapped-${emitBurst}`}
+                  style={
+                    {
+                      "--map-angle": `${emittedVector.mappedAngle}deg`,
+                      "--map-length": `${emittedVector.mappedLength}%`,
+                    } as CSSProperties
+                  }
                   aria-hidden="true"
                 >
                   <span>f(u)</span>

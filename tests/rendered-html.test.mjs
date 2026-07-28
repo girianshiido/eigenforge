@@ -133,7 +133,16 @@ test("keeps the network diagram consistent with its displayed dimension", async 
   assert.match(page, /<span>e₁<\/span>/);
   assert.match(page, /<span>e₂<\/span>/);
   assert.match(page, /<span>e₃<\/span>/);
+  assert.match(page, /className=\{`vector-line vector-four/);
+  assert.match(page, /<span>e₄<\/span>/);
+  assert.match(page, /Projection visuelle du quatrième vecteur de base e 4/);
   assert.match(page, /className=\{`forged-vector dimension-\$\{spaceDimension\}`\}/);
+  assert.match(page, /"--forge-angle": `\$\{emittedVector\.angle\}deg`/);
+  assert.match(page, /"--forge-length": `\$\{emittedVector\.length\}%`/);
+  assert.match(page, /spaceDimension === 1[\s\S]*previous\.angle === -28[\s\S]*\? 152[\s\S]*: -28/);
+  assert.match(page, /randomInt\(-165, 194\)/);
+  assert.match(page, /angularGap < 18/);
+  assert.match(page, /"--map-angle": `\$\{emittedVector\.mappedAngle\}deg`/);
   assert.match(page, /Forger des coordonnées/);
   assert.match(page, /Forger un vecteur/);
   assert.match(page, /className="mapped-vector"/);
@@ -147,6 +156,9 @@ test("keeps the network diagram consistent with its displayed dimension", async 
   assert.match(styles, /@keyframes planeBreath/);
   assert.match(styles, /@keyframes forgedVector/);
   assert.match(styles, /@keyframes mappedVector/);
+  assert.match(styles, /\.vector-four/);
+  assert.match(styles, /width: var\(--forge-length\)/);
+  assert.match(styles, /width: var\(--map-length\)/);
 });
 
 test("ships four ordered workshop cycles through matrix reduction", async () => {

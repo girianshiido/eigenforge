@@ -11,6 +11,10 @@ linéaire des classes préparatoires MPSI et MP.
   portée par \(u\) avec l’Émetteur, puis base \(B=(u,v)\) avec la Chambre ;
 - animations lentes des directions, du plan et des grilles, avec un champ
   circulaire conservant ses proportions sur ordinateur et téléphone ;
+- projection distincte des quatre vecteurs de la base, avec e₄ représenté en
+  pointillés pour rappeler la limite d’une projection plane ;
+- direction et longueur du vecteur u renouvelées à chaque forge, puis image
+  f(u) animée selon une nouvelle direction lorsque l’application est active ;
 - Émetteur vectoriel, Chambre des bases et Transformateur linéaire ;
 - paliers de production ×2 à 10, 25 et 50 instruments, avec une première
   progression calibrée jusqu’au changement de base ;
