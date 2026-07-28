@@ -66,15 +66,20 @@ test("formats generated expressions and previews basis changes", async () => {
     new URL("../app/page.tsx", import.meta.url),
     "utf8",
   );
+  const questions = await readFile(
+    new URL("../app/question-generator.ts", import.meta.url),
+    "utf8",
+  );
 
-  assert.match(page, /function formatLinearExpression/);
+  assert.match(questions, /function formatLinearExpression/);
+  assert.match(page, /generateExercise\(pool, spaceDimension\)/);
   assert.match(page, /Remis à zéro/);
   assert.match(page, /Multiplicateur actuel/);
   assert.match(page, /Après le changement/);
   assert.match(page, /question\.formula &&/);
-  assert.doesNotMatch(page, /D = \{ λ\$\{vector/);
-  assert.doesNotMatch(page, /\$\{[a-zA-Z]+\}x \+ \$\{[a-zA-Z]+\}y/);
-  assert.doesNotMatch(page, /\+ \$\{[a-zA-Z]+\}μ/);
+  assert.doesNotMatch(questions, /D = \{ λ\$\{vector/);
+  assert.doesNotMatch(questions, /\$\{[a-zA-Z]+\}x \+ \$\{[a-zA-Z]+\}y/);
+  assert.doesNotMatch(questions, /\+ \$\{[a-zA-Z]+\}μ/);
 });
 
 test("keeps the network diagram consistent with its displayed dimension", async () => {

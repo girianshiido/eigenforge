@@ -12,6 +12,7 @@ import {
   nextInvariantThreshold,
   resonanceDecayRate,
 } from "./game-balance";
+import { generateQuestion as generateExercise } from "./question-generator";
 
 type Sector = "vectors" | "bases" | "applications";
 type GameTab = "network" | "instruments" | "anomalies" | "atlas";
@@ -678,7 +679,7 @@ export default function Home() {
       (left, right) => game.mastery[left] - game.mastery[right],
     );
     const pool = Math.random() < 0.55 ? [weakest[0]] : sectors;
-    setQuestion(generateQuestion(pool));
+    setQuestion(generateExercise(pool, spaceDimension));
     setAnswer(null);
   }
 
