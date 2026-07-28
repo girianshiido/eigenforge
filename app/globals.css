@@ -24,6 +24,11 @@
 html {
   min-width: 320px;
   background: var(--ink);
+  touch-action: pan-y;
+  -webkit-text-size-adjust: 100%;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 body {
@@ -33,11 +38,17 @@ body {
     linear-gradient(180deg, #0b1820 0%, #08131a 100%);
   color: var(--ivory);
   font-family: "Avenir Next", Avenir, "Helvetica Neue", Arial, sans-serif;
+  touch-action: pan-y;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 button {
   color: inherit;
   font: inherit;
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
 }
 
 button:not(:disabled) {
@@ -653,8 +664,16 @@ button:disabled {
 }
 
 .network-stage.dimension-2::after,
-.network-stage.dimension-3::after {
+.network-stage.dimension-3::after,
+.network-stage.dimension-4::after {
   opacity: 1;
+}
+
+.network-stage.dimension-4::before {
+  box-shadow:
+    0 0 0 14px rgba(155, 141, 197, 0.035),
+    0 0 0 28px rgba(155, 141, 197, 0.018),
+    inset 0 0 34px rgba(155, 141, 197, 0.04);
 }
 
 .star-field {
@@ -690,7 +709,8 @@ button:disabled {
 }
 
 .dimension-2 .coordinate-grid,
-.dimension-3 .coordinate-grid {
+.dimension-3 .coordinate-grid,
+.dimension-4 .coordinate-grid {
   animation: gridDrift 18s linear infinite;
 }
 
@@ -733,32 +753,21 @@ button:disabled {
   animation: linePulse 5s ease-in-out infinite;
 }
 
-.basis-indicator {
+.space-indicator {
   position: absolute;
   z-index: 4;
-  left: 50%;
-  top: 18px;
-  min-width: 132px;
-  padding: 7px 12px;
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-  gap: 2px;
+  left: 18px;
+  bottom: 47px;
+  max-width: calc(100% - 36px);
+  padding: 6px 10px;
   border: 1px solid rgba(121, 199, 192, 0.24);
-  border-radius: 18px;
+  border-radius: 15px;
   background: rgba(9, 24, 32, 0.72);
-  color: rgba(241, 234, 217, 0.58);
-  font-family: Georgia, serif;
-  font-size: 9px;
-  font-style: italic;
-  transform: translateX(-50%);
-  animation: basisGlow 6s ease-in-out infinite;
-}
-
-.basis-indicator strong {
   color: rgba(121, 199, 192, 0.88);
-  font-size: 11px;
-  font-weight: 400;
+  font-family: Georgia, serif;
+  font-size: 10px;
+  font-style: italic;
+  animation: spaceGlow 6s ease-in-out infinite;
 }
 
 .plane {
@@ -919,6 +928,11 @@ button:disabled {
   width: 26%;
 }
 
+.forged-vector.dimension-4 {
+  --forge-angle: -48deg;
+  width: 26%;
+}
+
 .forged-vector::after {
   content: "";
   position: absolute;
@@ -967,7 +981,7 @@ button:disabled {
   transform: translate(-50%, -50%);
   transition: transform 120ms ease, box-shadow 180ms ease;
   -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
+  touch-action: pan-y;
 }
 
 .core-button:not(:disabled):hover {
@@ -1693,7 +1707,7 @@ footer {
   }
 }
 
-@keyframes basisGlow {
+@keyframes spaceGlow {
   50% {
     border-color: rgba(121, 199, 192, 0.42);
     color: rgba(121, 199, 192, 0.94);
@@ -2046,7 +2060,7 @@ footer {
     color 160ms ease,
     border-color 160ms ease,
     background 160ms ease;
-  touch-action: manipulation;
+  touch-action: pan-y;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -2122,8 +2136,42 @@ footer {
 }
 
 .tab-stage .instruments-panel .instrument-list {
+  display: flex;
+  gap: 26px;
+}
+
+.workshop-sector {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.workshop-sector-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.workshop-sector-heading span {
+  color: var(--copper);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.workshop-sector-heading h3 {
+  margin: 0;
+  font-family: Georgia, serif;
+  font-size: 18px;
+  font-weight: 400;
+}
+
+.workshop-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
 }
 
@@ -2312,7 +2360,7 @@ footer {
 }
 
 @media (max-width: 900px) {
-  .tab-stage .instruments-panel .instrument-list {
+  .workshop-grid {
     grid-template-columns: 1fr;
   }
 

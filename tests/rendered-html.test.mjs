@@ -88,6 +88,7 @@ test("keeps the network diagram consistent with its displayed dimension", async 
   );
 
   assert.match(page, /const spaceDimension/);
+  assert.match(page, /game\.instruments\[3\] > 0/);
   assert.match(page, /game\.instruments\[2\] > 0/);
   assert.match(page, /game\.instruments\[0\] > 0[\s\S]*\? 1/);
   assert.doesNotMatch(page, /game\.runTotal > 0 \?/);
@@ -96,8 +97,10 @@ test("keeps the network diagram consistent with its displayed dimension", async 
   assert.match(page, /spaceDimension >= 3/);
   assert.match(page, /spaceDimension === 0/);
   assert.match(page, /E = \{"\{0\}"\}/);
-  assert.match(page, /E\{spaceDimension\} = Vect\(\{basisList\}\)/);
-  assert.match(page, /ℬ\{spaceDimension\} = \(\{basisList\}\)/);
+  assert.match(page, /E = Vect\(\{spaceGeneratorList\}\)/);
+  assert.doesNotMatch(page, /E\{spaceDimension\}/);
+  assert.doesNotMatch(page, /ℬ\{spaceDimension\}/);
+  assert.match(page, /className="space-indicator"/);
   assert.match(page, /<span>e₁<\/span>/);
   assert.match(page, /<span>e₂<\/span>/);
   assert.match(page, /<span>e₃<\/span>/);
@@ -110,6 +113,33 @@ test("keeps the network diagram consistent with its displayed dimension", async 
   assert.match(styles, /@keyframes vectorGlow/);
   assert.match(styles, /@keyframes planeBreath/);
   assert.match(styles, /@keyframes forgedVector/);
+});
+
+test("keeps vertical scrolling while blocking selection and zoom gestures", async () => {
+  const page = await readFile(
+    new URL("../app/page.tsx", import.meta.url),
+    "utf8",
+  );
+  const layout = await readFile(
+    new URL("../app/layout.tsx", import.meta.url),
+    "utf8",
+  );
+  const sourceHtml = await readFile(
+    new URL("../index.html", import.meta.url),
+    "utf8",
+  );
+  const styles = await readFile(
+    new URL("../app/globals.css", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(layout, /maximumScale: 1/);
+  assert.match(layout, /userScalable: false/);
+  assert.match(sourceHtml, /maximum-scale=1\.0, user-scalable=no/);
+  assert.match(styles, /touch-action: pan-y/);
+  assert.match(styles, /user-select: none/);
+  assert.match(page, /gesturestart/);
+  assert.match(page, /event\.touches\.length > 1/);
 });
 
 test("exports a GitHub Pages build under the repository path", async () => {

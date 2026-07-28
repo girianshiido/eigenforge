@@ -18,7 +18,7 @@ type GameState = {
   coordinates: number;
   runTotal: number;
   allTime: number;
-  instruments: [number, number, number];
+  instruments: number[];
   mastery: Record<Sector, number>;
   correctAnswers: number;
   anomalies: number;
@@ -53,7 +53,7 @@ const INITIAL_STATE: GameState = {
   coordinates: 0,
   runTotal: 0,
   allTime: 0,
-  instruments: [0, 0, 0],
+  instruments: INSTRUMENTS.map(() => 0),
   mastery: { vectors: 0, bases: 0, applications: 0 },
   correctAnswers: 0,
   anomalies: 0,
@@ -425,8 +425,14 @@ function production(state: GameState) {
 
 function clickPower(state: GameState) {
   const emitterBonus = 1 + state.instruments[0] * 0.1;
+  const basisExtractionBonus = 1 + (state.instruments[6] ?? 0) * 0.05;
   const resonanceBonus = 1 + Math.floor(state.resonance / 25) * 0.5;
-  return emitterBonus * resonanceBonus * (1 + state.totalInvariants * 0.15);
+  return (
+    emitterBonus *
+    basisExtractionBonus *
+    resonanceBonus *
+    (1 + state.totalInvariants * 0.15)
+  );
 }
 
 function anomalyDelay(allTime: number) {
@@ -453,16 +459,20 @@ function restoreState(raw: string | null): GameState {
   if (!raw) return { ...INITIAL_STATE, lastTick: Date.now(), nextAnomalyAt: Date.now() + 8000 };
   try {
     const saved = JSON.parse(raw) as Partial<GameState>;
+    const instruments = INSTRUMENTS.map((_, index) =>
+      Math.max(0, Number(saved.instruments?.[index]) || 0),
+    );
+    // Les anciennes versions autorisaient parfois un atelier avancé sans son
+    // prédécesseur. La migration rétablit une chaîne structurelle cohérente.
+    for (let index = instruments.length - 1; index > 0; index -= 1) {
+      if (instruments[index] > 0) {
+        instruments[index - 1] = Math.max(1, instruments[index - 1]);
+      }
+    }
     return {
       ...INITIAL_STATE,
       ...saved,
-      instruments: Array.isArray(saved.instruments)
-        ? [
-            Number(saved.instruments[0]) || 0,
-            Number(saved.instruments[1]) || 0,
-            Number(saved.instruments[2]) || 0,
-          ]
-        : [0, 0, 0],
+      instruments,
       mastery: {
         vectors: Number(saved.mastery?.vectors) || 0,
         bases: Number(saved.mastery?.bases) || 0,
@@ -493,15 +503,38 @@ export default function Home() {
   // Le premier exemplaire de chaque atelier structurel ajoute un vecteur à la
   // base. Les exemplaires suivants renforcent la production sans changer dim(E).
   const spaceDimension =
-    game.instruments[2] > 0
-      ? 3
-      : game.instruments[1] > 0
-        ? 2
-        : game.instruments[0] > 0
-          ? 1
-          : 0;
+    game.instruments[3] > 0
+      ? 4
+      : game.instruments[2] > 0
+        ? 3
+        : game.instruments[1] > 0
+          ? 2
+          : game.instruments[0] > 0
+            ? 1
+            : 0;
   const basisVectors = ["e₁", "e₂", "e₃"].slice(0, spaceDimension);
-  const basisList = basisVectors.join(", ");
+  const spaceGeneratorList =
+    spaceDimension >= 4 ? "e₁, …, e₄" : basisVectors.join(", ");
+
+  useEffect(() => {
+    const preventGesture = (event: Event) => event.preventDefault();
+    const preventPinch = (event: TouchEvent) => {
+      if (event.touches.length > 1) event.preventDefault();
+    };
+    const nonPassive = { passive: false } as AddEventListenerOptions;
+
+    document.addEventListener("gesturestart", preventGesture, nonPassive);
+    document.addEventListener("gesturechange", preventGesture, nonPassive);
+    document.addEventListener("gestureend", preventGesture, nonPassive);
+    document.addEventListener("touchmove", preventPinch, nonPassive);
+
+    return () => {
+      document.removeEventListener("gesturestart", preventGesture);
+      document.removeEventListener("gesturechange", preventGesture);
+      document.removeEventListener("gestureend", preventGesture);
+      document.removeEventListener("touchmove", preventPinch);
+    };
+  }, []);
 
   useEffect(() => {
     const restored = restoreState(window.localStorage.getItem(SAVE_KEY));
@@ -609,10 +642,16 @@ export default function Home() {
   function buyInstrument(index: number) {
     setGame((previous) => {
       const cost = instrumentCost(index, previous.instruments[index]);
-      if (previous.coordinates < cost || previous.allTime < INSTRUMENTS[index].unlock) {
+      const prerequisiteOwned =
+        index === 0 || (previous.instruments[index - 1] ?? 0) > 0;
+      if (
+        previous.coordinates < cost ||
+        previous.allTime < INSTRUMENTS[index].unlock ||
+        !prerequisiteOwned
+      ) {
         return previous;
       }
-      const instruments = [...previous.instruments] as [number, number, number];
+      const instruments = [...previous.instruments];
       instruments[index] += 1;
       return { ...previous, coordinates: previous.coordinates - cost, instruments };
     });
@@ -621,8 +660,8 @@ export default function Home() {
   function openAnomaly() {
     if (game.anomalies <= 0) return;
     const sectors: Sector[] = ["vectors"];
-    if (game.instruments[1] > 0 || game.allTime >= INSTRUMENTS[1].unlock) sectors.push("bases");
-    if (game.instruments[2] > 0 || game.allTime >= INSTRUMENTS[2].unlock) {
+    if (game.instruments[1] > 0) sectors.push("bases");
+    if (game.instruments[2] > 0) {
       sectors.push("applications");
     }
     const weakest = [...sectors].sort(
@@ -702,8 +741,11 @@ export default function Home() {
   const instrumentCount = game.instruments.reduce((sum, count) => sum + count, 0);
   const unlockedSectorCount =
     1 +
-    (game.allTime >= INSTRUMENTS[1].unlock ? 1 : 0) +
-    (game.allTime >= INSTRUMENTS[2].unlock ? 1 : 0);
+    (game.instruments[1] > 0 ? 1 : 0) +
+    (game.instruments[2] > 0 ? 1 : 0);
+  const nextWorkshopIndex = game.instruments.findIndex((count) => count === 0);
+  const nextWorkshop =
+    nextWorkshopIndex >= 0 ? INSTRUMENTS[nextWorkshopIndex] : null;
   const nextAnomalySeconds = Math.max(
     0,
     Math.ceil((game.nextAnomalyAt - Date.now()) / 1000),
@@ -715,50 +757,32 @@ export default function Home() {
           text: "Forgez 15 coordonnées pour provoquer la première anomalie.",
           progress: Math.min(100, (game.allTime / 15) * 100),
         }
-      : game.instruments[0] === 0
+      : nextWorkshop && game.allTime < nextWorkshop.unlock
         ? {
-            title: "Forger e₁",
-            text: "Construisez le Générateur axial pour créer la première direction.",
-            progress: Math.min(100, (game.coordinates / instrumentCost(0, 0)) * 100),
+            title: `Révéler ${nextWorkshop.name}`,
+            text: `Atteignez ${formatNumber(nextWorkshop.unlock)} coordonnées cumulées pour ouvrir cet atelier.`,
+            progress: Math.min(
+              100,
+              (game.allTime / nextWorkshop.unlock) * 100,
+            ),
           }
-        : game.allTime < INSTRUMENTS[1].unlock
+        : nextWorkshop
           ? {
-              title: "Préparer e₂",
-              text: `Produisez encore ${formatNumber(INSTRUMENTS[1].unlock - game.allTime)} coordonnées cumulées pour ouvrir le plan.`,
-              progress: Math.min(100, (game.allTime / INSTRUMENTS[1].unlock) * 100),
+              title: nextWorkshop.mission,
+              text: `Construisez ${nextWorkshop.name}. ${nextWorkshop.description}`,
+              progress: Math.min(
+                100,
+                (game.coordinates / instrumentCost(nextWorkshopIndex, 0)) * 100,
+              ),
             }
-          : game.instruments[1] === 0
-            ? {
-                title: "Déployer le plan",
-                text: "Construisez le Déployeur planaire pour ajouter e₂.",
-                progress: Math.min(
-                  100,
-                  (game.coordinates / instrumentCost(1, 0)) * 100,
-                ),
-              }
-            : game.allTime < INSTRUMENTS[2].unlock
-              ? {
-                  title: "Préparer e₃",
-                  text: `Atteignez ${formatNumber(INSTRUMENTS[2].unlock)} coordonnées cumulées pour ouvrir l’espace.`,
-                  progress: Math.min(100, (game.allTime / INSTRUMENTS[2].unlock) * 100),
-                }
-              : game.instruments[2] === 0
-                ? {
-                    title: "Ouvrir la troisième dimension",
-                    text: "Construisez la Forge spatiale pour ajouter e₃.",
-                    progress: Math.min(
-                      100,
-                      (game.coordinates / instrumentCost(2, 0)) * 100,
-                    ),
-                  }
-                : {
-                    title: "Préparer un changement de base",
-                    text: "Renforcez la base (e₁, e₂, e₃) et stabilisez les anomalies.",
-                    progress: Math.min(
-                      100,
-                      (game.runTotal / nextInvariantThreshold(0)) * 100,
-                    ),
-                  };
+          : {
+              title: "Préparer un changement de base",
+              text: "Renforcez les huit ateliers et stabilisez les anomalies.",
+              progress: Math.min(
+                100,
+                (game.runTotal / nextInvariantThreshold(0)) * 100,
+              ),
+            };
 
   return (
     <main className="app-shell">
@@ -885,11 +909,10 @@ export default function Home() {
 
               {spaceDimension >= 1 && (
                 <div
-                  className="basis-indicator"
-                  aria-label={`Espace de dimension ${spaceDimension}, base e 1 à e ${spaceDimension}`}
+                  className="space-indicator"
+                  aria-label={`Espace engendré par e 1 à e ${spaceDimension}`}
                 >
-                  <span>E{spaceDimension} = Vect({basisList})</span>
-                  <strong>ℬ{spaceDimension} = ({basisList})</strong>
+                  E = Vect({spaceGeneratorList})
                 </div>
               )}
               {spaceDimension === 0 && (
@@ -932,7 +955,7 @@ export default function Home() {
             </div>
 
             <div className="mission-card">
-              <div className="mission-index">0{Math.min(6, game.instruments.reduce((sum, item) => sum + (item > 0 ? 1 : 0), 0) + 1)}</div>
+              <div className="mission-index">0{Math.min(9, game.instruments.reduce((sum, item) => sum + (item > 0 ? 1 : 0), 0) + 1)}</div>
               <div className="mission-copy">
                 <p>Mission active</p>
                 <h3>{mission.title}</h3>
@@ -966,84 +989,109 @@ export default function Home() {
           </div>
 
           <div className="instrument-list">
-            {INSTRUMENTS.map((instrument, index) => {
-              const unlocked = game.allTime >= instrument.unlock;
-              const count = game.instruments[index];
-              const cost = instrumentCost(index, count);
-              const affordable = game.coordinates >= cost;
-              const nextMilestone = INSTRUMENT_MILESTONES.find(
-                (milestone) => milestone > count,
-              );
-              const instrumentRate =
-                count *
-                instrument.baseProduction *
-                milestoneMultiplier(count);
-              return (
-                <article
-                  className={`instrument-card ${unlocked ? "" : "locked"}`}
-                  key={instrument.name}
-                >
-                  <div className="instrument-mark" aria-hidden="true">
-                    {instrument.mark}
+            {["Construction de l’espace", "Familles et rang"].map(
+              (chapter, chapterIndex) => (
+                <section className="workshop-sector" key={chapter}>
+                  <div className="workshop-sector-heading">
+                    <span>Cycle 0{chapterIndex + 1}</span>
+                    <h3>{chapter}</h3>
                   </div>
-                  <div className="instrument-copy">
-                    <div className="instrument-title">
-                      <div>
-                        <span>{instrument.sector}</span>
-                        <h3>{instrument.name}</h3>
-                      </div>
-                      <strong>{count}</strong>
-                    </div>
-                    <p>
-                      {unlocked
-                        ? instrument.description
-                        : `Se révèle à ${formatNumber(instrument.unlock)} coordonnées cumulées.`}
-                    </p>
-                    <div
-                      className="milestone-row"
-                      aria-label={`Paliers de ${instrument.name}`}
-                    >
-                      {INSTRUMENT_MILESTONES.map((milestone) => (
-                        <span
-                          className={count >= milestone ? "reached" : ""}
-                          key={milestone}
+                  <div className="workshop-grid">
+                    {INSTRUMENTS.map((instrument, index) => {
+                      if (instrument.chapter !== chapter) return null;
+                      const prerequisiteOwned =
+                        index === 0 || (game.instruments[index - 1] ?? 0) > 0;
+                      const progressUnlocked = game.allTime >= instrument.unlock;
+                      const unlocked = prerequisiteOwned && progressUnlocked;
+                      const count = game.instruments[index] ?? 0;
+                      const cost = instrumentCost(index, count);
+                      const affordable = game.coordinates >= cost;
+                      const nextMilestone = INSTRUMENT_MILESTONES.find(
+                        (milestone) => milestone > count,
+                      );
+                      const instrumentRate =
+                        count *
+                        instrument.baseProduction *
+                        milestoneMultiplier(count);
+                      const lockedDescription = !prerequisiteOwned
+                        ? `Nécessite d’abord ${INSTRUMENTS[index - 1].name}.`
+                        : `Se révèle à ${formatNumber(instrument.unlock)} coordonnées cumulées.`;
+                      return (
+                        <article
+                          className={`instrument-card ${unlocked ? "" : "locked"}`}
+                          key={instrument.name}
                         >
-                          {milestone}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="instrument-bottom">
-                      <div className="instrument-output">
-                        <span>{formatNumber(instrumentRate)}/s</span>
-                        <small>
-                          {nextMilestone
-                            ? `${nextMilestone - count} avant le prochain ×2`
-                            : "Tous les paliers atteints"}
-                        </small>
-                      </div>
-                      <button
-                        className={`workshop-buy ${unlocked && affordable ? "ready" : ""}`}
-                        type="button"
-                        onClick={() => buyInstrument(index)}
-                        disabled={!unlocked || !affordable}
-                        aria-label={`Construire ${instrument.name} pour ${formatNumber(cost)} coordonnées`}
-                      >
-                        <span className="workshop-buy-copy">
-                          <small>{unlocked ? "Forger une unité" : "Atelier verrouillé"}</small>
-                          <strong>
-                            {unlocked ? formatNumber(cost) : formatNumber(instrument.unlock)}
-                            <em> coord.</em>
-                          </strong>
-                        </span>
-                        <span className="workshop-buy-mark" aria-hidden="true">
-                          {unlocked ? "+" : "◇"}
-                        </span>
-                      </button>
-                    </div>
+                          <div className="instrument-mark" aria-hidden="true">
+                            {instrument.mark}
+                          </div>
+                          <div className="instrument-copy">
+                            <div className="instrument-title">
+                              <div>
+                                <span>{instrument.sector}</span>
+                                <h3>{instrument.name}</h3>
+                              </div>
+                              <strong>{count}</strong>
+                            </div>
+                            <p>{unlocked ? instrument.description : lockedDescription}</p>
+                            <div
+                              className="milestone-row"
+                              aria-label={`Paliers de ${instrument.name}`}
+                            >
+                              {INSTRUMENT_MILESTONES.map((milestone) => (
+                                <span
+                                  className={count >= milestone ? "reached" : ""}
+                                  key={milestone}
+                                >
+                                  {milestone}
+                                </span>
+                              ))}
+                            </div>
+                            <div className="instrument-bottom">
+                              <div className="instrument-output">
+                                <span>{formatNumber(instrumentRate)}/s</span>
+                                <small>
+                                  {nextMilestone
+                                    ? `${nextMilestone - count} avant le prochain ×2`
+                                    : "Tous les paliers atteints"}
+                                </small>
+                              </div>
+                              <button
+                                className={`workshop-buy ${unlocked && affordable ? "ready" : ""}`}
+                                type="button"
+                                onClick={() => buyInstrument(index)}
+                                disabled={!unlocked || !affordable}
+                                aria-label={`Construire ${instrument.name} pour ${formatNumber(cost)} coordonnées`}
+                              >
+                                <span className="workshop-buy-copy">
+                                  <small>
+                                    {unlocked
+                                      ? "Forger une unité"
+                                      : prerequisiteOwned
+                                        ? "Atelier verrouillé"
+                                        : "Prérequis manquant"}
+                                  </small>
+                                  <strong>
+                                    {unlocked
+                                      ? formatNumber(cost)
+                                      : prerequisiteOwned
+                                        ? formatNumber(instrument.unlock)
+                                        : "—"}
+                                    {prerequisiteOwned && <em> coord.</em>}
+                                  </strong>
+                                </span>
+                                <span className="workshop-buy-mark" aria-hidden="true">
+                                  {unlocked ? "+" : "◇"}
+                                </span>
+                              </button>
+                            </div>
+                          </div>
+                        </article>
+                      );
+                    })}
                   </div>
-                </article>
-              );
-            })}
+                </section>
+              ),
+            )}
           </div>
         </aside>
         </section>
@@ -1102,10 +1150,10 @@ export default function Home() {
               </div>
               <div className="sector-chips">
                 <span>Vecteurs</span>
-                <span className={game.allTime < INSTRUMENTS[1].unlock ? "locked" : ""}>
+                <span className={game.instruments[1] === 0 ? "locked" : ""}>
                   Bases
                 </span>
-                <span className={game.allTime < INSTRUMENTS[2].unlock ? "locked" : ""}>
+                <span className={game.instruments[2] === 0 ? "locked" : ""}>
                   Applications
                 </span>
               </div>
@@ -1138,9 +1186,9 @@ export default function Home() {
             {(Object.keys(SECTOR_LABELS) as Sector[]).map((sector) => {
               const locked =
                 sector === "bases"
-                  ? game.allTime < INSTRUMENTS[1].unlock
+                  ? game.instruments[1] === 0
                   : sector === "applications"
-                    ? game.allTime < INSTRUMENTS[2].unlock
+                    ? game.instruments[2] === 0
                     : false;
               return (
                 <div className={`mastery-row ${locked ? "locked" : ""}`} key={sector}>

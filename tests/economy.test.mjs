@@ -22,6 +22,22 @@ test("instrument milestones double passive production at 10, 25 and 50", () => {
   assert.equal(basePassiveProduction([25, 0, 0]), 50);
 });
 
+test("advanced workshops add distinct family and rank synergies", () => {
+  const baselineDirections = basePassiveProduction([1, 1, 1, 1, 0, 0, 0, 0]);
+  const assembledDirections = basePassiveProduction([1, 1, 1, 1, 1, 0, 0, 0]);
+  const testedFamilies = basePassiveProduction([1, 1, 1, 1, 1, 1, 0, 0]);
+  const compressedRank = basePassiveProduction([1, 1, 1, 1, 1, 1, 1, 1]);
+
+  assert.ok(assembledDirections > baselineDirections + INSTRUMENTS[4].baseProduction);
+  assert.ok(testedFamilies > assembledDirections + INSTRUMENTS[5].baseProduction);
+  assert.ok(
+    compressedRank >
+      testedFamilies +
+        INSTRUMENTS[6].baseProduction +
+        INSTRUMENTS[7].baseProduction,
+  );
+});
+
 test("basis changes require a meaningful run and scale quadratically", () => {
   assert.equal(invariantGain(749_999), 0);
   assert.equal(invariantGain(750_000), 1);
@@ -31,8 +47,8 @@ test("basis changes require a meaningful run and scale quadratically", () => {
   assert.equal(nextInvariantThreshold(1), 3_000_000);
 });
 
-test("the active first-hour model unlocks each phase before the first basis change", () => {
-  const instruments = [0, 0, 0];
+test("the active first-hour model unlocks the spatial forge before the first basis change", () => {
+  const instruments = INSTRUMENTS.map(() => 0);
   let coordinates = 0;
   let total = 0;
   let nextQuestion = 45;
