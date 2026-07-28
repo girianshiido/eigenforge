@@ -490,10 +490,18 @@ export default function Home() {
 
   const rate = useMemo(() => production(game), [game]);
   const manualPower = useMemo(() => clickPower(game), [game]);
-  // Les clics forgent une ressource brute. Les objets géométriques n'apparaissent
-  // qu'avec les ateliers qui leur donnent une signification mathématique.
+  // Le premier exemplaire de chaque atelier structurel ajoute un vecteur à la
+  // base. Les exemplaires suivants renforcent la production sans changer dim(E).
   const spaceDimension =
-    game.instruments[1] > 0 ? 2 : game.instruments[0] > 0 ? 1 : 0;
+    game.instruments[2] > 0
+      ? 3
+      : game.instruments[1] > 0
+        ? 2
+        : game.instruments[0] > 0
+          ? 1
+          : 0;
+  const basisVectors = ["e₁", "e₂", "e₃"].slice(0, spaceDimension);
+  const basisList = basisVectors.join(", ");
 
   useEffect(() => {
     const restored = restoreState(window.localStorage.getItem(SAVE_KEY));
@@ -578,7 +586,7 @@ export default function Home() {
     setIsEmitting(false);
     window.requestAnimationFrame(() => {
       setIsEmitting(true);
-      window.setTimeout(() => setIsEmitting(false), 320);
+      window.setTimeout(() => setIsEmitting(false), 620);
     });
     setGame((previous) => {
       const gain = clickPower(previous);
@@ -709,20 +717,20 @@ export default function Home() {
         }
       : game.instruments[0] === 0
         ? {
-            title: "Créer la première direction",
-            text: "Construisez votre premier Émetteur vectoriel.",
+            title: "Forger e₁",
+            text: "Construisez le Générateur axial pour créer la première direction.",
             progress: Math.min(100, (game.coordinates / instrumentCost(0, 0)) * 100),
           }
         : game.allTime < INSTRUMENTS[1].unlock
           ? {
-              title: "Ouvrir la Chambre des bases",
-              text: `Produisez encore ${formatNumber(INSTRUMENTS[1].unlock - game.allTime)} coordonnées cumulées.`,
+              title: "Préparer e₂",
+              text: `Produisez encore ${formatNumber(INSTRUMENTS[1].unlock - game.allTime)} coordonnées cumulées pour ouvrir le plan.`,
               progress: Math.min(100, (game.allTime / INSTRUMENTS[1].unlock) * 100),
             }
           : game.instruments[1] === 0
             ? {
-                title: "Choisir un repère",
-                text: "Construisez la Chambre des bases.",
+                title: "Déployer le plan",
+                text: "Construisez le Déployeur planaire pour ajouter e₂.",
                 progress: Math.min(
                   100,
                   (game.coordinates / instrumentCost(1, 0)) * 100,
@@ -730,14 +738,14 @@ export default function Home() {
               }
             : game.allTime < INSTRUMENTS[2].unlock
               ? {
-                  title: "Étendre le réseau",
-                  text: `Atteignez ${formatNumber(INSTRUMENTS[2].unlock)} coordonnées cumulées.`,
+                  title: "Préparer e₃",
+                  text: `Atteignez ${formatNumber(INSTRUMENTS[2].unlock)} coordonnées cumulées pour ouvrir l’espace.`,
                   progress: Math.min(100, (game.allTime / INSTRUMENTS[2].unlock) * 100),
                 }
               : game.instruments[2] === 0
                 ? {
-                    title: "Transporter la structure",
-                    text: "Construisez le Transformateur linéaire.",
+                    title: "Ouvrir la troisième dimension",
+                    text: "Construisez la Forge spatiale pour ajouter e₃.",
                     progress: Math.min(
                       100,
                       (game.coordinates / instrumentCost(2, 0)) * 100,
@@ -745,7 +753,7 @@ export default function Home() {
                   }
                 : {
                     title: "Préparer un changement de base",
-                    text: "Développez les trois instruments et stabilisez les anomalies.",
+                    text: "Renforcez la base (e₁, e₂, e₃) et stabilisez les anomalies.",
                     progress: Math.min(
                       100,
                       (game.runTotal / nextInvariantThreshold(0)) * 100,
@@ -840,7 +848,7 @@ export default function Home() {
                 aria-hidden="true"
               />
               <div
-                className={`transformed-grid ${game.instruments[2] > 0 ? "visible" : ""}`}
+                className={`depth-grid ${spaceDimension >= 3 ? "visible" : ""}`}
                 aria-hidden="true"
               />
               <div
@@ -848,26 +856,40 @@ export default function Home() {
                 style={{ "--angle": "-28deg", "--length": "35%" } as CSSProperties}
                 aria-hidden="true"
               >
-                <span>u</span>
+                <span>e₁</span>
               </div>
               <div
                 className={`vector-line vector-two ${game.instruments[1] > 0 ? "visible" : ""}`}
                 style={{ "--angle": "-102deg", "--length": "28%" } as CSSProperties}
                 aria-hidden="true"
               >
-                <span>v</span>
+                <span>e₂</span>
               </div>
               <div
                 className={`vector-line vector-three ${game.instruments[2] > 0 ? "visible" : ""}`}
                 style={{ "--angle": "23deg", "--length": "42%" } as CSSProperties}
                 aria-hidden="true"
               >
-                <span>f(u)</span>
+                <span>e₃</span>
               </div>
 
-              {spaceDimension >= 2 && (
-                <div className="basis-indicator" aria-hidden="true">
-                  B = (u, v)
+              {isEmitting && spaceDimension > 0 && (
+                <div
+                  className={`forged-vector dimension-${spaceDimension}`}
+                  key={`vector-${emitBurst}`}
+                  aria-hidden="true"
+                >
+                  <span>u</span>
+                </div>
+              )}
+
+              {spaceDimension >= 1 && (
+                <div
+                  className="basis-indicator"
+                  aria-label={`Espace de dimension ${spaceDimension}, base e 1 à e ${spaceDimension}`}
+                >
+                  <span>E{spaceDimension} = Vect({basisList})</span>
+                  <strong>ℬ{spaceDimension} = ({basisList})</strong>
                 </div>
               )}
               {spaceDimension === 0 && (
@@ -882,7 +904,7 @@ export default function Home() {
                 aria-label={
                   spaceDimension === 0
                     ? "Forger des coordonnées"
-                    : "Émettre un vecteur"
+                    : "Forger un vecteur"
                 }
               >
                 {emitBurst > 0 && (
@@ -895,7 +917,7 @@ export default function Home() {
                 <strong>
                   {spaceDimension === 0
                     ? "Forger des coordonnées"
-                    : "Émettre un vecteur"}
+                    : "Forger un vecteur"}
                 </strong>
                 <small>+{formatNumber(manualPower)} coordonnées</small>
               </button>

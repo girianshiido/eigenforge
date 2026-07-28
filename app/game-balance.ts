@@ -3,31 +3,31 @@ export const INSTRUMENT_MILESTONES = [10, 25, 50] as const;
 
 export const INSTRUMENTS = [
   {
-    name: "Émetteur vectoriel",
-    mark: "→",
-    description: "Déploie continûment de nouvelles directions dans le réseau.",
+    name: "Générateur axial",
+    mark: "e₁",
+    description: "Forge e₁. Les unités suivantes densifient le flux de coordonnées sur cet axe.",
     baseCost: 24,
     baseProduction: 0.5,
     unlock: 0,
-    sector: "Vecteurs",
+    sector: "Dimension I",
   },
   {
-    name: "Chambre des bases",
-    mark: "B",
-    description: "Organise les directions indépendantes en repères efficaces.",
+    name: "Déployeur planaire",
+    mark: "e₂",
+    description: "Ajoute e₂, indépendante de e₁, et ouvre le plan vectoriel.",
     baseCost: 350,
     baseProduction: 3.2,
     unlock: 400,
-    sector: "Bases",
+    sector: "Dimension II",
   },
   {
-    name: "Transformateur linéaire",
-    mark: "ƒ",
-    description: "Transporte le réseau sans rompre sa structure.",
+    name: "Forge spatiale",
+    mark: "e₃",
+    description: "Ajoute e₃ à la base et déploie la première projection de l’espace.",
     baseCost: 12_000,
     baseProduction: 16,
     unlock: 15_000,
-    sector: "Applications",
+    sector: "Dimension III",
   },
 ] as const;
 

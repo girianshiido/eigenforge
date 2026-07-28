@@ -652,7 +652,8 @@ button:disabled {
   transition: opacity 700ms ease;
 }
 
-.network-stage.dimension-2::after {
+.network-stage.dimension-2::after,
+.network-stage.dimension-3::after {
   opacity: 1;
 }
 
@@ -688,7 +689,8 @@ button:disabled {
   opacity: 0;
 }
 
-.dimension-2 .coordinate-grid {
+.dimension-2 .coordinate-grid,
+.dimension-3 .coordinate-grid {
   animation: gridDrift 18s linear infinite;
 }
 
@@ -735,17 +737,28 @@ button:disabled {
   position: absolute;
   z-index: 4;
   left: 50%;
-  top: 22px;
-  padding: 5px 10px;
+  top: 18px;
+  min-width: 132px;
+  padding: 7px 12px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 2px;
   border: 1px solid rgba(121, 199, 192, 0.24);
-  border-radius: 16px;
+  border-radius: 18px;
   background: rgba(9, 24, 32, 0.72);
-  color: rgba(121, 199, 192, 0.72);
+  color: rgba(241, 234, 217, 0.58);
   font-family: Georgia, serif;
-  font-size: 11px;
+  font-size: 9px;
   font-style: italic;
   transform: translateX(-50%);
   animation: basisGlow 6s ease-in-out infinite;
+}
+
+.basis-indicator strong {
+  color: rgba(121, 199, 192, 0.88);
+  font-size: 11px;
+  font-weight: 400;
 }
 
 .plane {
@@ -767,25 +780,27 @@ button:disabled {
   animation: planeBreath 7s ease-in-out infinite;
 }
 
-.transformed-grid {
+.depth-grid {
   position: absolute;
-  width: 63%;
-  height: 44%;
-  left: 20%;
-  top: 25%;
+  z-index: 1;
+  width: 56%;
+  height: 38%;
+  left: 22%;
+  top: 30%;
   opacity: 0;
-  transform: rotate(19deg) skewY(-12deg);
+  transform: perspective(520px) rotateX(66deg) rotateZ(34deg) scale(0.72);
   background-image:
-    linear-gradient(rgba(229, 122, 103, 0.3) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(229, 122, 103, 0.3) 1px, transparent 1px);
-  background-size: 38px 30px;
+    linear-gradient(rgba(229, 122, 103, 0.28) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(121, 199, 192, 0.26) 1px, transparent 1px);
+  background-size: 34px 34px;
   mask-image: radial-gradient(ellipse, black, transparent 72%);
-  transition: opacity 1s ease;
+  transition: opacity 900ms ease, transform 1100ms ease;
 }
 
-.transformed-grid.visible {
-  opacity: 0.34;
-  animation: transformFlow 9s linear infinite;
+.depth-grid.visible {
+  opacity: 0.38;
+  transform: perspective(520px) rotateX(66deg) rotateZ(34deg) scale(1);
+  animation: depthDrift 11s linear infinite;
 }
 
 .vector-line {
@@ -870,6 +885,61 @@ button:disabled {
 
 .vector-three.visible {
   animation-delay: -2.8s;
+}
+
+.forged-vector {
+  --forge-angle: -28deg;
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  top: 50%;
+  width: 24%;
+  height: 2px;
+  color: var(--violet);
+  transform: rotate(var(--forge-angle)) scaleX(0);
+  transform-origin: left center;
+  background: linear-gradient(90deg, #c8baf2, rgba(155, 141, 197, 0.18));
+  filter: drop-shadow(0 0 7px rgba(155, 141, 197, 0.75));
+  pointer-events: none;
+  animation: forgedVector 620ms ease-out both;
+}
+
+.forged-vector.dimension-1 {
+  --forge-angle: -28deg;
+  width: 25%;
+}
+
+.forged-vector.dimension-2 {
+  --forge-angle: -62deg;
+  width: 23%;
+}
+
+.forged-vector.dimension-3 {
+  --forge-angle: -48deg;
+  width: 26%;
+}
+
+.forged-vector::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  top: -4px;
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 9px solid #c8baf2;
+}
+
+.forged-vector span {
+  position: absolute;
+  right: 2px;
+  top: -22px;
+  color: #c8baf2;
+  font-family: Georgia, serif;
+  font-size: 13px;
+  font-style: italic;
+  transform: rotate(calc(-1 * var(--forge-angle)));
 }
 
 .core-button {
@@ -1668,17 +1738,36 @@ footer {
   }
 }
 
-@keyframes transformFlow {
+@keyframes depthDrift {
   0% {
-    opacity: 0.26;
+    opacity: 0.3;
     background-position: 0 0;
   }
   50% {
-    opacity: 0.4;
+    opacity: 0.44;
   }
   100% {
-    opacity: 0.26;
-    background-position: 38px 30px;
+    opacity: 0.3;
+    background-position: 34px 34px;
+  }
+}
+
+@keyframes forgedVector {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--forge-angle)) scaleX(0.08);
+  }
+  24% {
+    opacity: 1;
+    transform: rotate(var(--forge-angle)) scaleX(1);
+  }
+  72% {
+    opacity: 0.92;
+    transform: rotate(var(--forge-angle)) scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--forge-angle)) scaleX(1.14);
   }
 }
 

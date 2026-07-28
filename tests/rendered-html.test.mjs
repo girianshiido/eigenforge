@@ -88,18 +88,28 @@ test("keeps the network diagram consistent with its displayed dimension", async 
   );
 
   assert.match(page, /const spaceDimension/);
-  assert.match(page, /game\.instruments\[0\] > 0 \? 1 : 0/);
+  assert.match(page, /game\.instruments\[2\] > 0/);
+  assert.match(page, /game\.instruments\[0\] > 0[\s\S]*\? 1/);
   assert.doesNotMatch(page, /game\.runTotal > 0 \?/);
   assert.match(page, /vector-one \$\{game\.instruments\[0\] > 0/);
   assert.match(page, /spaceDimension >= 2/);
+  assert.match(page, /spaceDimension >= 3/);
   assert.match(page, /spaceDimension === 0/);
   assert.match(page, /E = \{"\{0\}"\}/);
-  assert.match(page, /B = \(u, v\)/);
+  assert.match(page, /E\{spaceDimension\} = Vect\(\{basisList\}\)/);
+  assert.match(page, /ℬ\{spaceDimension\} = \(\{basisList\}\)/);
+  assert.match(page, /<span>e₁<\/span>/);
+  assert.match(page, /<span>e₂<\/span>/);
+  assert.match(page, /<span>e₃<\/span>/);
+  assert.match(page, /className=\{`forged-vector dimension-\$\{spaceDimension\}`\}/);
   assert.match(page, /Forger des coordonnées/);
+  assert.match(page, /Forger un vecteur/);
+  assert.doesNotMatch(page, /<span>f\(u\)<\/span>/);
   assert.doesNotMatch(page, /className="axis-label/);
   assert.match(styles, /\.network-stage::before[\s\S]*aspect-ratio: 1/);
   assert.match(styles, /@keyframes vectorGlow/);
   assert.match(styles, /@keyframes planeBreath/);
+  assert.match(styles, /@keyframes forgedVector/);
 });
 
 test("exports a GitHub Pages build under the repository path", async () => {
