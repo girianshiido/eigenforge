@@ -268,6 +268,10 @@ test("renders matrices as responsive grids instead of flattened text", async () 
   assert.match(styles, /\.math-atomic/);
   assert.match(styles, /\.formula-card \.math-expression/);
   assert.match(styles, /\.lab-formula \.math-expression/);
+  assert.match(styles, /\.correction-columns > div > span/);
+  assert.match(styles, /\.lab-correction-notes > div > span/);
+  assert.doesNotMatch(styles, /\.correction-columns span \{/);
+  assert.doesNotMatch(styles, /\.lab-correction-notes span \{/);
   assert.match(styles, /\.matrix-operator/);
   assert.match(styles, /\.spectral-marker/);
 });

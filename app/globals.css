@@ -836,7 +836,7 @@ button:focus-visible {
 }
 
 .lab-correction-main > span,
-.lab-correction-notes span {
+.lab-correction-notes > div > span {
   color: var(--copper);
   font-size: 7.5px;
   font-weight: 700;
@@ -2942,7 +2942,7 @@ footer {
 }
 
 .correction-block > span,
-.correction-columns span {
+.correction-columns > div > span {
   color: var(--copper);
   font-size: 8px;
   font-weight: 700;
