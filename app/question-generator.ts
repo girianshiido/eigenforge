@@ -1675,27 +1675,54 @@ export function cayleyHamiltonQuestion(): Question {
 }
 
 export function characteristicSubspaceQuestion(): Question {
-  const [repeatedEigenvalue, simpleEigenvalue] = sample(
+  const order = pick([3, 4, 5]);
+  const blockSize = randomInt(2, order - 1);
+  const simpleCount = order - blockSize;
+  const eigenvalues = sample(
     [-4, -3, -2, -1, 1, 2, 3, 4],
-    2,
+    simpleCount + 1,
   );
+  const repeatedEigenvalue = eigenvalues[0];
+  const simpleEigenvalues = eigenvalues.slice(1);
   const askRepeated = Math.random() < 0.5;
   const selectedEigenvalue = askRepeated
     ? repeatedEigenvalue
-    : simpleEigenvalue;
-  const answer = askRepeated ? "2" : "1";
+    : pick(simpleEigenvalues);
+  const answer = askRepeated ? `${blockSize}` : "1";
+  const coupling = pick([-3, -2, -1, 1, 2, 3]);
+  const positions = shuffle(
+    Array.from({ length: order }, (_, index) => index),
+  );
+  const blockPositions = positions.slice(0, blockSize);
+  const simplePositions = positions.slice(blockSize);
+  const value = Array.from(
+    { length: order },
+    () => Array.from({ length: order }, () => 0),
+  );
+  for (const position of blockPositions) {
+    value[position][position] = repeatedEigenvalue;
+  }
+  for (let index = 0; index < simplePositions.length; index += 1) {
+    const position = simplePositions[index];
+    value[position][position] = simpleEigenvalues[index];
+  }
+  for (let index = 0; index < blockPositions.length - 1; index += 1) {
+    value[blockPositions[index]][blockPositions[index + 1]] = coupling;
+  }
+  const exponent = order === 3 ? "³" : order === 4 ? "⁴" : "⁵";
 
   return {
-    id: `M-CHARSPACE-${askRepeated ? "DOUBLE" : "SIMPLE"}-${Date.now()}-${randomInt(100, 999)}`,
+    id: `M-CHARSPACE-O${order}-B${blockSize}-P${blockPositions.join("")}-${askRepeated ? "REPEATED" : "SIMPLE"}-${Date.now()}-${randomInt(100, 999)}`,
     sector: "matrices",
     eyebrow: "MP · Sous-espace caractéristique",
-    prompt: `Quelle est la dimension de N_${selectedEigenvalue} = Ker((${shiftedMatrix(selectedEigenvalue)})³) ?`,
-    formula: `A = ${matrix([
-      [repeatedEigenvalue, 1, 0],
-      [0, repeatedEigenvalue, 0],
-      [0, 0, simpleEigenvalue],
-    ])}`,
-    choices: choices(answer, ["0", "1", "2", "3"].filter((item) => item !== answer)),
+    prompt: `Quelle est la dimension de N_${selectedEigenvalue} = Ker((${shiftedMatrix(selectedEigenvalue)})${exponent}) ?`,
+    formula: `A = ${matrix(value)}`,
+    choices: choices(
+      answer,
+      Array.from({ length: order + 1 }, (_, index) => `${index}`).filter(
+        (item) => item !== answer,
+      ),
+    ),
     explanation: `La dimension du sous-espace caractéristique associé à ${selectedEigenvalue} est sa multiplicité algébrique dans χ_A : elle vaut ${answer}.`,
     geometry:
       "Les sous-espaces caractéristiques regroupent les directions propres et les directions généralisées associées à une même valeur propre.",

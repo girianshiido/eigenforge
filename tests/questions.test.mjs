@@ -407,6 +407,10 @@ test("MP reduction questions vary diagonalizability and preserve multiplicities"
 test("polynomial reduction covers annihilators, minimal polynomial, Cayley-Hamilton and characteristic subspaces", () => {
   const minimalTemplates = new Set();
   const characteristicDimensions = new Set();
+  const characteristicOrders = new Set();
+  const characteristicBlockSizes = new Set();
+  let sawNonUnitCoupling = false;
+  let sawNonTriangularMatrix = false;
 
   for (let index = 0; index < 400; index += 1) {
     const annihilator = annihilatingPolynomialQuestion();
@@ -431,19 +435,48 @@ test("polynomial reduction covers annihilators, minimal polynomial, Cayley-Hamil
 
     const characteristicSpace = characteristicSubspaceQuestion();
     assertWellFormed(characteristicSpace);
+    characteristicOrders.add(
+      Number(characteristicSpace.id.match(/-O(\d)-/)[1]),
+    );
+    characteristicBlockSizes.add(
+      Number(characteristicSpace.id.match(/-B(\d)-/)[1]),
+    );
+    const characteristicMatrix = parseMatrix(characteristicSpace.formula);
+    sawNonUnitCoupling ||= characteristicMatrix.some((row, rowIndex) =>
+      row.some(
+        (coefficient, columnIndex) =>
+          rowIndex !== columnIndex && Math.abs(coefficient) > 1,
+      ),
+    );
+    sawNonTriangularMatrix ||= characteristicMatrix.some((row, rowIndex) =>
+      row.some(
+        (coefficient, columnIndex) =>
+          rowIndex > columnIndex && coefficient !== 0,
+      ),
+    );
     characteristicDimensions.add(
       characteristicSpace.choices.find((choice) => choice.correct).text,
     );
     assert.match(
       characteristicSpace.prompt,
-      /Ker\(\(A [−+] (?:\d+)?I\)³\)/,
+      /Ker\(\(A [−+] (?:\d+)?I\)[³⁴⁵]\)/,
     );
     assert.doesNotMatch(characteristicSpace.prompt, /− -/);
     assert.doesNotMatch(characteristicSpace.prompt, /[−+] 1I/);
   }
 
   assert.deepEqual(minimalTemplates, new Set(["0", "1", "2"]));
-  assert.deepEqual(characteristicDimensions, new Set(["1", "2"]));
+  assert.deepEqual(
+    characteristicDimensions,
+    new Set(["1", "2", "3", "4"]),
+  );
+  assert.deepEqual(
+    characteristicOrders,
+    new Set([3, 4, 5]),
+  );
+  assert.deepEqual(characteristicBlockSizes, new Set([2, 3, 4]));
+  assert.equal(sawNonUnitCoupling, true);
+  assert.equal(sawNonTriangularMatrix, true);
 });
 
 test("image exercises genuinely determine images in dimensions two and three", () => {
