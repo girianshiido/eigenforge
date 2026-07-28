@@ -1220,7 +1220,7 @@ export default function Home() {
               <div className="mission-copy">
                 <p>Mission active</p>
                 <h3>{mission.title}</h3>
-                <span>{mission.text}</span>
+                <span><MathExpression text={mission.text} /></span>
               </div>
               <div
                 className="mission-ring"
@@ -1346,7 +1346,11 @@ export default function Home() {
                               </div>
                               <strong>{count}</strong>
                             </div>
-                            <p>{unlocked ? instrument.description : lockedDescription}</p>
+                            <p>
+                              <MathExpression
+                                text={unlocked ? instrument.description : lockedDescription}
+                              />
+                            </p>
                             <div
                               className="milestone-row"
                               aria-label={`Paliers de ${instrument.name}`}

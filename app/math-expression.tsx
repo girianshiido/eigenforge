@@ -6,6 +6,37 @@ type MathExpressionProps = {
 };
 
 const STRUCTURED_MATH_PATTERN = /⟦([^⟧]+)⟧|⟪([^⟫]+)⟫/g;
+const SUBSCRIPT_PATTERN = /_(\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])/g;
+
+function PlainMath({ source }: { source: string }) {
+  const parts: ReactNode[] = [];
+  let previousEnd = 0;
+
+  for (const match of source.matchAll(SUBSCRIPT_PATTERN)) {
+    const start = match.index ?? 0;
+    if (start > previousEnd) {
+      parts.push(source.slice(previousEnd, start));
+    }
+
+    const rawSubscript = match[1].replace(/^\{|\}$/g, "");
+    const subscript = rawSubscript.replace("-", "−");
+    parts.push(
+      <sub
+        className="math-subscript"
+        key={`subscript-${start}-${subscript}`}
+      >
+        {subscript}
+      </sub>,
+    );
+    previousEnd = start + match[0].length;
+  }
+
+  if (previousEnd < source.length) {
+    parts.push(source.slice(previousEnd));
+  }
+
+  return <>{parts}</>;
+}
 
 function Matrix({ source }: { source: string }) {
   const rows = source
@@ -67,7 +98,12 @@ export default function MathExpression({
   for (const match of text.matchAll(STRUCTURED_MATH_PATTERN)) {
     const start = match.index ?? 0;
     if (start > previousEnd) {
-      parts.push(text.slice(previousEnd, start));
+      parts.push(
+        <PlainMath
+          source={text.slice(previousEnd, start)}
+          key={`plain-${previousEnd}-${start}`}
+        />,
+      );
     }
     parts.push(
       match[1] !== undefined ? (
@@ -83,7 +119,12 @@ export default function MathExpression({
   }
 
   if (previousEnd < text.length) {
-    parts.push(text.slice(previousEnd));
+    parts.push(
+      <PlainMath
+        source={text.slice(previousEnd)}
+        key={`plain-${previousEnd}-${text.length}`}
+      />,
+    );
   }
 
   return (

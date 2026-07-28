@@ -230,6 +230,9 @@ test("renders matrices as responsive grids instead of flattened text", async () 
   assert.match(page, /<MathExpression text=\{choice\.text\}/);
   assert.match(renderer, /className="math-matrix-grid"/);
   assert.match(renderer, /className="math-column-vector"/);
+  assert.match(renderer, /className="math-subscript"/);
+  assert.match(renderer, /SUBSCRIPT_PATTERN/);
+  assert.match(renderer, /rawSubscript\.replace\("-", "−"\)/);
   assert.match(renderer, /Vecteur colonne/);
   assert.match(renderer, /--matrix-columns/);
   assert.match(questions, /Déterminant d’ordre 3/);
@@ -238,6 +241,7 @@ test("renders matrices as responsive grids instead of flattened text", async () 
   assert.doesNotMatch(questions, /u = \$\{vector\(value\)\}/);
   assert.match(styles, /\.math-matrix::before/);
   assert.match(styles, /\.math-column-vector::before/);
+  assert.match(styles, /\.math-subscript/);
   assert.match(styles, /\.matrix-operator/);
   assert.match(styles, /\.spectral-marker/);
 });
