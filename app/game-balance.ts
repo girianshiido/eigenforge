@@ -5,6 +5,7 @@ export const MATRIX_WORKSHOP_START = 12;
 export const REDUCTION_WORKSHOP_START = 16;
 export const POLYNOMIAL_WORKSHOP_START = 20;
 export const EUCLIDEAN_WORKSHOP_START = 24;
+export const GEOMETRY_WORKSHOP_START = 28;
 
 export const INVARIANT_PROTOCOLS = [
   {
@@ -366,6 +367,50 @@ export const INSTRUMENTS = [
     unlock: 840_000_000_000_000_000_000,
     sector: "Positivité",
   },
+  {
+    name: "Accordeur scalaire",
+    mark: "⟨·, ·⟩",
+    description: "Mesure angles, normes et distances, puis augmente de 4 % la production du cycle Réduction euclidienne.",
+    chapter: "Fondations euclidiennes · MPSI",
+    mission: "Accorder le produit scalaire",
+    baseCost: 3.1e21,
+    baseProduction: 6.3e17,
+    unlock: 4e21,
+    sector: "Produit scalaire",
+  },
+  {
+    name: "Orthogonalisateur de Schmidt",
+    mark: "ON",
+    description: "Transforme les familles libres en bases orthonormées et amplifie toute la production de 2 %.",
+    chapter: "Fondations euclidiennes · MPSI",
+    mission: "Orthonormaliser une famille",
+    baseCost: 1.5e22,
+    baseProduction: 3.1e18,
+    unlock: 1.9e22,
+    sector: "Gram–Schmidt",
+  },
+  {
+    name: "Chambre orthogonale",
+    mark: "F⊥",
+    description: "Isole les directions orthogonales à F et réduit de 1 % le prix de tous les ateliers.",
+    chapter: "Fondations euclidiennes · MPSI",
+    mission: "Déployer l’orthogonal",
+    baseCost: 7.2e22,
+    baseProduction: 1.5e19,
+    unlock: 9.2e22,
+    sector: "Orthogonal",
+  },
+  {
+    name: "Projecteur métrique",
+    mark: "p_F",
+    description: "Projette sur le sous-espace le plus proche et augmente de 2 % les récompenses des réponses justes.",
+    chapter: "Fondations euclidiennes · MPSI",
+    mission: "Projeter sur un sous-espace",
+    baseCost: 3.5e23,
+    baseProduction: 7.4e19,
+    unlock: 4.5e23,
+    sector: "Projection et distance",
+  },
 ] as const;
 
 export function milestoneMultiplier(owned: number) {
@@ -446,7 +491,10 @@ export function basePassiveProduction(
     .slice(POLYNOMIAL_WORKSHOP_START, EUCLIDEAN_WORKSHOP_START)
     .reduce((sum, output) => sum + output, 0);
   const euclideanOutput = outputs
-    .slice(EUCLIDEAN_WORKSHOP_START)
+    .slice(EUCLIDEAN_WORKSHOP_START, GEOMETRY_WORKSHOP_START)
+    .reduce((sum, output) => sum + output, 0);
+  const geometryOutput = outputs
+    .slice(GEOMETRY_WORKSHOP_START)
     .reduce((sum, output) => sum + output, 0);
   const directionalMultiplier = 1 + (instruments[4] ?? 0) * 0.04;
   const familyMultiplier = 1 + (instruments[5] ?? 0) * 0.03;
@@ -462,6 +510,8 @@ export function basePassiveProduction(
   const cayleyHamiltonMultiplier = 1 + (instruments[22] ?? 0) * 0.02;
   const adjointMultiplier = 1 + (instruments[24] ?? 0) * 0.04;
   const orthogonalDiagonalMultiplier = 1 + (instruments[26] ?? 0) * 0.02;
+  const innerProductMultiplier = 1 + (instruments[28] ?? 0) * 0.04;
+  const orthonormalMultiplier = 1 + (instruments[29] ?? 0) * 0.02;
 
   return (
     (directionalOutput * directionalMultiplier +
@@ -470,14 +520,16 @@ export function basePassiveProduction(
       matrixOutput * characteristicMultiplier +
       reductionOutput * polynomialMultiplier +
       polynomialOutput * adjointMultiplier +
-      euclideanOutput +
+      euclideanOutput * innerProductMultiplier +
+      geometryOutput +
       applicationOutput * (matrixEncodingMultiplier - 1)) *
     rankMultiplier *
     rankTheoremMultiplier *
     spectralMultiplier *
     diagonalMultiplier *
     cayleyHamiltonMultiplier *
-    orthogonalDiagonalMultiplier
+    orthogonalDiagonalMultiplier *
+    orthonormalMultiplier
   );
 }
 
@@ -489,7 +541,8 @@ export function matrixWorkshopCostMultiplier(
     (instruments[14] ?? 0) +
       (instruments[19] ?? 0) +
       (instruments[23] ?? 0) +
-      (instruments[27] ?? 0),
+      (instruments[27] ?? 0) +
+      (instruments[30] ?? 0),
   );
 }
 
@@ -505,7 +558,8 @@ export function correctAnomalyRewardMultiplier(
     (instruments[10] ?? 0) * 0.03 +
     (instruments[17] ?? 0) * 0.02 +
     (instruments[21] ?? 0) * 0.02 +
-    (instruments[25] ?? 0) * 0.02
+    (instruments[25] ?? 0) * 0.02 +
+    (instruments[31] ?? 0) * 0.02
   );
 }
 

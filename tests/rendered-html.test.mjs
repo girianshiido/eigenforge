@@ -169,7 +169,7 @@ test("keeps the network diagram consistent with its displayed dimension", async 
   assert.match(styles, /width: var\(--map-length\)/);
 });
 
-test("ships seven ordered workshop cycles through Euclidean reduction", async () => {
+test("ships eight ordered workshop cycles through MPSI Euclidean foundations", async () => {
   const balance = await readFile(
     new URL("../app/game-balance.ts", import.meta.url),
     "utf8",
@@ -209,6 +209,11 @@ test("ships seven ordered workshop cycles through Euclidean reduction", async ()
   assert.match(balance, /name: "Diagonaliseur orthogonal"/);
   assert.match(balance, /name: "Analyseur de positivité"/);
   assert.match(balance, /chapter: "Réduction euclidienne · MP"/);
+  assert.match(balance, /name: "Accordeur scalaire"/);
+  assert.match(balance, /name: "Orthogonalisateur de Schmidt"/);
+  assert.match(balance, /name: "Chambre orthogonale"/);
+  assert.match(balance, /name: "Projecteur métrique"/);
+  assert.match(balance, /chapter: "Fondations euclidiennes · MPSI"/);
   assert.match(balance, /resonanceDecayRate/);
   assert.match(balance, /correctAnomalyRewardMultiplier/);
   assert.match(page, /const WORKSHOP_CHAPTERS/);
@@ -225,10 +230,15 @@ test("ships seven ordered workshop cycles through Euclidean reduction", async ()
   assert.match(page, /className=\{`euclidean-sequence/);
   assert.match(page, />u\*<\/span>/);
   assert.match(page, />PDPᵀ<\/span>/);
-  assert.match(styles, /grid-template-columns: repeat\(7/);
+  assert.match(page, /className=\{`geometry-sequence/);
+  assert.match(page, />⟨·,·⟩<\/span>/);
+  assert.match(page, />F⊥<\/span>/);
+  assert.match(styles, /grid-template-columns: repeat\(8/);
   assert.match(styles, /\.reduction-sequence/);
   assert.match(styles, /\.polynomial-sequence/);
   assert.match(styles, /\.euclidean-sequence/);
+  assert.match(styles, /\.geometry-sequence/);
+  assert.match(styles, /\.network-stage\.has-projection/);
 });
 
 test("renders matrices as responsive grids instead of flattened text", async () => {

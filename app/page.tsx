@@ -503,6 +503,8 @@ function formatNumber(value: number) {
     return value < 100 ? value.toFixed(value < 10 ? 1 : 0) : Math.floor(value).toString();
   }
   const units = [
+    { value: 1e24, suffix: " Sp" },
+    { value: 1e21, suffix: " Sx" },
     { value: 1e18, suffix: " Qi" },
     { value: 1e15, suffix: " Qa" },
     { value: 1e12, suffix: " B" },
@@ -1032,6 +1034,8 @@ export default function Home() {
                 game.instruments[22] > 0 ? "has-cayley-hamilton" : "",
                 game.instruments[24] > 0 ? "has-adjoint" : "",
                 game.instruments[26] > 0 ? "is-orthogonally-diagonalized" : "",
+                game.instruments[28] > 0 ? "has-inner-product" : "",
+                game.instruments[31] > 0 ? "has-projection" : "",
               ]
                 .filter(Boolean)
                 .join(" ")}
@@ -1112,6 +1116,15 @@ export default function Home() {
                 <span className={game.instruments[25] > 0 ? "active" : ""}>S</span>
                 <span className={game.instruments[26] > 0 ? "active" : ""}>PDPᵀ</span>
                 <span className={game.instruments[27] > 0 ? "active" : ""}>S++</span>
+              </div>
+              <div
+                className={`geometry-sequence ${game.instruments[28] > 0 ? "visible" : ""}`}
+                aria-label="Progression des fondations euclidiennes"
+              >
+                <span className={game.instruments[28] > 0 ? "active" : ""}>⟨·,·⟩</span>
+                <span className={game.instruments[29] > 0 ? "active" : ""}>ON</span>
+                <span className={game.instruments[30] > 0 ? "active" : ""}>F⊥</span>
+                <span className={game.instruments[31] > 0 ? "active" : ""}>pF</span>
               </div>
               <div
                 className={`vector-line vector-one ${game.instruments[0] > 0 ? "visible" : ""}`}

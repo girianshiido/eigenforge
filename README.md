@@ -34,6 +34,10 @@ linéaire des classes préparatoires MPSI et MP.
 - septième cycle « Réduction euclidienne · MP » portant la forge à vingt-huit
   ateliers : adjoints, endomorphismes autoadjoints, théorème spectral,
   diagonalisation orthogonale et positivité des matrices symétriques ;
+- huitième cycle « Fondations euclidiennes · MPSI » portant la forge à
+  trente-deux ateliers : produit scalaire, norme, distance, inégalité de
+  Cauchy–Schwarz, orthogonalisation de Gram–Schmidt, complément orthogonal,
+  hyperplans, projections orthogonales et meilleure approximation ;
 - matrices 2×2 à 5×5 rendues comme de vraies grilles responsives dans les
   énoncés, les réponses et les corrections ;
 - notation contextuelle des vecteurs : tuples compacts pour les coordonnées,
@@ -49,6 +53,8 @@ linéaire des classes préparatoires MPSI et MP.
   par blocs et les valeurs propres, débloquées avec la Chambre spectrale MP ;
 - déblocage progressif des exercices de réduction : chaque atelier MP ajoute
   sa propre famille au générateur au lieu d’ouvrir tout le chapitre d’un coup ;
+- trente-cinq familles paramétriques partagées par le jeu et le laboratoire,
+  dont quatre nouvelles familles euclidiennes débloquées atelier par atelier ;
 - variantes de diagonalisation et trigonalisation fondées sur les bases
   propres, le corps de base et les formes triangulaires, sans dépendre
   systématiquement du seul polynôme caractéristique ;

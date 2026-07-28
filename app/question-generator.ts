@@ -100,6 +100,20 @@ function combineVectors(
   );
 }
 
+function dotProduct(
+  first: readonly number[],
+  second: readonly number[],
+) {
+  return first.reduce(
+    (sum, coordinate, index) => sum + coordinate * second[index],
+    0,
+  );
+}
+
+function squaredNorm(value: readonly number[]) {
+  return dotProduct(value, value);
+}
+
 function multiplyMatrices(
   first: readonly (readonly number[])[],
   second: readonly (readonly number[])[],
@@ -2243,6 +2257,473 @@ export function blockDeterminantQuestion(): Question {
   };
 }
 
+const PYTHAGOREAN_VECTORS = {
+  2: [
+    { vector: [3, 4], norm: 5 },
+    { vector: [5, 12], norm: 13 },
+    { vector: [8, 15], norm: 17 },
+  ],
+  3: [
+    { vector: [1, 2, 2], norm: 3 },
+    { vector: [2, 3, 6], norm: 7 },
+    { vector: [2, 6, 9], norm: 11 },
+  ],
+} as const;
+
+function signedVector(value: readonly number[]) {
+  return value.map((coordinate) =>
+    Math.random() < 0.5 ? coordinate : -coordinate,
+  );
+}
+
+export function innerProductQuestion(spaceDimension = 2): Question {
+  const dimension = ambientDimension(spaceDimension);
+  const template = randomInt(0, 3);
+
+  if (template === 0) {
+    const first = randomVector(dimension);
+    const second = randomVector(dimension);
+    const result = dotProduct(first, second);
+    return {
+      id: `E-INNER-DOT-${dimension}-${Date.now()}-${randomInt(100, 999)}`,
+      sector: "vectors",
+      eyebrow: "MPSI · Produit scalaire",
+      prompt: "Quelle est la valeur de ⟨u, v⟩ dans la base canonique ?",
+      formula: `u = ${vector(first)} et v = ${vector(second)}`,
+      choices: choices(`${result}`, [
+        `${result + first[0]}`,
+        `${-result}`,
+        `${first.reduce((sum, value) => sum + value, 0) + second.reduce((sum, value) => sum + value, 0)}`,
+      ]),
+      explanation: `On multiplie les coordonnées de même rang puis on additionne : ⟨u, v⟩ = ${result}.`,
+      geometry:
+        "Le signe du produit scalaire distingue un angle aigu, droit ou obtus.",
+      trap:
+        "Il ne faut ni multiplier les sommes des coordonnées, ni croiser leurs positions.",
+    };
+  }
+
+  if (template === 1) {
+    const specimen = pick(PYTHAGOREAN_VECTORS[dimension]);
+    const normVector = signedVector(specimen.vector);
+    return {
+      id: `E-INNER-NORM-${dimension}-${Date.now()}-${randomInt(100, 999)}`,
+      sector: "vectors",
+      eyebrow: "MPSI · Norme euclidienne",
+      prompt: "Quelle est la norme de u ?",
+      formula: `u = ${vector(normVector)}`,
+      choices: choices(`${specimen.norm}`, [
+        `${squaredNorm(normVector)}`,
+        `${normVector.reduce((sum, coordinate) => sum + Math.abs(coordinate), 0)}`,
+        `${specimen.norm + 1}`,
+      ]),
+      explanation: `On calcule ‖u‖² = ⟨u, u⟩ = ${squaredNorm(normVector)}, donc ‖u‖ = ${specimen.norm}.`,
+      geometry:
+        "La norme euclidienne est la longueur du vecteur.",
+      trap:
+        "La somme des carrés donne ‖u‖² ; il reste ensuite à prendre la racine carrée.",
+    };
+  }
+
+  if (template === 2) {
+    const specimen = pick(PYTHAGOREAN_VECTORS[dimension]);
+    const difference = signedVector(specimen.vector);
+    const first = Array.from(
+      { length: dimension },
+      () => randomInt(-4, 4),
+    );
+    const second = first.map(
+      (coordinate, index) => coordinate + difference[index],
+    );
+    return {
+      id: `E-INNER-DISTANCE-${dimension}-${Date.now()}-${randomInt(100, 999)}`,
+      sector: "vectors",
+      eyebrow: "MPSI · Distance euclidienne",
+      prompt: "Quelle est la distance entre u et v ?",
+      formula: `u = ${vector(first)} et v = ${vector(second)}`,
+      choices: choices(`${specimen.norm}`, [
+        `${squaredNorm(difference)}`,
+        `${specimen.norm + 1}`,
+        `${Math.max(1, specimen.norm - 1)}`,
+      ]),
+      explanation: `La différence v − u vaut ${vector(difference)}. Sa norme est ${specimen.norm}, donc d(u, v) = ${specimen.norm}.`,
+      geometry:
+        "La distance entre deux vecteurs est la longueur du segment qui relie leurs extrémités.",
+      trap:
+        "On calcule la norme de v − u, pas la différence des normes.",
+    };
+  }
+
+  const first = randomVector(dimension);
+  const scalar = pick([-3, -2, 2, 3]);
+  const second = scaleVector(scalar, first);
+  const wrongSeconds = [0, 1, 2].map((variant) => {
+    const candidate = [...second];
+    const changedIndex = variant % dimension;
+    candidate[changedIndex] += variant < dimension ? 1 : -1;
+    return candidate;
+  });
+  const correct = `u = ${vector(first)}, v = ${vector(second)}`;
+  return {
+    id: `E-INNER-CAUCHY-${dimension}-${Date.now()}-${randomInt(100, 999)}`,
+    sector: "vectors",
+    eyebrow: "MPSI · Cauchy–Schwarz",
+    prompt: "Pour quel couple y a-t-il égalité dans l’inégalité de Cauchy–Schwarz ?",
+    formula: "|⟨u, v⟩| ≤ ‖u‖ ‖v‖",
+    choices: choices(
+      correct,
+      wrongSeconds.map(
+        (candidate) => `u = ${vector(first)}, v = ${vector(candidate)}`,
+      ),
+    ),
+    explanation:
+      "L’égalité a lieu exactement lorsque u et v sont colinéaires. Ici, v est un multiple non nul de u.",
+    geometry:
+      "L’égalité correspond à deux directions confondues ou opposées.",
+    trap:
+      "L’orthogonalité donne ⟨u, v⟩ = 0 ; elle ne donne pas l’égalité de Cauchy–Schwarz pour deux vecteurs non nuls.",
+  };
+}
+
+export function orthonormalizationQuestion(): Question {
+  const template = randomInt(0, 2);
+
+  if (template === 0) {
+    const specimen = pick(PYTHAGOREAN_VECTORS[2]);
+    const value = signedVector(specimen.vector);
+    const normalized = `${fraction(1, specimen.norm)}${columnVector(value)}`;
+    return {
+      id: `E-ON-NORMALIZE-${Date.now()}-${randomInt(100, 999)}`,
+      sector: "bases",
+      eyebrow: "MPSI · Normalisation",
+      prompt: "Lequel de ces vecteurs est le vecteur unitaire porté par u et de même sens ?",
+      formula: `u = ${columnVector(value)}`,
+      choices: choices(normalized, [
+        `${fraction(1, squaredNorm(value))}${columnVector(value)}`,
+        `${fraction(1, specimen.norm + 1)}${columnVector(value)}`,
+        `${fraction(-1, specimen.norm)}${columnVector(value)}`,
+      ]),
+      explanation: `Comme ‖u‖ = ${specimen.norm}, le vecteur recherché est u/‖u‖ = ${normalized}.`,
+      geometry:
+        "Normaliser conserve la direction et le sens, mais ramène la longueur à 1.",
+      trap:
+        "Il faut diviser par ‖u‖, et non par ‖u‖².",
+    };
+  }
+
+  if (template === 1) {
+    const first = randomVector(2);
+    const correctSecond = [-first[1], first[0]];
+    const correct = `u = ${vector(first)}, v = ${vector(correctSecond)}`;
+    const wrongSeconds = [1, 2, -1].map((coefficient) =>
+      correctSecond.map(
+        (value, index) => value + coefficient * first[index],
+      ),
+    );
+    return {
+      id: `E-ON-ORTHOGONAL-${Date.now()}-${randomInt(100, 999)}`,
+      sector: "bases",
+      eyebrow: "MPSI · Famille orthogonale",
+      prompt: "Quel couple forme une famille orthogonale ?",
+      formula: "Deux vecteurs sont orthogonaux lorsque leur produit scalaire est nul.",
+      choices: choices(
+        correct,
+        wrongSeconds.map(
+          (candidate) => `u = ${vector(first)}, v = ${vector(candidate)}`,
+        ),
+      ),
+      explanation: `On obtient ⟨u, v⟩ = ${first[0]} × ${correctSecond[0]} + ${first[1]} × ${correctSecond[1]} = 0.`,
+      geometry:
+        "Dans le plan, une famille de deux vecteurs non nuls orthogonaux dessine deux axes perpendiculaires.",
+      trap:
+        "Une famille orthogonale n’est orthonormée que si chaque vecteur est aussi de norme 1.",
+    };
+  }
+
+  let firstCoordinate = randomInt(-5, 5);
+  let secondCoordinate = randomInt(-5, 5);
+  while (
+    firstCoordinate === secondCoordinate ||
+    (firstCoordinate + secondCoordinate) % 2 !== 0
+  ) {
+    firstCoordinate = randomInt(-5, 5);
+    secondCoordinate = randomInt(-5, 5);
+  }
+  const coefficient = (firstCoordinate + secondCoordinate) / 2;
+  const result = [
+    firstCoordinate - coefficient,
+    secondCoordinate - coefficient,
+  ];
+  const source = [firstCoordinate, secondCoordinate];
+  return {
+    id: `E-ON-SCHMIDT-${Date.now()}-${randomInt(100, 999)}`,
+    sector: "bases",
+    eyebrow: "MPSI · Procédé de Gram–Schmidt",
+    prompt: "Quel vecteur obtient-on après la première étape d’orthogonalisation de v par rapport à u ?",
+    formula: `u = ${vector([1, 1])}, v = ${vector(source)} et v⊥ = v − ${fraction("⟨v, u⟩", "⟨u, u⟩")}u`,
+    choices: choices(vector(result), [
+      vector(source),
+      vector([source[0] - 2 * coefficient, source[1] - 2 * coefficient]),
+      vector([result[1], result[0]]),
+    ]),
+    explanation: `Le coefficient de projection vaut ${fraction(firstCoordinate + secondCoordinate, 2)} = ${coefficient}. Ainsi v⊥ = ${vector(result)}, et ⟨v⊥, u⟩ = 0.`,
+    geometry:
+      "Gram–Schmidt retire à v sa composante parallèle à u.",
+    trap:
+      "L’étape d’orthogonalisation ne normalise pas encore le vecteur obtenu.",
+  };
+}
+
+export function orthogonalComplementQuestion(spaceDimension = 2): Question {
+  const dimension = ambientDimension(spaceDimension);
+  const template = randomInt(0, 2);
+
+  if (template === 0) {
+    if (dimension === 3) {
+      const [first, second] = independentPair(3);
+      const normal = crossProduct(first, second);
+      return {
+        id: `E-ORTHO-COMPLEMENT-3-${Date.now()}-${randomInt(100, 999)}`,
+        sector: "bases",
+        eyebrow: "MPSI · Orthogonal d’un sous-espace",
+        prompt: "Quel vecteur non nul appartient à F⊥ ?",
+        formula: `F = Vect(${vector(first)}, ${vector(second)})`,
+        choices: choices(vector(normal), [
+          vector(first),
+          vector(second),
+          vector(first.map((value, index) => value + second[index])),
+        ]),
+        explanation: `Le vecteur ${vector(normal)} a un produit scalaire nul avec chacun des deux générateurs de F. Il appartient donc à F⊥.`,
+        geometry:
+          "L’orthogonal d’un plan de ℝ³ est la droite portée par un vecteur normal au plan.",
+        trap:
+          "Être extérieur à F ne suffit pas : il faut être orthogonal à tous les vecteurs de F.",
+      };
+    }
+
+    const generator = randomVector(2);
+    const normal = [-generator[1], generator[0]];
+    return {
+      id: `E-ORTHO-COMPLEMENT-2-${Date.now()}-${randomInt(100, 999)}`,
+      sector: "bases",
+      eyebrow: "MPSI · Orthogonal d’un sous-espace",
+      prompt: "Quel vecteur non nul appartient à F⊥ ?",
+      formula: `F = Vect(${vector(generator)})`,
+      choices: choices(vector(normal), [
+        vector(generator),
+        vector(normal.map((value, index) => value + generator[index])),
+        vector(normal.map((value, index) => value - generator[index])),
+      ]),
+      explanation: `Le produit scalaire de ${vector(generator)} et ${vector(normal)} vaut 0. Ce dernier vecteur appartient donc à F⊥.`,
+      geometry:
+        "Dans le plan, l’orthogonal d’une droite est la droite perpendiculaire.",
+      trap:
+        "Une rotation arbitraire des coordonnées ne produit pas nécessairement un vecteur orthogonal.",
+    };
+  }
+
+  if (template === 1) {
+    const ambient = randomInt(3, 7);
+    const subspace = randomInt(1, ambient - 1);
+    const result = ambient - subspace;
+    return {
+      id: `E-ORTHO-DIM-${ambient}-${subspace}-${Date.now()}-${randomInt(100, 999)}`,
+      sector: "bases",
+      eyebrow: "MPSI · Dimension de l’orthogonal",
+      prompt: "Quelle est la dimension de F⊥ ?",
+      formula: `F est un sous-espace d’un espace euclidien E, dim(E) = ${ambient} et dim(F) = ${subspace}.`,
+      choices: choices(`${result}`, [
+        `${subspace}`,
+        `${ambient}`,
+        `${Math.abs(ambient - 2 * subspace)}`,
+      ]),
+      explanation: `Dans un espace euclidien de dimension finie, dim(F) + dim(F⊥) = dim(E). Ainsi dim(F⊥) = ${ambient} − ${subspace} = ${result}.`,
+      geometry:
+        "Les directions de F et celles de F⊥ se complètent pour former tout l’espace.",
+      trap:
+        "F⊥ n’a pas en général la même dimension que F.",
+    };
+  }
+
+  const coefficients = Array.from(
+    { length: dimension },
+    () => nonZero(),
+  );
+  const coordinates = ["x", "y", "z"].slice(0, dimension);
+  const equation = formatLinearExpression(
+    coefficients.map(
+      (coefficient, index) =>
+        [coefficient, coordinates[index]] as [number, string],
+    ),
+  );
+  const correct = vector(coefficients);
+  const normalDistractors =
+    dimension === 2
+      ? [
+          vector([coefficients[0] + 1, coefficients[1]]),
+          vector([coefficients[0], coefficients[1] + 1]),
+          vector([coefficients[1], -coefficients[0]]),
+        ]
+      : coefficients.map((_, changedIndex) =>
+          vector(
+            coefficients.map((value, index) =>
+              index === changedIndex
+                ? value + (value > 0 ? 1 : -1)
+                : value,
+            ),
+          ),
+        );
+  return {
+    id: `E-ORTHO-NORMAL-${dimension}-${Date.now()}-${randomInt(100, 999)}`,
+    sector: "bases",
+    eyebrow: "MPSI · Vecteur normal",
+    prompt: "Lequel de ces vecteurs est normal à l’hyperplan H ?",
+    formula: `H = {(${coordinates.join(" ; ")}) ∈ ℝ${dimension} | ${equation} = 0}`,
+    choices: choices(correct, normalDistractors),
+    explanation: `L’équation de H s’écrit ⟨${correct}, x⟩ = 0. Ainsi H = Vect(${correct})⊥ et ${correct} est un vecteur normal à H.`,
+    geometry:
+      "Un hyperplan est l’ensemble des vecteurs orthogonaux à une direction normale.",
+    trap:
+      "Les coefficients de l’équation homogène donnent les coordonnées du vecteur normal dans le même ordre.",
+  };
+}
+
+export function projectionDistanceQuestion(spaceDimension = 2): Question {
+  const dimension = ambientDimension(spaceDimension);
+  const template = randomInt(0, 3);
+
+  if (template === 0) {
+    const direction = pick([
+      [1, 0],
+      [0, 1],
+      [1, 1],
+      [1, -1],
+    ] as const);
+    let point = [randomInt(-6, 6), randomInt(-6, 6)];
+    while (
+      dotProduct(point, direction) % squaredNorm(direction) !== 0 ||
+      dotProduct(point, direction) === 0 ||
+      point[0] * direction[1] === point[1] * direction[0]
+    ) {
+      point = [randomInt(-6, 6), randomInt(-6, 6)];
+    }
+    const coefficient =
+      dotProduct(point, direction) / squaredNorm(direction);
+    const result = scaleVector(coefficient, direction);
+    const residual = point.map(
+      (coordinate, index) => coordinate - result[index],
+    );
+    return {
+      id: `E-PROJ-LINE-${Date.now()}-${randomInt(100, 999)}`,
+      sector: "applications",
+      eyebrow: "MPSI · Projection orthogonale",
+      prompt: "Quelle est la projection orthogonale de x sur la droite F ?",
+      formula: `F = Vect(${vector(direction)}) et x = ${vector(point)}`,
+      choices: choices(vector(result), [
+        vector(residual),
+        vector(point),
+        vector(result.map((value) => -value)),
+      ]),
+      explanation: `Le coefficient vaut ${fraction("⟨x, u⟩", "⟨u, u⟩")} = ${coefficient}. Donc p_F(x) = ${vector(result)} et x − p_F(x) = ${vector(residual)} est orthogonal à F.`,
+      geometry:
+        "La projection est le point de F le plus proche de x.",
+      trap:
+        "La composante orthogonale x − p_F(x) n’est pas la projection sur F.",
+    };
+  }
+
+  if (template === 1) {
+    const signs = [Math.random() < 0.5 ? 3 : -3, Math.random() < 0.5 ? 4 : -4];
+    const tangent = [-signs[1], signs[0]];
+    const tangentCoefficient = randomInt(-3, 3);
+    const normalCoefficient = nonZero();
+    const point = tangent.map(
+      (value, index) =>
+        tangentCoefficient * value + normalCoefficient * signs[index],
+    );
+    const distance = Math.abs(normalCoefficient) * 5;
+    const equation = formatLinearExpression([
+      [signs[0], "x"],
+      [signs[1], "y"],
+    ]);
+    return {
+      id: `E-PROJ-DISTANCE-${Date.now()}-${randomInt(100, 999)}`,
+      sector: "applications",
+      eyebrow: "MPSI · Distance à un sous-espace",
+      prompt: "Quelle est la distance du vecteur x à la droite F ?",
+      formula: `F = {(x ; y) ∈ ℝ² | ${equation} = 0} et x = ${vector(point)}`,
+      choices: choices(`${distance}`, [
+        `${distance * 5}`,
+        `${Math.abs(normalCoefficient)}`,
+        `${distance + 1}`,
+      ]),
+      explanation: `Un vecteur normal à F est n = ${vector(signs)}, de norme 5. La distance vaut ${fraction(`|⟨x, n⟩|`, "‖n‖")} = ${distance}.`,
+      geometry:
+        "La distance à F est la longueur de la composante orthogonale à F.",
+      trap:
+        "Il faut diviser la valeur absolue du produit scalaire par la norme du vecteur normal.",
+    };
+  }
+
+  if (template === 2) {
+    return {
+      id: `E-PROJ-NEAREST-${Date.now()}-${randomInt(100, 999)}`,
+      sector: "applications",
+      eyebrow: "MPSI · Meilleure approximation",
+      prompt: "Quelle propriété caractérise p_F(x), la projection orthogonale de x sur F ?",
+      formula: "F est un sous-espace de dimension finie d’un espace euclidien E.",
+      choices: choices(
+        "p_F(x) ∈ F et x − p_F(x) ∈ F⊥",
+        [
+          "p_F(x) ∈ F⊥ et x − p_F(x) ∈ F",
+          "p_F(x) = x pour tout x ∈ E",
+          "p_F(x) est toujours le vecteur nul",
+        ],
+      ),
+      explanation:
+        "La décomposition orthogonale x = p_F(x) + (x − p_F(x)) place la première composante dans F et la seconde dans F⊥.",
+      geometry:
+        "Parmi tous les vecteurs de F, p_F(x) est l’unique plus proche de x.",
+      trap:
+        "La projection appartient à F ; c’est le résidu qui appartient à F⊥.",
+    };
+  }
+
+  const point = Array.from(
+    { length: dimension },
+    () => randomInt(-5, 5),
+  );
+  const keptDimension = dimension - 1;
+  while (
+    point.slice(0, keptDimension).every((value) => value === 0) ||
+    point.at(-1) === 0
+  ) {
+    for (let index = 0; index < dimension; index += 1) {
+      point[index] = randomInt(-5, 5);
+    }
+  }
+  const result = point.map((value, index) =>
+    index < keptDimension ? value : 0,
+  );
+  return {
+    id: `E-PROJ-ON-${dimension}-${Date.now()}-${randomInt(100, 999)}`,
+    sector: "applications",
+    eyebrow: "MPSI · Projection dans une base orthonormée",
+    prompt: "Quelles sont les coordonnées de p_F(x) dans la base orthonormée B ?",
+    formula: `B = ${dimension === 3 ? "(e₁, e₂, e₃)" : "(e₁, e₂)"}, F = Vect(e₁${dimension === 3 ? ", e₂" : ""}) et x = ${columnVector(point)}`,
+    choices: choices(columnVector(result), [
+      columnVector(point.map((value, index) => index < keptDimension ? 0 : value)),
+      columnVector(point),
+      columnVector(result.map((value) => -value)),
+    ]),
+    explanation: `Dans une base orthonormée adaptée à F, on conserve les ${keptDimension} première${keptDimension > 1 ? "s" : ""} coordonnée${keptDimension > 1 ? "s" : ""} et on annule la composante orthogonale. Ainsi p_F(x) = ${columnVector(result)}.`,
+    geometry:
+      "Une base orthonormée adaptée sépare directement les composantes parallèle et orthogonale.",
+    trap:
+      "Projeter sur F ne consiste pas à annuler les coordonnées appartenant à F.",
+  };
+}
+
 export function matrixQuestion(
   _spaceDimension: number,
   forcedTemplate?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19,
@@ -2549,6 +3030,42 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     label: "Positivité",
     description: "Lire la positivité d’une matrice symétrique sur son spectre.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 19),
+  },
+  {
+    id: "euclidean-inner-product",
+    sector: "vectors",
+    program: "MPSI",
+    minInstrument: 28,
+    label: "Produit scalaire, norme et distance",
+    description: "Calculer produits scalaires, normes, distances et cas d’égalité de Cauchy–Schwarz.",
+    generate: (spaceDimension) => innerProductQuestion(spaceDimension),
+  },
+  {
+    id: "euclidean-orthonormalization",
+    sector: "bases",
+    program: "MPSI",
+    minInstrument: 29,
+    label: "Orthogonalisation",
+    description: "Reconnaître, normaliser et orthogonaliser une famille par le procédé de Gram–Schmidt.",
+    generate: () => orthonormalizationQuestion(),
+  },
+  {
+    id: "euclidean-orthogonal-complement",
+    sector: "bases",
+    program: "MPSI",
+    minInstrument: 30,
+    label: "Orthogonal et hyperplans",
+    description: "Déterminer F⊥, sa dimension et une direction normale à un hyperplan.",
+    generate: (spaceDimension) => orthogonalComplementQuestion(spaceDimension),
+  },
+  {
+    id: "euclidean-projection-distance",
+    sector: "applications",
+    program: "MPSI",
+    minInstrument: 31,
+    label: "Projection et distance",
+    description: "Projeter orthogonalement et calculer la distance à un sous-espace.",
+    generate: (spaceDimension) => projectionDistanceQuestion(spaceDimension),
   },
 ] as const;
 

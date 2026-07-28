@@ -19,9 +19,13 @@ import {
   familyRankQuestion,
   generateQuestion,
   imageQuestion,
+  innerProductQuestion,
   matrixProductQuestion,
   minimalPolynomialQuestion,
+  orthogonalComplementQuestion,
+  orthonormalizationQuestion,
   positivityQuestion,
+  projectionDistanceQuestion,
   rankTheoremQuestion,
   selfAdjointQuestion,
   spanQuestion,
@@ -98,7 +102,7 @@ function multiply(first, second) {
 }
 
 test("the shared catalogue exposes every exercise family to the game and laboratory", () => {
-  assert.equal(EXERCISE_FAMILIES.length, 31);
+  assert.equal(EXERCISE_FAMILIES.length, 35);
   assert.deepEqual(
     new Set(EXERCISE_FAMILIES.map((family) => family.sector)),
     new Set(["vectors", "bases", "applications", "matrices"]),
@@ -317,6 +321,210 @@ test("the MP exercise path unlocks one reduction topic per workshop", () => {
       "matrix-spectral-theorem",
       "matrix-positivity",
     ],
+  );
+});
+
+test("the MPSI Euclidean path unlocks one validated topic per workshop", () => {
+  assert.deepEqual(
+    [28, 29, 30, 31].map((highestOwnedInstrument) =>
+      availableExerciseFamilies(
+        ["vectors", "bases", "applications"],
+        highestOwnedInstrument,
+      ).at(-1).id,
+    ),
+    [
+      "euclidean-inner-product",
+      "euclidean-orthonormalization",
+      "euclidean-orthogonal-complement",
+      "euclidean-projection-distance",
+    ],
+  );
+
+  const innerTemplates = new Set();
+  const orthonormalTemplates = new Set();
+  const complementTemplates = new Set();
+  const projectionTemplates = new Set();
+
+  for (let index = 0; index < 800; index += 1) {
+    const dimension = index % 2 === 0 ? 2 : 3;
+
+    const inner = innerProductQuestion(dimension);
+    assertWellFormed(inner);
+    assert.doesNotMatch(
+      inner.choices.map((choice) => choice.text).join(" "),
+      /Autre proposition/,
+    );
+    const innerTemplate = inner.id.split("-")[2];
+    innerTemplates.add(innerTemplate);
+    if (innerTemplate === "DOT") {
+      const [first, second] = [
+        ...inner.formula.matchAll(/\((-?\d+(?: ; -?\d+)+)\)/g),
+      ].map((match) => match[1].split(" ; ").map(Number));
+      const expected = first.reduce(
+        (sum, value, coordinate) => sum + value * second[coordinate],
+        0,
+      );
+      assert.equal(
+        Number(inner.choices.find((choice) => choice.correct).text),
+        expected,
+      );
+    }
+    if (innerTemplate === "CAUCHY") {
+      const vectors = [
+        ...inner.choices
+          .find((choice) => choice.correct)
+          .text.matchAll(/\((-?\d+(?: ; -?\d+)+)\)/g),
+      ].map((match) => match[1].split(" ; ").map(Number));
+      const determinant =
+        vectors.length === 2 && vectors[0].length === 2
+          ? vectors[0][0] * vectors[1][1] -
+            vectors[0][1] * vectors[1][0]
+          : 0;
+      const cross =
+        vectors[0].length === 3
+          ? [
+              vectors[0][1] * vectors[1][2] -
+                vectors[0][2] * vectors[1][1],
+              vectors[0][2] * vectors[1][0] -
+                vectors[0][0] * vectors[1][2],
+              vectors[0][0] * vectors[1][1] -
+                vectors[0][1] * vectors[1][0],
+            ]
+          : [];
+      assert.equal(
+        vectors[0].length === 2
+          ? determinant || 0
+          : cross.every((coordinate) => coordinate === 0),
+        vectors[0].length === 2 ? 0 : true,
+      );
+    }
+
+    const orthonormal = orthonormalizationQuestion();
+    assertWellFormed(orthonormal);
+    assert.doesNotMatch(
+      orthonormal.choices.map((choice) => choice.text).join(" "),
+      /Autre proposition/,
+    );
+    const orthonormalTemplate = orthonormal.id.split("-")[2];
+    orthonormalTemplates.add(orthonormalTemplate);
+    if (orthonormalTemplate === "NORMALIZE") {
+      const answer = orthonormal.choices.find((choice) => choice.correct).text;
+      const match = answer.match(/^⟬(-?\d+)¦(\d+)⟭⟪(-?\d+),(-?\d+)⟫$/);
+      assert.ok(match);
+      const numerator = Number(match[1]);
+      const denominator = Number(match[2]);
+      const coordinates = [Number(match[3]), Number(match[4])];
+      assert.equal(
+        numerator ** 2 *
+          coordinates.reduce((sum, value) => sum + value ** 2, 0),
+        denominator ** 2,
+      );
+    } else {
+      const answerVectors = [
+        ...orthonormal.choices
+          .find((choice) => choice.correct)
+          .text.matchAll(/\((-?\d+(?: ; -?\d+)+)\)/g),
+      ].map((match) => match[1].split(" ; ").map(Number));
+      if (orthonormalTemplate === "ORTHOGONAL") {
+        assert.equal(
+          answerVectors[0].reduce(
+            (sum, value, coordinate) =>
+              sum + value * answerVectors[1][coordinate],
+            0,
+          ),
+          0,
+        );
+      } else {
+        const sourceVectors = [
+          ...orthonormal.formula.matchAll(/\((-?\d+(?: ; -?\d+)+)\)/g),
+        ].map((match) => match[1].split(" ; ").map(Number));
+        assert.equal(
+          sourceVectors[0].reduce(
+            (sum, value, coordinate) =>
+              sum + value * answerVectors[0][coordinate],
+            0,
+          ),
+          0,
+        );
+      }
+    }
+
+    const complement = orthogonalComplementQuestion(dimension);
+    assertWellFormed(complement);
+    assert.doesNotMatch(
+      complement.choices.map((choice) => choice.text).join(" "),
+      /Autre proposition/,
+    );
+    complementTemplates.add(complement.id.split("-")[2]);
+    if (complement.id.includes("-COMPLEMENT-")) {
+      const generators = [
+        ...complement.formula.matchAll(/\((-?\d+(?: ; -?\d+)+)\)/g),
+      ].map((match) => match[1].split(" ; ").map(Number));
+      const answer = parseVector(
+        complement.choices.find((choice) => choice.correct).text,
+      );
+      for (const generator of generators) {
+        assert.equal(
+          generator.reduce(
+            (sum, value, coordinate) =>
+              sum + value * answer[coordinate],
+            0,
+          ),
+          0,
+        );
+      }
+    }
+
+    const projection = projectionDistanceQuestion(dimension);
+    assertWellFormed(projection);
+    assert.doesNotMatch(
+      projection.choices.map((choice) => choice.text).join(" "),
+      /Autre proposition/,
+    );
+    const projectionTemplate = projection.id.split("-")[2];
+    projectionTemplates.add(projectionTemplate);
+    if (projectionTemplate === "LINE") {
+      const [direction, point] = [
+        ...projection.formula.matchAll(/\((-?\d+(?: ; -?\d+)+)\)/g),
+      ].map((match) => match[1].split(" ; ").map(Number));
+      const result = parseVector(
+        projection.choices.find((choice) => choice.correct).text,
+      );
+      assert.equal(
+        result[0] * direction[1] - result[1] * direction[0] || 0,
+        0,
+      );
+      assert.equal(
+        (point[0] - result[0]) * direction[0] +
+          (point[1] - result[1]) * direction[1] || 0,
+        0,
+      );
+    }
+    if (projectionTemplate === "ON") {
+      const point = parseVector(projection.formula.match(/⟪[^⟫]+⟫/)[0]);
+      const result = parseVector(
+        projection.choices.find((choice) => choice.correct).text,
+      );
+      assert.deepEqual(result.slice(0, -1), point.slice(0, -1));
+      assert.equal(result.at(-1), 0);
+    }
+  }
+
+  assert.deepEqual(
+    innerTemplates,
+    new Set(["DOT", "NORM", "DISTANCE", "CAUCHY"]),
+  );
+  assert.deepEqual(
+    orthonormalTemplates,
+    new Set(["NORMALIZE", "ORTHOGONAL", "SCHMIDT"]),
+  );
+  assert.deepEqual(
+    complementTemplates,
+    new Set(["COMPLEMENT", "DIM", "NORMAL"]),
+  );
+  assert.deepEqual(
+    projectionTemplates,
+    new Set(["LINE", "DISTANCE", "NEAREST", "ON"]),
   );
 });
 

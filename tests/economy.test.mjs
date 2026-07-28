@@ -85,8 +85,8 @@ test("linear-map workshops transform production, resonance and anomaly rewards",
   );
 });
 
-test("matrix and MP reduction cycles extend production and workshop synergies", () => {
-  assert.equal(INSTRUMENTS.length, 28);
+test("matrix, reduction and Euclidean cycles extend production and workshop synergies", () => {
+  assert.equal(INSTRUMENTS.length, 32);
   assert.deepEqual(
     INSTRUMENTS.slice(12, 16).map((instrument) => instrument.name),
     [
@@ -115,12 +115,21 @@ test("matrix and MP reduction cycles extend production and workshop synergies", 
     ],
   );
   assert.deepEqual(
-    INSTRUMENTS.slice(24).map((instrument) => instrument.name),
+    INSTRUMENTS.slice(24, 28).map((instrument) => instrument.name),
     [
       "Chambre adjointe",
       "Symétriseur spectral",
       "Diagonaliseur orthogonal",
       "Analyseur de positivité",
+    ],
+  );
+  assert.deepEqual(
+    INSTRUMENTS.slice(28).map((instrument) => instrument.name),
+    [
+      "Accordeur scalaire",
+      "Orthogonalisateur de Schmidt",
+      "Chambre orthogonale",
+      "Projecteur métrique",
     ],
   );
 
@@ -134,7 +143,12 @@ test("matrix and MP reduction cycles extend production and workshop synergies", 
     ...INSTRUMENTS.slice(0, 16).map(() => 1),
     0, 0, 0, 0,
   ]);
-  const reduction = basePassiveProduction(INSTRUMENTS.map(() => 1));
+  const euclideanReduction = basePassiveProduction(
+    INSTRUMENTS.map((_, index) => (index < 28 ? 1 : 0)),
+  );
+  const euclideanFoundations = basePassiveProduction(
+    INSTRUMENTS.map(() => 1),
+  );
   assert.ok(
     matrices >
       applications +
@@ -144,9 +158,17 @@ test("matrix and MP reduction cycles extend production and workshop synergies", 
         ),
   );
   assert.ok(
-    reduction >
+    euclideanReduction >
       matrices +
-        INSTRUMENTS.slice(16).reduce(
+        INSTRUMENTS.slice(16, 28).reduce(
+          (sum, instrument) => sum + instrument.baseProduction,
+          0,
+        ),
+  );
+  assert.ok(
+    euclideanFoundations >
+      euclideanReduction +
+        INSTRUMENTS.slice(28).reduce(
           (sum, instrument) => sum + instrument.baseProduction,
           0,
         ),
@@ -172,6 +194,25 @@ test("matrix and MP reduction cycles extend production and workshop synergies", 
     matrixWorkshopCostMultiplier(
       INSTRUMENTS.map((_, index) => (index === 27 ? 5 : 0)),
     ) < 1,
+  );
+  assert.ok(
+    matrixWorkshopCostMultiplier(
+      INSTRUMENTS.map((_, index) => (index === 30 ? 5 : 0)),
+    ) < 1,
+  );
+  assert.equal(
+    correctAnomalyRewardMultiplier(
+      INSTRUMENTS.map((_, index) => (index === 31 ? 2 : 0)),
+    ),
+    1.04,
+  );
+  assert.ok(
+    basePassiveProduction(
+      INSTRUMENTS.map((_, index) =>
+        index < 28 || index === 28 ? 1 : 0,
+      ),
+    ) >
+      euclideanReduction + INSTRUMENTS[28].baseProduction,
   );
   assert.equal(matrixWorkshopCostMultiplier([]), 1);
   assert.ok(
