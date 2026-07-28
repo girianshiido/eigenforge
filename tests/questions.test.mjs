@@ -434,8 +434,12 @@ test("polynomial reduction covers annihilators, minimal polynomial, Cayley-Hamil
     characteristicDimensions.add(
       characteristicSpace.choices.find((choice) => choice.correct).text,
     );
-    assert.match(characteristicSpace.prompt, /Ker\(\(A [−+] \d+I\)³\)/);
+    assert.match(
+      characteristicSpace.prompt,
+      /Ker\(\(A [−+] (?:\d+)?I\)³\)/,
+    );
     assert.doesNotMatch(characteristicSpace.prompt, /− -/);
+    assert.doesNotMatch(characteristicSpace.prompt, /[−+] 1I/);
   }
 
   assert.deepEqual(minimalTemplates, new Set(["0", "1", "2"]));

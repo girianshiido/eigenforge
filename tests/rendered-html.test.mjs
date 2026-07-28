@@ -250,7 +250,9 @@ test("renders matrices as responsive grids instead of flattened text", async () 
   assert.match(renderer, /className="math-column-vector"/);
   assert.match(renderer, /className="math-subscript"/);
   assert.match(renderer, /className="math-superscript"/);
+  assert.match(renderer, /className="math-atomic"/);
   assert.match(renderer, /INLINE_SCRIPT_PATTERN/);
+  assert.match(renderer, /ATOMIC_MATH_PATTERN/);
   assert.match(renderer, /SUPERSCRIPT_CHARACTERS/);
   assert.match(renderer, /rawSubscript\.replace\("-", "−"\)/);
   assert.match(renderer, /Vecteur colonne/);
@@ -263,6 +265,9 @@ test("renders matrices as responsive grids instead of flattened text", async () 
   assert.match(styles, /\.math-column-vector::before/);
   assert.match(styles, /\.math-subscript/);
   assert.match(styles, /\.math-superscript/);
+  assert.match(styles, /\.math-atomic/);
+  assert.match(styles, /\.formula-card \.math-expression/);
+  assert.match(styles, /\.lab-formula \.math-expression/);
   assert.match(styles, /\.matrix-operator/);
   assert.match(styles, /\.spectral-marker/);
 });

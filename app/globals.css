@@ -64,6 +64,11 @@ button:focus-visible {
   white-space: pre-wrap;
 }
 
+.math-atomic {
+  display: inline-block;
+  white-space: nowrap;
+}
+
 .math-subscript,
 .math-superscript {
   display: inline-block;
@@ -695,6 +700,14 @@ button:focus-visible {
   font-size: clamp(15px, 1.8vw, 21px);
   line-height: 1.5;
   text-align: center;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.lab-formula .math-expression {
+  display: inline-block;
+  min-width: max-content;
+  white-space: nowrap;
 }
 
 .lab-answer-grid {
@@ -2800,6 +2813,17 @@ footer {
   font-size: clamp(15px, 2.5vw, 19px);
   line-height: 1.45;
   text-align: center;
+}
+
+.formula-card {
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.formula-card .math-expression {
+  display: inline-block;
+  min-width: max-content;
+  white-space: nowrap;
 }
 
 .answer-grid {

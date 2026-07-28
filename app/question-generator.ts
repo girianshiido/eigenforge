@@ -175,7 +175,8 @@ function polynomialRootFactor(root: number) {
 }
 
 function shiftedMatrix(root: number) {
-  return root > 0 ? `A − ${root}I` : `A + ${Math.abs(root)}I`;
+  const magnitude = Math.abs(root) === 1 ? "" : `${Math.abs(root)}`;
+  return root > 0 ? `A − ${magnitude}I` : `A + ${magnitude}I`;
 }
 
 function choices(correct: string, distractors: string[]) {

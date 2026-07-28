@@ -8,6 +8,8 @@ type MathExpressionProps = {
 const STRUCTURED_MATH_PATTERN = /⟦([^⟧]+)⟧|⟪([^⟫]+)⟫/g;
 const INLINE_SCRIPT_PATTERN =
   /_(\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])|([₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎]+)|([⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾]+)/g;
+const ATOMIC_MATH_PATTERN =
+  /N_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])\s*=\s*Ker\((?:[^()]|\([^()]*\))*\)|(?:Vect|Ker|Im|det|dim|Sp)\((?:[^()]|\([^()]*\))*\)|[χπ]_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])(?:\([^)]*\))?|N_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])/g;
 const SUBSCRIPT_CHARACTERS: Record<string, string> = {
   "₀": "0",
   "₁": "1",
@@ -52,7 +54,7 @@ function normalizeScript(
   );
 }
 
-function PlainMath({ source }: { source: string }) {
+function ScriptedText({ source }: { source: string }) {
   const parts: ReactNode[] = [];
   let previousEnd = 0;
 
@@ -95,6 +97,43 @@ function PlainMath({ source }: { source: string }) {
 
   if (previousEnd < source.length) {
     parts.push(source.slice(previousEnd));
+  }
+
+  return <>{parts}</>;
+}
+
+function PlainMath({ source }: { source: string }) {
+  const parts: ReactNode[] = [];
+  let previousEnd = 0;
+
+  for (const match of source.matchAll(ATOMIC_MATH_PATTERN)) {
+    const start = match.index ?? 0;
+    if (start > previousEnd) {
+      parts.push(
+        <ScriptedText
+          source={source.slice(previousEnd, start)}
+          key={`text-${previousEnd}-${start}`}
+        />,
+      );
+    }
+    parts.push(
+      <span
+        className="math-atomic"
+        key={`atomic-${start}-${match[0]}`}
+      >
+        <ScriptedText source={match[0]} />
+      </span>,
+    );
+    previousEnd = start + match[0].length;
+  }
+
+  if (previousEnd < source.length) {
+    parts.push(
+      <ScriptedText
+        source={source.slice(previousEnd)}
+        key={`text-${previousEnd}-${source.length}`}
+      />,
+    );
   }
 
   return <>{parts}</>;
