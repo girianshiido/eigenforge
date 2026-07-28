@@ -2,13 +2,21 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  INVARIANT_PROTOCOLS,
   INSTRUMENTS,
   basePassiveProduction,
   correctAnomalyRewardMultiplier,
+  inheritedStructuralWorkshops,
   instrumentCost,
   invariantGain,
+  invariantProtocolCost,
   milestoneMultiplier,
   nextInvariantThreshold,
+  protocolAnomalyMultiplier,
+  protocolManualMultiplier,
+  protocolPassiveMultiplier,
+  protocolResonanceMultiplier,
+  protocolWorkshopCostMultiplier,
   resonanceDecayRate,
 } from "../app/game-balance.ts";
 
@@ -83,6 +91,23 @@ test("basis changes require a meaningful run and scale quadratically", () => {
   assert.equal(invariantGain(3_000_000), 2);
   assert.equal(nextInvariantThreshold(0), 750_000);
   assert.equal(nextInvariantThreshold(1), 3_000_000);
+});
+
+test("invariant protocols create permanent strategic upgrades", () => {
+  assert.equal(INVARIANT_PROTOCOLS.length, 6);
+  assert.equal(invariantProtocolCost(0, 0), 1);
+  assert.equal(invariantProtocolCost(0, 3), 4);
+  assert.equal(invariantProtocolCost(5, 2), 15);
+
+  assert.equal(protocolManualMultiplier([2]), 1.5);
+  assert.ok(Math.abs(protocolPassiveMultiplier([0, 3]) - 1.36) < 1e-12);
+  assert.ok(protocolWorkshopCostMultiplier([0, 0, 2]) < 1);
+  assert.ok(
+    Math.abs(protocolResonanceMultiplier([0, 0, 0, 2]) - 1.24) < 1e-12,
+  );
+  assert.equal(protocolAnomalyMultiplier([0, 0, 0, 0, 2]), 1.3);
+  assert.equal(inheritedStructuralWorkshops([0, 0, 0, 0, 0, 2]), 2);
+  assert.equal(inheritedStructuralWorkshops([0, 0, 0, 0, 0, 8]), 3);
 });
 
 test("the active first-hour model unlocks the spatial forge before the first basis change", () => {

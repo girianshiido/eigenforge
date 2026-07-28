@@ -2,6 +2,57 @@ export const PRESTIGE_SCALE = 750_000;
 export const INSTRUMENT_MILESTONES = [10, 25, 50] as const;
 export const STRUCTURAL_WORKSHOP_COUNT = 4;
 
+export const INVARIANT_PROTOCOLS = [
+  {
+    name: "Principe d’homogénéité",
+    mark: "α",
+    description: "Chaque niveau amplifie de 25 % les coordonnées forgées manuellement.",
+    baseCost: 1,
+    costStep: 1,
+    maxLevel: 8,
+  },
+  {
+    name: "Somme directe",
+    mark: "⊕",
+    description: "Chaque niveau augmente de 12 % toute la production passive.",
+    baseCost: 2,
+    costStep: 2,
+    maxLevel: 8,
+  },
+  {
+    name: "Réduction de Gauss",
+    mark: "G",
+    description: "Chaque niveau réduit de 5 % le prix de tous les ateliers.",
+    baseCost: 3,
+    costStep: 2,
+    maxLevel: 6,
+  },
+  {
+    name: "Résonance spectrale",
+    mark: "ρ",
+    description: "Chaque niveau augmente de 12 % la stabilité de la résonance.",
+    baseCost: 2,
+    costStep: 2,
+    maxLevel: 6,
+  },
+  {
+    name: "Image fidèle",
+    mark: "Im",
+    description: "Chaque niveau augmente de 15 % les gains des réponses justes.",
+    baseCost: 3,
+    costStep: 3,
+    maxLevel: 6,
+  },
+  {
+    name: "Base héritée",
+    mark: "B",
+    description: "Conserve un atelier dimensionnel supplémentaire après chaque changement de base.",
+    baseCost: 5,
+    costStep: 5,
+    maxLevel: 3,
+  },
+] as const;
+
 export const INSTRUMENTS = [
   {
     name: "Générateur axial",
@@ -146,6 +197,47 @@ export function milestoneMultiplier(owned: number) {
 
 export function instrumentCost(index: number, owned: number) {
   return Math.ceil(INSTRUMENTS[index].baseCost * Math.pow(1.18, owned));
+}
+
+export function invariantProtocolCost(index: number, level: number) {
+  const protocol = INVARIANT_PROTOCOLS[index];
+  return protocol.baseCost + protocol.costStep * level;
+}
+
+export function protocolPassiveMultiplier(
+  protocols: readonly number[],
+) {
+  return 1 + (protocols[1] ?? 0) * 0.12;
+}
+
+export function protocolManualMultiplier(
+  protocols: readonly number[],
+) {
+  return 1 + (protocols[0] ?? 0) * 0.25;
+}
+
+export function protocolWorkshopCostMultiplier(
+  protocols: readonly number[],
+) {
+  return Math.pow(0.95, protocols[2] ?? 0);
+}
+
+export function protocolResonanceMultiplier(
+  protocols: readonly number[],
+) {
+  return 1 + (protocols[3] ?? 0) * 0.12;
+}
+
+export function protocolAnomalyMultiplier(
+  protocols: readonly number[],
+) {
+  return 1 + (protocols[4] ?? 0) * 0.15;
+}
+
+export function inheritedStructuralWorkshops(
+  protocols: readonly number[],
+) {
+  return Math.min(3, protocols[5] ?? 0);
 }
 
 export function basePassiveProduction(

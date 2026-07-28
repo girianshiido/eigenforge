@@ -16,6 +16,9 @@ linéaire des classes préparatoires MPSI et MP.
   progression calibrée jusqu’au changement de base ;
 - résonance, maîtrise et changement de base avec aperçu des pertes, éléments
   conservés et multiplicateur obtenu ;
+- six principes permanents à renforcer avec les invariants : production
+  manuelle ou passive, prix des ateliers, résonance, anomalies et héritage
+  d’ateliers dimensionnels entre deux cycles ;
 - anomalies mathématiques générées sur les vecteurs, les bases et les
   applications linéaires ;
 - rappels mathématiques affichés seulement lorsqu’ils apportent une information

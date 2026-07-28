@@ -3392,6 +3392,201 @@ footer {
   font-size: 9px;
 }
 
+.protocol-section {
+  padding: clamp(18px, 2.5vw, 28px);
+  grid-column: 1 / -1;
+  border: 1px solid rgba(155, 141, 197, 0.28);
+  border-radius: 11px;
+  background:
+    radial-gradient(circle at 92% 0%, rgba(155, 141, 197, 0.09), transparent 34%),
+    rgba(255, 255, 255, 0.018);
+}
+
+.protocol-heading {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.protocol-heading p {
+  margin: 0 0 4px;
+  color: var(--violet);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.protocol-heading h3 {
+  margin: 0;
+  font-family: Georgia, serif;
+  font-size: 22px;
+  font-weight: 400;
+}
+
+.protocol-heading > div:first-child > span {
+  max-width: 610px;
+  margin-top: 7px;
+  display: block;
+  color: var(--ivory-muted);
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.protocol-balance {
+  min-width: 150px;
+  padding: 11px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(155, 141, 197, 0.3);
+  border-radius: 8px;
+  background: rgba(155, 141, 197, 0.045);
+}
+
+.protocol-balance strong {
+  color: var(--violet);
+  font-family: Georgia, serif;
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.protocol-balance span {
+  color: var(--ivory-muted);
+  font-size: 7px;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.protocol-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.protocol-card {
+  min-width: 0;
+  min-height: 218px;
+  padding: 15px;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 13px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.025), transparent 58%),
+    rgba(5, 17, 23, 0.42);
+}
+
+.protocol-card.complete {
+  border-color: rgba(159, 197, 158, 0.28);
+}
+
+.protocol-mark {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(155, 141, 197, 0.35);
+  border-radius: 50%;
+  color: var(--violet);
+  font-family: Georgia, serif;
+  font-size: 16px;
+  box-shadow: inset 0 0 16px rgba(155, 141, 197, 0.06);
+}
+
+.protocol-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.protocol-copy > div:first-child > span {
+  color: var(--violet);
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.protocol-copy h4 {
+  margin: 3px 0 0;
+  font-family: Georgia, serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.15;
+}
+
+.protocol-copy > p {
+  min-height: 42px;
+  margin: 8px 0 7px;
+  color: var(--ivory-muted);
+  font-size: 8.5px;
+  line-height: 1.45;
+}
+
+.protocol-effect {
+  margin-bottom: 9px;
+  color: var(--sage);
+  font-size: 7.5px;
+  font-weight: 600;
+  letter-spacing: 0.035em;
+}
+
+.protocol-levels {
+  margin: auto 0 10px;
+  display: flex;
+  gap: 3px;
+}
+
+.protocol-levels span {
+  height: 3px;
+  flex: 1;
+  border-radius: 2px;
+  background: rgba(241, 234, 217, 0.1);
+}
+
+.protocol-levels span.filled {
+  background: var(--violet);
+  box-shadow: 0 0 6px rgba(155, 141, 197, 0.28);
+}
+
+.protocol-copy button {
+  width: 100%;
+  min-height: 38px;
+  padding: 7px 9px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: transparent;
+  color: rgba(241, 234, 217, 0.34);
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.protocol-copy button strong {
+  font-size: 7.5px;
+  font-weight: 600;
+}
+
+.protocol-copy button.ready {
+  border-color: rgba(155, 141, 197, 0.55);
+  background: rgba(155, 141, 197, 0.1);
+  color: var(--ivory);
+}
+
+.protocol-copy button.ready:hover {
+  border-color: var(--violet);
+  background: rgba(155, 141, 197, 0.16);
+  transform: translateY(-1px);
+}
+
 @keyframes tabReveal {
   from {
     opacity: 0;
@@ -3420,6 +3615,10 @@ footer {
 
   .atlas-layout .mastery-section {
     grid-row: auto;
+  }
+
+  .protocol-grid {
+    grid-template-columns: 1fr 1fr;
   }
 }
 
@@ -3552,8 +3751,32 @@ footer {
 
   .atlas-layout .mastery-section,
   .atlas-principle,
-  .atlas-basis-card {
+  .atlas-basis-card,
+  .protocol-section {
     padding: 17px;
+  }
+
+  .protocol-heading {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 13px;
+  }
+
+  .protocol-balance {
+    min-width: 0;
+    align-self: flex-start;
+  }
+
+  .protocol-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .protocol-card {
+    min-height: 0;
+  }
+
+  .protocol-copy > p {
+    min-height: 0;
   }
 }
 

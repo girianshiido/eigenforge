@@ -4,12 +4,20 @@ import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import {
   INSTRUMENT_MILESTONES,
   INSTRUMENTS,
+  INVARIANT_PROTOCOLS,
   basePassiveProduction,
   correctAnomalyRewardMultiplier,
+  inheritedStructuralWorkshops,
   instrumentCost,
   invariantGain,
+  invariantProtocolCost,
   milestoneMultiplier,
   nextInvariantThreshold,
+  protocolAnomalyMultiplier,
+  protocolManualMultiplier,
+  protocolPassiveMultiplier,
+  protocolResonanceMultiplier,
+  protocolWorkshopCostMultiplier,
   resonanceDecayRate,
 } from "./game-balance";
 import { generateQuestion as generateExercise } from "./question-generator";
@@ -29,6 +37,7 @@ type GameState = {
   resonance: number;
   invariants: number;
   totalInvariants: number;
+  protocols: number[];
   lastTick: number;
 };
 
@@ -64,6 +73,7 @@ const INITIAL_STATE: GameState = {
   resonance: 0,
   invariants: 0,
   totalInvariants: 0,
+  protocols: INVARIANT_PROTOCOLS.map(() => 0),
   lastTick: 0,
 };
 
@@ -427,7 +437,12 @@ function production(state: GameState) {
   const invariantMultiplier = 1 + state.totalInvariants * 0.15;
   const masteryTotal =
     state.mastery.vectors + state.mastery.bases + state.mastery.applications;
-  return base * invariantMultiplier * (1 + masteryTotal * 0.003);
+  return (
+    base *
+    invariantMultiplier *
+    protocolPassiveMultiplier(state.protocols) *
+    (1 + masteryTotal * 0.003)
+  );
 }
 
 function clickPower(state: GameState) {
@@ -438,8 +453,31 @@ function clickPower(state: GameState) {
     emitterBonus *
     basisExtractionBonus *
     resonanceBonus *
+    protocolManualMultiplier(state.protocols) *
     (1 + state.totalInvariants * 0.15)
   );
+}
+
+function workshopCost(state: GameState, index: number) {
+  return Math.ceil(
+    instrumentCost(index, state.instruments[index]) *
+      protocolWorkshopCostMultiplier(state.protocols),
+  );
+}
+
+function protocolEffect(index: number, level: number) {
+  if (level === 0) return "Aucun bonus actif";
+  if (index === 0) return `Émission manuelle : +${level * 25} %`;
+  if (index === 1) return `Production passive : +${level * 12} %`;
+  if (index === 2) {
+    const reduction = Math.round(
+      (1 - protocolWorkshopCostMultiplier([0, 0, level])) * 100,
+    );
+    return `Prix des ateliers : −${reduction} %`;
+  }
+  if (index === 3) return `Stabilité de résonance : +${level * 12} %`;
+  if (index === 4) return `Réponses justes : +${level * 15} %`;
+  return `${level} atelier${level > 1 ? "s" : ""} dimensionnel${level > 1 ? "s" : ""} conservé${level > 1 ? "s" : ""}`;
 }
 
 function anomalyDelay(allTime: number) {
@@ -480,6 +518,12 @@ function restoreState(raw: string | null): GameState {
       ...INITIAL_STATE,
       ...saved,
       instruments,
+      protocols: INVARIANT_PROTOCOLS.map((protocol, index) =>
+        Math.min(
+          protocol.maxLevel,
+          Math.max(0, Number(saved.protocols?.[index]) || 0),
+        ),
+      ),
       mastery: {
         vectors: Number(saved.mastery?.vectors) || 0,
         bases: Number(saved.mastery?.bases) || 0,
@@ -593,7 +637,8 @@ export default function Home() {
           resonance: Math.max(
             0,
             previous.resonance -
-              elapsed * resonanceDecayRate(previous.instruments),
+              (elapsed * resonanceDecayRate(previous.instruments)) /
+                protocolResonanceMultiplier(previous.protocols),
           ),
           anomalies,
           nextAnomalyAt,
@@ -652,7 +697,7 @@ export default function Home() {
 
   function buyInstrument(index: number) {
     setGame((previous) => {
-      const cost = instrumentCost(index, previous.instruments[index]);
+      const cost = workshopCost(previous, index);
       const prerequisiteOwned =
         index === 0 || (previous.instruments[index - 1] ?? 0) > 0;
       if (
@@ -665,6 +710,27 @@ export default function Home() {
       const instruments = [...previous.instruments];
       instruments[index] += 1;
       return { ...previous, coordinates: previous.coordinates - cost, instruments };
+    });
+  }
+
+  function buyProtocol(index: number) {
+    setGame((previous) => {
+      const currentLevel = previous.protocols[index] ?? 0;
+      const protocol = INVARIANT_PROTOCOLS[index];
+      const cost = invariantProtocolCost(index, currentLevel);
+      if (
+        currentLevel >= protocol.maxLevel ||
+        previous.invariants < cost
+      ) {
+        return previous;
+      }
+      const protocols = [...previous.protocols];
+      protocols[index] = currentLevel + 1;
+      return {
+        ...previous,
+        invariants: previous.invariants - cost,
+        protocols,
+      };
     });
   }
 
@@ -689,7 +755,8 @@ export default function Home() {
     const reward =
       Math.max(isCorrect ? 24 : 5, rate * (isCorrect ? 20 : 5)) *
       (isCorrect
-        ? correctAnomalyRewardMultiplier(game.instruments)
+        ? correctAnomalyRewardMultiplier(game.instruments) *
+          protocolAnomalyMultiplier(game.protocols)
         : 1);
     setAnswer({ choice: index, correct: isCorrect, reward });
     setGame((previous) => {
@@ -722,16 +789,26 @@ export default function Home() {
   function changeBasis() {
     const gained = invariantGain(game.runTotal);
     if (gained < 1) return;
-    setGame((previous) => ({
-      ...INITIAL_STATE,
-      mastery: previous.mastery,
-      correctAnswers: previous.correctAnswers,
-      allTime: previous.allTime,
-      invariants: previous.invariants + gained,
-      totalInvariants: previous.totalInvariants + gained,
-      lastTick: Date.now(),
-      nextAnomalyAt: Date.now() + 8000,
-    }));
+    setGame((previous) => {
+      const inheritedCount = inheritedStructuralWorkshops(
+        previous.protocols,
+      );
+      const instruments = INSTRUMENTS.map((_, index) =>
+        index < inheritedCount ? 1 : 0,
+      );
+      return {
+        ...INITIAL_STATE,
+        instruments,
+        protocols: previous.protocols,
+        mastery: previous.mastery,
+        correctAnswers: previous.correctAnswers,
+        allTime: previous.allTime,
+        invariants: previous.invariants + gained,
+        totalInvariants: previous.totalInvariants + gained,
+        lastTick: Date.now(),
+        nextAnomalyAt: Date.now() + 8000,
+      };
+    });
     setConfirmBasisChange(false);
     setActiveTab("network");
     setNotice(`${gained} invariant${gained > 1 ? "s" : ""} conservé${gained > 1 ? "s" : ""}. Le réseau adopte une nouvelle base.`);
@@ -793,7 +870,12 @@ export default function Home() {
               text: `Construisez ${nextWorkshop.name}. ${nextWorkshop.description}`,
               progress: Math.min(
                 100,
-                (game.coordinates / instrumentCost(nextWorkshopIndex, 0)) * 100,
+                (game.coordinates /
+                  Math.ceil(
+                    instrumentCost(nextWorkshopIndex, 0) *
+                      protocolWorkshopCostMultiplier(game.protocols),
+                  )) *
+                  100,
               ),
             }
           : {
@@ -1067,7 +1149,7 @@ export default function Home() {
                       const progressUnlocked = game.allTime >= instrument.unlock;
                       const unlocked = prerequisiteOwned && progressUnlocked;
                       const count = game.instruments[index] ?? 0;
-                      const cost = instrumentCost(index, count);
+                      const cost = workshopCost(game, index);
                       const affordable = game.coordinates >= cost;
                       const nextMilestone = INSTRUMENT_MILESTONES.find(
                         (milestone) => milestone > count,
@@ -1305,6 +1387,72 @@ export default function Home() {
               Prévisualiser le changement
             </button>
           </div>
+
+          <section className="protocol-section">
+            <div className="protocol-heading">
+              <div>
+                <p>Principes permanents</p>
+                <h3>Orienter les prochains cycles</h3>
+                <span>
+                  Dépenser un invariant ne réduit jamais le bonus permanent déjà
+                  gagné avec les changements de base.
+                </span>
+              </div>
+              <div className="protocol-balance">
+                <strong>{game.invariants}</strong>
+                <span>invariant{game.invariants > 1 ? "s" : ""} disponible{game.invariants > 1 ? "s" : ""}</span>
+              </div>
+            </div>
+
+            <div className="protocol-grid">
+              {INVARIANT_PROTOCOLS.map((protocol, index) => {
+                const level = game.protocols[index] ?? 0;
+                const cost = invariantProtocolCost(index, level);
+                const complete = level >= protocol.maxLevel;
+                const affordable = !complete && game.invariants >= cost;
+                return (
+                  <article
+                    className={`protocol-card ${complete ? "complete" : ""}`}
+                    key={protocol.name}
+                  >
+                    <div className="protocol-mark" aria-hidden="true">
+                      {protocol.mark}
+                    </div>
+                    <div className="protocol-copy">
+                      <div>
+                        <span>Niveau {level}/{protocol.maxLevel}</span>
+                        <h4>{protocol.name}</h4>
+                      </div>
+                      <p>{protocol.description}</p>
+                      <strong className="protocol-effect">
+                        {protocolEffect(index, level)}
+                      </strong>
+                      <div className="protocol-levels" aria-label={`Niveau ${level} sur ${protocol.maxLevel}`}>
+                        {Array.from({ length: protocol.maxLevel }, (_, item) => (
+                          <span className={item < level ? "filled" : ""} key={item} />
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        className={affordable ? "ready" : ""}
+                        disabled={!affordable}
+                        onClick={() => buyProtocol(index)}
+                      >
+                        {complete ? (
+                          "Principe maîtrisé"
+                        ) : (
+                          <>
+                            Renforcer
+                            <strong>{cost} invariant{cost > 1 ? "s" : ""}</strong>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
           </div>
 
           <button
@@ -1454,6 +1602,7 @@ export default function Home() {
                   <li><strong>{game.correctAnswers}</strong> réponses justes</li>
                   <li>Tous les secteurs déjà révélés</li>
                   <li>Les invariants précédents</li>
+                  <li>Les principes permanents renforcés</li>
                 </ul>
               </section>
 
@@ -1471,7 +1620,8 @@ export default function Home() {
             <p className="basis-modal-note">
               Les invariants accordent chacun +15 % à la production et à
               l’émission. Ce bonus est permanent et ne sera pas perdu lors des
-              changements suivants.
+              changements suivants, même lorsqu’un invariant est dépensé dans
+              un principe.
             </p>
 
             <div className="basis-modal-actions">

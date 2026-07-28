@@ -1,4 +1,4 @@
-const CACHE_NAME = "eigenforge-exercises-M9cQKY_D.js-game-DYRKpbBn.js-globals-B5aRjv0I.css-globals-ViW83V6V.js";
+const CACHE_NAME = "eigenforge-exercises-mu5bzeLX.js-game-BB_pQgQG.js-globals-CMt8cS5W.js-globals-tOE_HfO1.css";
 const PRECACHE = [
   "/eigenforge/",
   "/eigenforge/index.html",
@@ -8,10 +8,10 @@ const PRECACHE = [
   "/eigenforge/apple-touch-icon.png",
   "/eigenforge/icon-192.png",
   "/eigenforge/icon-512.png",
-  "/eigenforge/assets/exercises-M9cQKY_D.js",
-  "/eigenforge/assets/game-DYRKpbBn.js",
-  "/eigenforge/assets/globals-B5aRjv0I.css",
-  "/eigenforge/assets/globals-ViW83V6V.js"
+  "/eigenforge/assets/exercises-mu5bzeLX.js",
+  "/eigenforge/assets/game-BB_pQgQG.js",
+  "/eigenforge/assets/globals-CMt8cS5W.js",
+  "/eigenforge/assets/globals-tOE_HfO1.css"
 ];
 
 self.addEventListener("install", (event) => {

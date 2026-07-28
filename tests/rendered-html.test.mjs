@@ -167,6 +167,30 @@ test("ships three ordered workshop cycles with linear-map mechanics", async () =
   assert.match(page, /game\.instruments\[8\] > 0/);
 });
 
+test("turns invariants into a permanent post-basis progression", async () => {
+  const page = await readFile(
+    new URL("../app/page.tsx", import.meta.url),
+    "utf8",
+  );
+  const balance = await readFile(
+    new URL("../app/game-balance.ts", import.meta.url),
+    "utf8",
+  );
+  const styles = await readFile(
+    new URL("../app/globals.css", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(page, /Principes permanents/);
+  assert.match(page, /buyProtocol/);
+  assert.match(page, /protocols: previous\.protocols/);
+  assert.match(page, /inheritedStructuralWorkshops/);
+  assert.match(balance, /name: "Principe d’homogénéité"/);
+  assert.match(balance, /name: "Base héritée"/);
+  assert.match(styles, /\.protocol-grid/);
+  assert.match(styles, /\.protocol-card/);
+});
+
 test("keeps vertical scrolling while blocking selection and zoom gestures", async () => {
   const page = await readFile(
     new URL("../app/page.tsx", import.meta.url),
