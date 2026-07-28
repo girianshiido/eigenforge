@@ -2063,6 +2063,59 @@ button:disabled {
   box-shadow: 0 0 28px rgba(230, 159, 91, 0.2);
 }
 
+.euclidean-sequence {
+  position: absolute;
+  z-index: 4;
+  top: 98px;
+  right: 18px;
+  padding: 5px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  border: 1px solid rgba(159, 197, 158, 0.22);
+  border-radius: 18px;
+  background: rgba(9, 24, 32, 0.72);
+  pointer-events: none;
+  transform: translateY(-7px);
+  transition: opacity 700ms ease, transform 850ms ease;
+}
+
+.euclidean-sequence.visible {
+  opacity: 0.92;
+  transform: translateY(0);
+}
+
+.euclidean-sequence span {
+  min-width: 24px;
+  height: 24px;
+  padding-inline: 4px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(159, 197, 158, 0.16);
+  border-radius: 50%;
+  color: rgba(159, 197, 158, 0.3);
+  font-family: Georgia, serif;
+  font-size: 7px;
+  font-style: italic;
+}
+
+.euclidean-sequence span.active {
+  border-color: rgba(159, 197, 158, 0.58);
+  background: rgba(159, 197, 158, 0.1);
+  box-shadow: 0 0 12px rgba(159, 197, 158, 0.14);
+  color: var(--sage);
+  animation: reductionNode 4.8s ease-in-out infinite;
+}
+
+.network-stage.has-adjoint .spectral-marker {
+  filter: drop-shadow(0 0 10px rgba(159, 197, 158, 0.3));
+}
+
+.network-stage.is-orthogonally-diagonalized .coordinate-grid {
+  opacity: 0.48;
+  transform: rotate(0deg) skewY(0deg);
+}
+
 .network-stage.has-characteristic .spectral-marker {
   filter: drop-shadow(0 0 8px rgba(155, 141, 197, 0.22));
 }
@@ -3546,7 +3599,7 @@ footer {
 .workshop-cycle-navigation {
   margin-bottom: 22px;
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 7px;
 }
 

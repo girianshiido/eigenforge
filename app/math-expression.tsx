@@ -7,7 +7,7 @@ type MathExpressionProps = {
 
 const STRUCTURED_MATH_PATTERN = /⟦([^⟧]+)⟧|⟪([^⟫]+)⟫/g;
 const INLINE_SCRIPT_PATTERN =
-  /_(\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])|([₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎]+)|([⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾]+)/g;
+  /_(\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])|([₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎]+)|([⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ᵀ]+)/g;
 const ATOMIC_MATH_PATTERN =
   /N_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])\s*=\s*Ker\((?:[^()]|\([^()]*\))*\)|(?:Vect|Ker|Im|det|dim|Sp)\((?:[^()]|\([^()]*\))*\)|[χπ]_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])(?:\([^)]*\))?|N_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])/g;
 const SUBSCRIPT_CHARACTERS: Record<string, string> = {
@@ -43,6 +43,7 @@ const SUPERSCRIPT_CHARACTERS: Record<string, string> = {
   "⁼": "=",
   "⁽": "(",
   "⁾": ")",
+  "ᵀ": "T",
 };
 
 function normalizeScript(
@@ -182,7 +183,9 @@ function ColumnVector({ source }: { source: string }) {
     >
       <span className="math-column-vector-grid" aria-hidden="true">
         {coordinates.map((coordinate, index) => (
-          <span key={`${index}-${coordinate}`}>{coordinate}</span>
+          <span key={`${index}-${coordinate}`}>
+            <ScriptedText source={coordinate} />
+          </span>
         ))}
       </span>
     </span>

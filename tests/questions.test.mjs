@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   EXERCISE_FAMILIES,
+  adjointMatrixQuestion,
   annihilatingPolynomialQuestion,
   availableExerciseFamilies,
   basisQuestion,
@@ -20,8 +21,11 @@ import {
   imageQuestion,
   matrixProductQuestion,
   minimalPolynomialQuestion,
+  positivityQuestion,
   rankTheoremQuestion,
+  selfAdjointQuestion,
   spanQuestion,
+  spectralTheoremQuestion,
   subspaceQuestion,
   triangularizationQuestion,
   cayleyHamiltonQuestion,
@@ -94,7 +98,7 @@ function multiply(first, second) {
 }
 
 test("the shared catalogue exposes every exercise family to the game and laboratory", () => {
-  assert.equal(EXERCISE_FAMILIES.length, 27);
+  assert.equal(EXERCISE_FAMILIES.length, 31);
   assert.deepEqual(
     new Set(EXERCISE_FAMILIES.map((family) => family.sector)),
     new Set(["vectors", "bases", "applications", "matrices"]),
@@ -132,7 +136,7 @@ test("matrix questions use structured notation and mental 3 by 3 determinants", 
   const matrixFamilies = EXERCISE_FAMILIES.filter(
     (family) => family.sector === "matrices",
   );
-  assert.equal(matrixFamilies.length, 16);
+  assert.equal(matrixFamilies.length, 20);
 
   for (const family of matrixFamilies) {
     for (let index = 0; index < 150; index += 1) {
@@ -271,6 +275,10 @@ test("the MP exercise path unlocks one reduction topic per workshop", () => {
       "matrix-minimal-polynomial",
       "matrix-cayley-hamilton",
       "matrix-characteristic-subspace",
+      "matrix-adjoint",
+      "matrix-self-adjoint",
+      "matrix-spectral-theorem",
+      "matrix-positivity",
     ],
   );
 
@@ -287,7 +295,7 @@ test("the MP exercise path unlocks one reduction topic per workshop", () => {
     ["matrix-spectrum", "matrix-block-determinant"],
   );
   assert.deepEqual(
-    [16, 17, 18, 19, 20, 21, 22, 23].map((highestOwnedInstrument) =>
+    [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27].map((highestOwnedInstrument) =>
       availableExerciseFamilies(
         ["matrices"],
         highestOwnedInstrument,
@@ -304,7 +312,110 @@ test("the MP exercise path unlocks one reduction topic per workshop", () => {
       "matrix-minimal-polynomial",
       "matrix-cayley-hamilton",
       "matrix-characteristic-subspace",
+      "matrix-adjoint",
+      "matrix-self-adjoint",
+      "matrix-spectral-theorem",
+      "matrix-positivity",
     ],
+  );
+});
+
+test("Euclidean reduction questions validate adjoints and symmetry", () => {
+  const adjointOrders = new Set();
+  const selfAdjointOrders = new Set();
+
+  for (let index = 0; index < 400; index += 1) {
+    const adjoint = adjointMatrixQuestion();
+    assertWellFormed(adjoint);
+    const source = parseMatrix(adjoint.formula);
+    const expected = source[0].map((_, column) =>
+      source.map((row) => row[column]),
+    );
+    assert.deepEqual(
+      parseMatrix(adjoint.choices.find((choice) => choice.correct).text),
+      expected,
+    );
+    adjointOrders.add(source.length);
+
+    const selfAdjoint = selfAdjointQuestion();
+    assertWellFormed(selfAdjoint);
+    const correct = parseMatrix(
+      selfAdjoint.choices.find((choice) => choice.correct).text,
+    );
+    selfAdjointOrders.add(correct.length);
+    assert.deepEqual(
+      correct,
+      correct[0].map((_, column) => correct.map((row) => row[column])),
+    );
+    for (const choice of selfAdjoint.choices.filter((choice) => !choice.correct)) {
+      const candidate = parseMatrix(choice.text);
+      assert.notDeepEqual(
+        candidate,
+        candidate[0].map((_, column) =>
+          candidate.map((row) => row[column]),
+        ),
+      );
+    }
+  }
+
+  assert.deepEqual(adjointOrders, new Set([2, 3]));
+  assert.deepEqual(selfAdjointOrders, new Set([2, 3]));
+});
+
+test("spectral and positivity questions cover theorem, computation and all signs", () => {
+  const spectralTemplates = new Set();
+  const positivityTemplates = new Set();
+
+  for (let index = 0; index < 600; index += 1) {
+    const spectral = spectralTheoremQuestion();
+    assertWellFormed(spectral);
+    if (spectral.id.includes("THEOREM")) {
+      spectralTemplates.add("theorem");
+      assert.match(
+        spectral.choices.find((choice) => choice.correct).text,
+        /orthogonale P.*diagonale D.*A = PDPᵀ/,
+      );
+    } else {
+      spectralTemplates.add("basis");
+      const source = parseMatrix(spectral.formula);
+      const answer = parseMatrix(
+        spectral.choices.find((choice) => choice.correct).text,
+      );
+      assert.deepEqual(answer, [
+        [source[0][0] + source[0][1], 0],
+        [0, source[0][0] - source[0][1]],
+      ]);
+    }
+
+    const positivity = positivityQuestion();
+    assertWellFormed(positivity);
+    const source = parseMatrix(positivity.formula);
+    const determinantValue = determinant(source);
+    const correct = positivity.choices.find((choice) => choice.correct).text;
+    if (positivity.id.includes("SEMIDEFINED")) {
+      positivityTemplates.add("semidefinite");
+      assert.equal(correct, "A est positive, mais pas définie positive.");
+      assert.equal(determinantValue, 0);
+      assert.ok(source[0][0] >= 0 && source[1][1] >= 0);
+    } else if (positivity.id.includes("DEFINED")) {
+      positivityTemplates.add("definite");
+      assert.equal(correct, "A est définie positive.");
+      assert.ok(source[0][0] > 0 && determinantValue > 0);
+    } else {
+      positivityTemplates.add("not-positive");
+      assert.equal(correct, "A n’est pas positive.");
+      assert.ok(
+        source[0][0] < 0 ||
+          source[1][1] < 0 ||
+          determinantValue < 0,
+      );
+    }
+  }
+
+  assert.deepEqual(spectralTemplates, new Set(["theorem", "basis"]));
+  assert.deepEqual(
+    positivityTemplates,
+    new Set(["definite", "semidefinite", "not-positive"]),
   );
 });
 

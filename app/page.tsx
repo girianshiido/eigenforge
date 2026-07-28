@@ -1048,6 +1048,8 @@ export default function Home() {
                 game.instruments[19] > 0 ? "is-triangularized" : "",
                 game.instruments[20] > 0 ? "has-polynomial" : "",
                 game.instruments[22] > 0 ? "has-cayley-hamilton" : "",
+                game.instruments[24] > 0 ? "has-adjoint" : "",
+                game.instruments[26] > 0 ? "is-orthogonally-diagonalized" : "",
               ]
                 .filter(Boolean)
                 .join(" ")}
@@ -1119,6 +1121,15 @@ export default function Home() {
                 <span className={game.instruments[21] > 0 ? "active" : ""}>πu</span>
                 <span className={game.instruments[22] > 0 ? "active" : ""}>χ(u)</span>
                 <span className={game.instruments[23] > 0 ? "active" : ""}>Nλ</span>
+              </div>
+              <div
+                className={`euclidean-sequence ${game.instruments[24] > 0 ? "visible" : ""}`}
+                aria-label="Progression de la réduction euclidienne"
+              >
+                <span className={game.instruments[24] > 0 ? "active" : ""}>u*</span>
+                <span className={game.instruments[25] > 0 ? "active" : ""}>S</span>
+                <span className={game.instruments[26] > 0 ? "active" : ""}>PDPᵀ</span>
+                <span className={game.instruments[27] > 0 ? "active" : ""}>S++</span>
               </div>
               <div
                 className={`vector-line vector-one ${game.instruments[0] > 0 ? "visible" : ""}`}
@@ -1657,7 +1668,7 @@ export default function Home() {
       </section>
 
       <footer>
-        <span>Prototype MPSI · Vecteurs, bases et applications linéaires</span>
+        <span>Programme MPSI · MP · Algèbre linéaire</span>
         <span>Sauvegarde locale automatique</span>
       </footer>
 

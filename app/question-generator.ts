@@ -55,7 +55,7 @@ function matrix(rows: readonly (readonly number[])[]) {
   return `⟦${rows.map((row) => row.join(",")).join(";")}⟧`;
 }
 
-function columnVector(values: readonly number[]) {
+function columnVector(values: readonly (number | string)[]) {
   return `⟪${values.join(",")}⟫`;
 }
 
@@ -101,6 +101,14 @@ function multiplyMatrices(
         0,
       ),
     ),
+  );
+}
+
+function transposeMatrix(
+  value: readonly (readonly number[])[],
+) {
+  return value[0].map((_, columnIndex) =>
+    value.map((row) => row[columnIndex]),
   );
 }
 
@@ -1849,6 +1857,234 @@ export function characteristicSubspaceQuestion(): Question {
   };
 }
 
+export function adjointMatrixQuestion(): Question {
+  const order = pick([2, 3]);
+  let value: number[][];
+  let transposed: number[][];
+  let distractors: number[][][];
+
+  do {
+    value = Array.from({ length: order }, () =>
+      Array.from({ length: order }, () => randomInt(-4, 4)),
+    );
+    transposed = transposeMatrix(value);
+    distractors = [
+      value,
+      transposed.map((row) => row.map((coefficient) => -coefficient)),
+      value.map((row) => row.map((coefficient) => -coefficient)),
+    ];
+  } while (
+    new Set([matrix(transposed), ...distractors.map(matrix)]).size !== 4
+  );
+
+  return {
+    id: `M-ADJOINT-O${order}-${Date.now()}-${randomInt(100, 999)}`,
+    sector: "matrices",
+    eyebrow: "MP · Adjoint",
+    prompt: "Quelle est la matrice de l’adjoint u* dans cette base ?",
+    formula: `Mat(u) = ${matrix(value)},   la base est orthonormée`,
+    choices: choices(matrix(transposed), distractors.map(matrix)),
+    explanation: `Dans une base orthonormée d’un espace euclidien, Mat(u*) = Mat(u)ᵀ. On transpose donc lignes et colonnes : ${matrix(transposed)}.`,
+    geometry:
+      "L’adjoint échange le rôle des deux arguments dans le produit scalaire.",
+    trap:
+      "La transposée représente l’adjoint seulement lorsque la base utilisée est orthonormée.",
+  };
+}
+
+export function selfAdjointQuestion(): Question {
+  const order = pick([2, 3]);
+  const symmetric = Array.from(
+    { length: order },
+    () => Array.from({ length: order }, () => 0),
+  );
+  for (let row = 0; row < order; row += 1) {
+    for (let column = row; column < order; column += 1) {
+      const coefficient = randomInt(-4, 4);
+      symmetric[row][column] = coefficient;
+      symmetric[column][row] = coefficient;
+    }
+  }
+  const distractors = [1, 2, 3].map((offset) => {
+    const candidate = symmetric.map((row) => [...row]);
+    candidate[0][1] += offset;
+    return candidate;
+  });
+
+  return {
+    id: `M-SELFADJOINT-O${order}-${Date.now()}-${randomInt(100, 999)}`,
+    sector: "matrices",
+    eyebrow: "MP · Endomorphisme autoadjoint",
+    prompt: "Laquelle de ces matrices représente un endomorphisme autoadjoint dans une base orthonormée ?",
+    formula: "Dans une base orthonormée, u est autoadjoint si et seulement si sa matrice est symétrique.",
+    choices: choices(matrix(symmetric), distractors.map(matrix)),
+    explanation: `${matrix(symmetric)} est égale à sa transposée : les coefficients symétriques par rapport à la diagonale sont égaux.`,
+    geometry:
+      "La symétrie matricielle traduit l’équilibre du produit scalaire entre u(x) et y.",
+    trap:
+      "Une matrice triangulaire ou diagonalisable n’est pas nécessairement symétrique.",
+  };
+}
+
+export function spectralTheoremQuestion(): Question {
+  if (Math.random() < 0.5) {
+    return {
+      id: `M-SPECTRAL-THEOREM-${Date.now()}-${randomInt(100, 999)}`,
+      sector: "matrices",
+      eyebrow: "MP · Théorème spectral",
+      prompt: "Quelle conclusion fournit le théorème spectral réel ?",
+      formula: "A ∈ M_n(ℝ),   Aᵀ = A",
+      choices: choices(
+        "Il existe une matrice orthogonale P et une matrice diagonale D telles que A = PDPᵀ.",
+        [
+          "A est diagonale dans toute base orthonormée.",
+          "Toutes les valeurs propres de A sont strictement positives.",
+          "Il existe une matrice inversible P telle que A = P².",
+        ],
+      ),
+      explanation:
+        "Une matrice réelle symétrique est orthogonalement diagonalisable : elle possède une base orthonormée de vecteurs propres.",
+      geometry:
+        "La transformation se décompose en une rotation ou réflexion orthogonale des axes, suivie d’étirements indépendants.",
+      trap:
+        "Le théorème garantit des valeurs propres réelles, pas nécessairement positives.",
+    };
+  }
+
+  const diagonal = randomInt(-3, 3);
+  const coupling = nonZero();
+  const firstEigenvalue = diagonal + coupling;
+  const secondEigenvalue = diagonal - coupling;
+  const answer = matrix([
+    [firstEigenvalue, 0],
+    [0, secondEigenvalue],
+  ]);
+
+  return {
+    id: `M-SPECTRAL-BASIS-${Date.now()}-${randomInt(100, 999)}`,
+    sector: "matrices",
+    eyebrow: "MP · Diagonalisation orthogonale",
+    prompt: "Quelle est la matrice diagonale de A dans la base orthonormée B = (v₁, v₂) ?",
+    formula: `A = ${matrix([
+      [diagonal, coupling],
+      [coupling, diagonal],
+    ])},   v₁ = (1/√2)${columnVector([1, 1])},   v₂ = (1/√2)${columnVector([1, -1])}`,
+    choices: choices(answer, [
+      matrix([
+        [secondEigenvalue, 0],
+        [0, firstEigenvalue],
+      ]),
+      matrix([
+        [diagonal, 0],
+        [0, diagonal],
+      ]),
+      matrix([
+        [firstEigenvalue, coupling],
+        [0, secondEigenvalue],
+      ]),
+    ]),
+    explanation: `Av₁ = ${firstEigenvalue}v₁ et Av₂ = ${secondEigenvalue}v₂. Dans l’ordre de B, la matrice diagonale est donc ${answer}.`,
+    geometry:
+      "Les deux diagonales du plan deviennent les axes orthogonaux propres de la transformation.",
+    trap:
+      "L’ordre des coefficients diagonaux doit suivre l’ordre v₁, puis v₂.",
+  };
+}
+
+export function positivityQuestion(): Question {
+  const template = randomInt(0, 3);
+  let selected: {
+    value: number[][];
+    answer: string;
+    explanation: string;
+    kind: "DEFINED" | "SEMIDEFINED" | "NO";
+  };
+
+  if (template === 0) {
+    const firstDiagonal = randomInt(1, 5);
+    const coupling = randomInt(-3, 3);
+    const secondDiagonal =
+      coupling * coupling + randomInt(1, 5);
+    const determinant =
+      firstDiagonal * secondDiagonal - coupling * coupling;
+    selected = {
+      value: [
+        [firstDiagonal, coupling],
+        [coupling, secondDiagonal],
+      ],
+      answer: "A est définie positive.",
+      explanation: `Le premier mineur principal vaut ${firstDiagonal} > 0 et det(A) = ${determinant} > 0. Le critère de Sylvester donne donc une matrice définie positive.`,
+      kind: "DEFINED",
+    };
+  } else if (template === 1) {
+    const firstCoordinate = nonZero();
+    const secondCoordinate = nonZero();
+    const scale = randomInt(1, 3);
+    selected = {
+      value: [
+        [
+          scale * firstCoordinate * firstCoordinate,
+          scale * firstCoordinate * secondCoordinate,
+        ],
+        [
+          scale * firstCoordinate * secondCoordinate,
+          scale * secondCoordinate * secondCoordinate,
+        ],
+      ],
+      answer: "A est positive, mais pas définie positive.",
+      explanation: `Pour x = ${columnVector(["x₁", "x₂"])}, xᵀAx = ${scale === 1 ? "" : scale}(${formatLinearExpression([
+        [firstCoordinate, "x₁"],
+        [secondCoordinate, "x₂"],
+      ])})² ≥ 0. Mais det(A) = 0 : A n’est pas définie positive.`,
+      kind: "SEMIDEFINED",
+    };
+  } else if (template === 2) {
+    const diagonal = randomInt(0, 3);
+    const coupling = diagonal + randomInt(1, 3);
+    const determinant = diagonal * diagonal - coupling * coupling;
+    selected = {
+      value: [
+        [diagonal, coupling],
+        [coupling, diagonal],
+      ],
+      answer: "A n’est pas positive.",
+      explanation: `det(A) = ${determinant} < 0 : les deux valeurs propres sont de signes opposés, donc A n’est pas positive.`,
+      kind: "NO",
+    };
+  } else {
+    const firstDiagonal = -randomInt(1, 5);
+    const secondDiagonal = -randomInt(1, 5);
+    selected = {
+      value: [
+        [firstDiagonal, 0],
+        [0, secondDiagonal],
+      ],
+      answer: "A n’est pas positive.",
+      explanation: `Avec x = ${columnVector([1, 0])}, on obtient xᵀAx = ${firstDiagonal} < 0. La matrice n’est donc pas positive.`,
+      kind: "NO",
+    };
+  }
+
+  return {
+    id: `M-POSITIVITY-${selected.kind}-${Date.now()}-${randomInt(100, 999)}`,
+    sector: "matrices",
+    eyebrow: "MP · Positivité",
+    prompt: "Quelle est la nature de cette matrice symétrique réelle ?",
+    formula: `A = ${matrix(selected.value)}`,
+    choices: choices(selected.answer, [
+      "A est définie positive.",
+      "A est positive, mais pas définie positive.",
+      "A n’est pas positive.",
+      "On ne peut pas conclure sans connaître une base propre.",
+    ].filter((candidate) => candidate !== selected.answer)),
+    explanation: selected.explanation,
+    geometry:
+      "La positivité signifie que la forme quadratique associée ne descend jamais sous zéro.",
+    trap:
+      "Une matrice symétrique peut être diagonalisable sans être positive.",
+  };
+}
+
 export function determinant3Question(): Question {
   const template = randomInt(0, 2);
   let rows: number[][];
@@ -1998,9 +2234,9 @@ export function blockDeterminantQuestion(): Question {
 
 export function matrixQuestion(
   _spaceDimension: number,
-  forcedTemplate?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15,
+  forcedTemplate?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19,
 ): Question {
-  const template = forcedTemplate ?? randomInt(0, 15);
+  const template = forcedTemplate ?? randomInt(0, 19);
   if (template === 0) return matrixVectorQuestion();
   if (template === 1) return representationMatrixQuestion();
   if (template === 2) return invertibleMatrixQuestion();
@@ -2016,7 +2252,11 @@ export function matrixQuestion(
   if (template === 12) return annihilatingPolynomialQuestion();
   if (template === 13) return minimalPolynomialQuestion();
   if (template === 14) return cayleyHamiltonQuestion();
-  return characteristicSubspaceQuestion();
+  if (template === 15) return characteristicSubspaceQuestion();
+  if (template === 16) return adjointMatrixQuestion();
+  if (template === 17) return selfAdjointQuestion();
+  if (template === 18) return spectralTheoremQuestion();
+  return positivityQuestion();
 }
 
 export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
@@ -2262,6 +2502,42 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     label: "Sous-espaces caractéristiques",
     description: "Lire les noyaux généralisés associés aux valeurs propres.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 15),
+  },
+  {
+    id: "matrix-adjoint",
+    sector: "matrices",
+    program: "MP",
+    minInstrument: 24,
+    label: "Adjoint",
+    description: "Transposer une matrice dans une base orthonormée.",
+    generate: (spaceDimension) => matrixQuestion(spaceDimension, 16),
+  },
+  {
+    id: "matrix-self-adjoint",
+    sector: "matrices",
+    program: "MP",
+    minInstrument: 25,
+    label: "Endomorphismes autoadjoints",
+    description: "Reconnaître la symétrie matricielle en base orthonormée.",
+    generate: (spaceDimension) => matrixQuestion(spaceDimension, 17),
+  },
+  {
+    id: "matrix-spectral-theorem",
+    sector: "matrices",
+    program: "MP",
+    minInstrument: 26,
+    label: "Théorème spectral",
+    description: "Construire une diagonalisation orthogonale.",
+    generate: (spaceDimension) => matrixQuestion(spaceDimension, 18),
+  },
+  {
+    id: "matrix-positivity",
+    sector: "matrices",
+    program: "MP",
+    minInstrument: 27,
+    label: "Positivité",
+    description: "Lire la positivité d’une matrice symétrique sur son spectre.",
+    generate: (spaceDimension) => matrixQuestion(spaceDimension, 19),
   },
 ] as const;
 

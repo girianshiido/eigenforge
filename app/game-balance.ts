@@ -4,6 +4,7 @@ export const STRUCTURAL_WORKSHOP_COUNT = 4;
 export const MATRIX_WORKSHOP_START = 12;
 export const REDUCTION_WORKSHOP_START = 16;
 export const POLYNOMIAL_WORKSHOP_START = 20;
+export const EUCLIDEAN_WORKSHOP_START = 24;
 
 export const INVARIANT_PROTOCOLS = [
   {
@@ -321,6 +322,50 @@ export const INSTRUMENTS = [
     unlock: 1_750_000_000_000_000_000,
     sector: "Sous-espaces caractéristiques",
   },
+  {
+    name: "Chambre adjointe",
+    mark: "u*",
+    description: "Révèle l’adjoint et augmente de 4 % la production du cycle Calcul polynomial.",
+    chapter: "Réduction euclidienne · MP",
+    mission: "Construire l’adjoint",
+    baseCost: 6_400_000_000_000_000_000,
+    baseProduction: 1_350_000_000_000_000,
+    unlock: 8_000_000_000_000_000_000,
+    sector: "Adjoint",
+  },
+  {
+    name: "Symétriseur spectral",
+    mark: "S(E)",
+    description: "Isole les endomorphismes autoadjoints et augmente de 2 % les récompenses justes.",
+    chapter: "Réduction euclidienne · MP",
+    mission: "Stabiliser la symétrie",
+    baseCost: 30_000_000_000_000_000_000,
+    baseProduction: 6_200_000_000_000_000,
+    unlock: 38_000_000_000_000_000_000,
+    sector: "Autoadjoint",
+  },
+  {
+    name: "Diagonaliseur orthogonal",
+    mark: "PDPᵀ",
+    description: "Oriente une base propre orthonormée et amplifie toute la production de 2 %.",
+    chapter: "Réduction euclidienne · MP",
+    mission: "Orthonormaliser le spectre",
+    baseCost: 140_000_000_000_000_000_000,
+    baseProduction: 29_000_000_000_000_000,
+    unlock: 180_000_000_000_000_000_000,
+    sector: "Théorème spectral",
+  },
+  {
+    name: "Analyseur de positivité",
+    mark: "S++",
+    description: "Sépare positivité et positivité définie, puis réduit de 1 % le prix des ateliers.",
+    chapter: "Réduction euclidienne · MP",
+    mission: "Mesurer la positivité",
+    baseCost: 660_000_000_000_000_000_000,
+    baseProduction: 135_000_000_000_000_000,
+    unlock: 840_000_000_000_000_000_000,
+    sector: "Positivité",
+  },
 ] as const;
 
 export function milestoneMultiplier(owned: number) {
@@ -398,7 +443,10 @@ export function basePassiveProduction(
     .slice(REDUCTION_WORKSHOP_START, POLYNOMIAL_WORKSHOP_START)
     .reduce((sum, output) => sum + output, 0);
   const polynomialOutput = outputs
-    .slice(POLYNOMIAL_WORKSHOP_START)
+    .slice(POLYNOMIAL_WORKSHOP_START, EUCLIDEAN_WORKSHOP_START)
+    .reduce((sum, output) => sum + output, 0);
+  const euclideanOutput = outputs
+    .slice(EUCLIDEAN_WORKSHOP_START)
     .reduce((sum, output) => sum + output, 0);
   const directionalMultiplier = 1 + (instruments[4] ?? 0) * 0.04;
   const familyMultiplier = 1 + (instruments[5] ?? 0) * 0.03;
@@ -412,6 +460,8 @@ export function basePassiveProduction(
   const diagonalMultiplier = 1 + (instruments[18] ?? 0) * 0.02;
   const polynomialMultiplier = 1 + (instruments[20] ?? 0) * 0.04;
   const cayleyHamiltonMultiplier = 1 + (instruments[22] ?? 0) * 0.02;
+  const adjointMultiplier = 1 + (instruments[24] ?? 0) * 0.04;
+  const orthogonalDiagonalMultiplier = 1 + (instruments[26] ?? 0) * 0.02;
 
   return (
     (directionalOutput * directionalMultiplier +
@@ -419,13 +469,15 @@ export function basePassiveProduction(
       applicationOutput * matrixCompositionMultiplier +
       matrixOutput * characteristicMultiplier +
       reductionOutput * polynomialMultiplier +
-      polynomialOutput +
+      polynomialOutput * adjointMultiplier +
+      euclideanOutput +
       applicationOutput * (matrixEncodingMultiplier - 1)) *
     rankMultiplier *
     rankTheoremMultiplier *
     spectralMultiplier *
     diagonalMultiplier *
-    cayleyHamiltonMultiplier
+    cayleyHamiltonMultiplier *
+    orthogonalDiagonalMultiplier
   );
 }
 
@@ -436,7 +488,8 @@ export function matrixWorkshopCostMultiplier(
     0.99,
     (instruments[14] ?? 0) +
       (instruments[19] ?? 0) +
-      (instruments[23] ?? 0),
+      (instruments[23] ?? 0) +
+      (instruments[27] ?? 0),
   );
 }
 
@@ -451,7 +504,8 @@ export function correctAnomalyRewardMultiplier(
     1 +
     (instruments[10] ?? 0) * 0.03 +
     (instruments[17] ?? 0) * 0.02 +
-    (instruments[21] ?? 0) * 0.02
+    (instruments[21] ?? 0) * 0.02 +
+    (instruments[25] ?? 0) * 0.02
   );
 }
 

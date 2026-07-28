@@ -31,6 +31,9 @@ linéaire des classes préparatoires MPSI et MP.
 - sixième cycle « Calcul polynomial · MP » portant la forge à vingt-quatre
   ateliers : polynômes annulateurs, polynôme minimal, théorème de
   Cayley-Hamilton et sous-espaces caractéristiques ;
+- septième cycle « Réduction euclidienne · MP » portant la forge à vingt-huit
+  ateliers : adjoints, endomorphismes autoadjoints, théorème spectral,
+  diagonalisation orthogonale et positivité des matrices symétriques ;
 - matrices 2×2 à 5×5 rendues comme de vraies grilles responsives dans les
   énoncés, les réponses et les corrections ;
 - notation contextuelle des vecteurs : tuples compacts pour les coordonnées,

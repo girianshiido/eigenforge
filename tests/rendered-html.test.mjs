@@ -170,7 +170,7 @@ test("keeps the network diagram consistent with its displayed dimension", async 
   assert.match(styles, /width: var\(--map-length\)/);
 });
 
-test("ships six ordered workshop cycles through polynomial reduction", async () => {
+test("ships seven ordered workshop cycles through Euclidean reduction", async () => {
   const balance = await readFile(
     new URL("../app/game-balance.ts", import.meta.url),
     "utf8",
@@ -205,6 +205,11 @@ test("ships six ordered workshop cycles through polynomial reduction", async () 
   assert.match(balance, /name: "Forge de Cayley-Hamilton"/);
   assert.match(balance, /name: "Décomposeur caractéristique"/);
   assert.match(balance, /chapter: "Calcul polynomial · MP"/);
+  assert.match(balance, /name: "Chambre adjointe"/);
+  assert.match(balance, /name: "Symétriseur spectral"/);
+  assert.match(balance, /name: "Diagonaliseur orthogonal"/);
+  assert.match(balance, /name: "Analyseur de positivité"/);
+  assert.match(balance, /chapter: "Réduction euclidienne · MP"/);
   assert.match(balance, /resonanceDecayRate/);
   assert.match(balance, /correctAnomalyRewardMultiplier/);
   assert.match(page, /const WORKSHOP_CHAPTERS/);
@@ -218,9 +223,13 @@ test("ships six ordered workshop cycles through polynomial reduction", async () 
   assert.match(page, /className=\{`polynomial-sequence/);
   assert.match(page, />P\(u\)<\/span>/);
   assert.match(page, />χ\(u\)<\/span>/);
-  assert.match(styles, /grid-template-columns: repeat\(6/);
+  assert.match(page, /className=\{`euclidean-sequence/);
+  assert.match(page, />u\*<\/span>/);
+  assert.match(page, />PDPᵀ<\/span>/);
+  assert.match(styles, /grid-template-columns: repeat\(7/);
   assert.match(styles, /\.reduction-sequence/);
   assert.match(styles, /\.polynomial-sequence/);
+  assert.match(styles, /\.euclidean-sequence/);
 });
 
 test("renders matrices as responsive grids instead of flattened text", async () => {
@@ -254,8 +263,10 @@ test("renders matrices as responsive grids instead of flattened text", async () 
   assert.match(renderer, /INLINE_SCRIPT_PATTERN/);
   assert.match(renderer, /ATOMIC_MATH_PATTERN/);
   assert.match(renderer, /SUPERSCRIPT_CHARACTERS/);
+  assert.match(renderer, /"ᵀ": "T"/);
   assert.match(renderer, /rawSubscript\.replace\("-", "−"\)/);
   assert.match(renderer, /Vecteur colonne/);
+  assert.match(renderer, /<ScriptedText source=\{coordinate\} \/>/);
   assert.match(renderer, /--matrix-columns/);
   assert.match(questions, /Déterminant d’ordre 3/);
   assert.match(questions, /⟦\$\{rows/);
