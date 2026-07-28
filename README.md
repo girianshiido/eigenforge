@@ -25,6 +25,9 @@ linéaire des classes préparatoires MPSI et MP.
   d’ateliers dimensionnels entre deux cycles ;
 - quatrième cycle « Matrices et réduction » portant la forge à seize ateliers,
   avec encodage, produit, inversibilité et spectre ;
+- cinquième cycle « Réduction spectrale · MP » portant la forge à vingt
+  ateliers : polynôme caractéristique, espaces propres, diagonalisation et
+  trigonalisation ;
 - matrices 2×2 à 5×5 rendues comme de vraies grilles responsives dans les
   énoncés, les réponses et les corrections ;
 - notation contextuelle des vecteurs : tuples compacts pour les coordonnées,
@@ -38,6 +41,8 @@ linéaire des classes préparatoires MPSI et MP.
   calculables de tête ;
 - progression conforme aux deux années : le socle MPSI précède les matrices
   par blocs et les valeurs propres, débloquées avec la Chambre spectrale MP ;
+- déblocage progressif des exercices de réduction : chaque atelier MP ajoute
+  sa propre famille au générateur au lieu d’ouvrir tout le chapitre d’un coup ;
 - anomalies mathématiques générées sur les vecteurs, les bases et les
   applications linéaires ;
 - rappels mathématiques affichés seulement lorsqu’ils apportent une information

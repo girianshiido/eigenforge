@@ -16,6 +16,7 @@ export type ExerciseFamily = {
   id: string;
   sector: Sector;
   program: "MPSI" | "MP";
+  minInstrument: number;
   label: string;
   description: string;
   generate: (spaceDimension: number) => Question;
@@ -152,6 +153,25 @@ function formatLinearExpression(terms: Array<[number, string]>) {
 
 function factor(value: number) {
   return value < 0 ? `(${value})` : `${value}`;
+}
+
+function characteristicPolynomial2(trace: number, determinant: number) {
+  let result = "X²";
+  if (trace !== 0) {
+    const magnitude = Math.abs(trace) === 1 ? "" : `${Math.abs(trace)}`;
+    result += trace > 0 ? ` − ${magnitude}X` : ` + ${magnitude}X`;
+  }
+  if (determinant !== 0) {
+    result +=
+      determinant > 0
+        ? ` + ${determinant}`
+        : ` − ${Math.abs(determinant)}`;
+  }
+  return result;
+}
+
+function polynomialRootFactor(root: number) {
+  return root > 0 ? `(X − ${root})` : `(X + ${Math.abs(root)})`;
 }
 
 function choices(correct: string, distractors: string[]) {
@@ -1252,6 +1272,156 @@ function eigenvalueQuestion(): Question {
   };
 }
 
+export function characteristicPolynomialQuestion(): Question {
+  let eigenvalues = sample([-4, -3, -2, -1, 1, 2, 3, 4], 2);
+  while (eigenvalues[0] + eigenvalues[1] === 0) {
+    eigenvalues = sample([-4, -3, -2, -1, 1, 2, 3, 4], 2);
+  }
+  const [firstEigenvalue, secondEigenvalue] = eigenvalues;
+  const upperCoefficient = nonZero();
+  const trace = firstEigenvalue + secondEigenvalue;
+  const determinant = firstEigenvalue * secondEigenvalue;
+  const answer = characteristicPolynomial2(trace, determinant);
+
+  return {
+    id: `M-CHARPOLY-${Date.now()}-${randomInt(100, 999)}`,
+    sector: "matrices",
+    eyebrow: "MP · Polynôme caractéristique",
+    prompt: "Quel est le polynôme caractéristique χ_A(X) = det(XI − A) ?",
+    formula: `A = ${matrix([
+      [firstEigenvalue, upperCoefficient],
+      [0, secondEigenvalue],
+    ])}`,
+    choices: choices(answer, [
+      characteristicPolynomial2(-trace, determinant),
+      characteristicPolynomial2(trace, -determinant),
+      characteristicPolynomial2(trace, determinant + 1),
+    ]),
+    explanation: `A est triangulaire, donc χ_A(X) = ${polynomialRootFactor(firstEigenvalue)}${polynomialRootFactor(secondEigenvalue)} = ${answer}.`,
+    geometry:
+      "Les racines du polynôme caractéristique sont les valeurs propres, comptées avec leur multiplicité.",
+    trap:
+      "Avec la convention det(XI − A), le coefficient de X est l’opposé de la trace.",
+  };
+}
+
+function inverseUnimodular2(value: readonly (readonly number[])[]) {
+  const determinant = determinant2(value[0], value[1]);
+  return [
+    [value[1][1] / determinant, -value[0][1] / determinant],
+    [-value[1][0] / determinant, value[0][0] / determinant],
+  ];
+}
+
+export function eigenvectorQuestion(): Question {
+  const changeOfBasis = pick([
+    [[1, 1], [0, 1]],
+    [[1, 0], [1, 1]],
+    [[1, -1], [1, 0]],
+    [[0, 1], [-1, 1]],
+  ] as const);
+  const eigenvalues = sample([-4, -3, -2, -1, 1, 2, 3, 4], 2);
+  const diagonal = [
+    [eigenvalues[0], 0],
+    [0, eigenvalues[1]],
+  ];
+  const value = multiplyMatrices(
+    multiplyMatrices(changeOfBasis, diagonal),
+    inverseUnimodular2(changeOfBasis),
+  );
+  const selectedIndex = randomInt(0, 1);
+  const eigenvector = [
+    changeOfBasis[0][selectedIndex],
+    changeOfBasis[1][selectedIndex],
+  ];
+  const otherEigenvector = [
+    changeOfBasis[0][1 - selectedIndex],
+    changeOfBasis[1][1 - selectedIndex],
+  ];
+  const mixedVector = [
+    eigenvector[0] + otherEigenvector[0],
+    eigenvector[1] + otherEigenvector[1],
+  ];
+  const selectedEigenvalue = eigenvalues[selectedIndex];
+
+  return {
+    id: `M-EIGENVECTOR-${Date.now()}-${randomInt(100, 999)}`,
+    sector: "matrices",
+    eyebrow: "MP · Espace propre",
+    prompt: `Quel vecteur est un vecteur propre de A pour la valeur propre ${selectedEigenvalue} ?`,
+    formula: `A = ${matrix(value)}`,
+    choices: choices(columnVector(eigenvector), [
+      columnVector(otherEigenvector),
+      columnVector(mixedVector),
+      columnVector([0, 0]),
+    ]),
+    explanation: `On vérifie que A ${columnVector(eigenvector)} = ${selectedEigenvalue} ${columnVector(eigenvector)}. Le vecteur est non nul : il appartient donc à l’espace propre E_${selectedEigenvalue}.`,
+    geometry:
+      "Une direction propre est conservée par l’application ; seule sa longueur ou son orientation peut changer.",
+    trap:
+      "Le vecteur nul vérifie formellement Av = λv, mais il n’est jamais un vecteur propre.",
+  };
+}
+
+export function diagonalizabilityQuestion(): Question {
+  const eigenvalues = sample([-3, -2, -1, 1, 2, 3], 2);
+  const [repeatedEigenvalue, simpleEigenvalue] = eigenvalues;
+  const diagonalizable = Math.random() < 0.5;
+  const repeatedEigenspaceDimension = diagonalizable ? 2 : 1;
+  const totalEigenspaceDimension = repeatedEigenspaceDimension + 1;
+  const answer = diagonalizable
+    ? `u est diagonalisable : ${repeatedEigenspaceDimension} + 1 = 3.`
+    : `u n’est pas diagonalisable : ${repeatedEigenspaceDimension} + 1 < 3.`;
+
+  return {
+    id: `M-DIAGONAL-${diagonalizable ? "YES" : "NO"}-${Date.now()}-${randomInt(100, 999)}`,
+    sector: "matrices",
+    eyebrow: "MP · Diagonalisation",
+    prompt: "Quelle conclusion est correcte ?",
+    formula: `χ_u(X) = ${polynomialRootFactor(repeatedEigenvalue)}²${polynomialRootFactor(simpleEigenvalue)},   dim(E_${repeatedEigenvalue}) = ${repeatedEigenspaceDimension},   dim(E_${simpleEigenvalue}) = 1`,
+    choices: choices(answer, [
+      "u est diagonalisable car son polynôme caractéristique est de degré 3.",
+      "u n’est pas diagonalisable car il possède exactement deux valeurs propres.",
+      "On ne peut rien conclure sans calculer det(u).",
+    ]),
+    explanation: diagonalizable
+      ? "La somme des dimensions des sous-espaces propres vaut 3, qui est la dimension de l’espace. Une base de vecteurs propres existe."
+      : "La somme des dimensions des sous-espaces propres vaut seulement 2. Il manque une direction propre pour former une base.",
+    geometry:
+      "Diagonaliser consiste à trouver une base entièrement formée de directions propres.",
+    trap:
+      "Un polynôme caractéristique scindé ne suffit pas à garantir la diagonalisabilité.",
+  };
+}
+
+export function triangularizationQuestion(): Question {
+  let eigenvalues = sample([-4, -3, -2, -1, 1, 2, 3, 4], 2);
+  while (eigenvalues[0] + eigenvalues[1] === 0) {
+    eigenvalues = sample([-4, -3, -2, -1, 1, 2, 3, 4], 2);
+  }
+  const [repeatedEigenvalue, simpleEigenvalue] = eigenvalues;
+  const extraValue = repeatedEigenvalue + simpleEigenvalue;
+  const answer = `{${repeatedEigenvalue} ; ${repeatedEigenvalue} ; ${simpleEigenvalue}}`;
+
+  return {
+    id: `M-TRIANGULAR-${Date.now()}-${randomInt(100, 999)}`,
+    sector: "matrices",
+    eyebrow: "MP · Trigonalisation",
+    prompt: "À l’ordre près, quels sont les coefficients diagonaux d’une forme triangulaire de u ?",
+    formula: `χ_u(X) = ${polynomialRootFactor(repeatedEigenvalue)}²${polynomialRootFactor(simpleEigenvalue)}`,
+    choices: choices(answer, [
+      `{${repeatedEigenvalue} ; ${simpleEigenvalue} ; ${simpleEigenvalue}}`,
+      `{${repeatedEigenvalue} ; ${simpleEigenvalue} ; ${extraValue}}`,
+      `{0 ; ${repeatedEigenvalue} ; ${simpleEigenvalue}}`,
+    ]),
+    explanation: `Dans une matrice triangulaire, les coefficients diagonaux sont les valeurs propres comptées avec leur multiplicité. On obtient donc ${answer}, à l’ordre près.`,
+    geometry:
+      "La trigonalisation organise les directions généralisées tout en faisant apparaître le spectre sur la diagonale.",
+    trap:
+      "La multiplicité algébrique d’une valeur propre doit être conservée sur la diagonale.",
+  };
+}
+
 export function determinant3Question(): Question {
   const template = randomInt(0, 2);
   let rows: number[][];
@@ -1401,9 +1571,9 @@ export function blockDeterminantQuestion(): Question {
 
 export function matrixQuestion(
   _spaceDimension: number,
-  forcedTemplate?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7,
+  forcedTemplate?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11,
 ): Question {
-  const template = forcedTemplate ?? randomInt(0, 7);
+  const template = forcedTemplate ?? randomInt(0, 11);
   if (template === 0) return matrixVectorQuestion();
   if (template === 1) return representationMatrixQuestion();
   if (template === 2) return invertibleMatrixQuestion();
@@ -1411,7 +1581,11 @@ export function matrixQuestion(
   if (template === 4) return determinant3Question();
   if (template === 5) return determinant2MatrixQuestion();
   if (template === 6) return matrixProductQuestion();
-  return blockDeterminantQuestion();
+  if (template === 7) return blockDeterminantQuestion();
+  if (template === 8) return characteristicPolynomialQuestion();
+  if (template === 9) return eigenvectorQuestion();
+  if (template === 10) return diagonalizabilityQuestion();
+  return triangularizationQuestion();
 }
 
 export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
@@ -1419,6 +1593,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     id: "vector-combination",
     sector: "vectors",
     program: "MPSI",
+    minInstrument: -1,
     label: "Combinaisons linéaires",
     description: "Calculer les coordonnées de αu + βv.",
     generate: (spaceDimension) => vectorQuestion(spaceDimension, 0),
@@ -1427,6 +1602,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     id: "vector-span",
     sector: "vectors",
     program: "MPSI",
+    minInstrument: -1,
     label: "Appartenance à Vect",
     description: "Reconnaître les vecteurs d’une droite ou d’un plan engendré.",
     generate: (spaceDimension) => vectorQuestion(spaceDimension, 1),
@@ -1435,6 +1611,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     id: "vector-subspace",
     sector: "vectors",
     program: "MPSI",
+    minInstrument: -1,
     label: "Sous-espaces vectoriels",
     description: "Distinguer sous-espaces et ensembles non stables.",
     generate: (spaceDimension) => vectorQuestion(spaceDimension, 2),
@@ -1443,6 +1620,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     id: "basis-determinant",
     sector: "bases",
     program: "MPSI",
+    minInstrument: 1,
     label: "Déterminant d’une famille",
     description: "Calculer un déterminant et reconnaître une base de ℝ².",
     generate: (spaceDimension) => basisQuestion(spaceDimension, 0),
@@ -1451,6 +1629,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     id: "basis-coordinates",
     sector: "bases",
     program: "MPSI",
+    minInstrument: 1,
     label: "Coordonnées dans une base",
     description: "Exprimer un vecteur dans une base non canonique.",
     generate: (spaceDimension) => basisQuestion(spaceDimension, 1),
@@ -1459,6 +1638,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     id: "basis-rank",
     sector: "bases",
     program: "MPSI",
+    minInstrument: 4,
     label: "Rang d’une famille",
     description: "Déterminer le nombre de directions indépendantes.",
     generate: (spaceDimension) => basisQuestion(spaceDimension, 2),
@@ -1467,6 +1647,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     id: "application-kernel",
     sector: "applications",
     program: "MPSI",
+    minInstrument: 9,
     label: "Noyau",
     description: "Identifier un vecteur envoyé sur le vecteur nul.",
     generate: (spaceDimension) => applicationQuestion(spaceDimension, 0),
@@ -1475,6 +1656,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     id: "application-rank-theorem",
     sector: "applications",
     program: "MPSI",
+    minInstrument: 11,
     label: "Théorème du rang",
     description: "Relier dimension du noyau, rang et dimension de départ.",
     generate: (spaceDimension) => applicationQuestion(spaceDimension, 1),
@@ -1483,6 +1665,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     id: "application-explicit-rank",
     sector: "applications",
     program: "MPSI",
+    minInstrument: 8,
     label: "Rang d’une application",
     description: "Lire le rang d’une application donnée explicitement.",
     generate: (spaceDimension) => applicationQuestion(spaceDimension, 2),
@@ -1491,6 +1674,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     id: "application-image",
     sector: "applications",
     program: "MPSI",
+    minInstrument: 10,
     label: "Image d’une application",
     description: "Déterminer le sous-espace atteint par une application.",
     generate: (spaceDimension) => applicationQuestion(spaceDimension, 3),
@@ -1499,6 +1683,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     id: "application-linearity",
     sector: "applications",
     program: "MPSI",
+    minInstrument: 8,
     label: "Linéarité",
     description: "Reconnaître les applications qui conservent les combinaisons linéaires.",
     generate: (spaceDimension) => applicationQuestion(spaceDimension, 4),
@@ -1507,6 +1692,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     id: "matrix-vector-product",
     sector: "matrices",
     program: "MPSI",
+    minInstrument: 12,
     label: "Produit matrice-vecteur",
     description: "Appliquer une matrice à un vecteur colonne.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 0),
@@ -1515,6 +1701,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     id: "matrix-representation",
     sector: "matrices",
     program: "MPSI",
+    minInstrument: 12,
     label: "Matrice d’une application",
     description: "Encoder les images des vecteurs de base dans les colonnes.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 1),
@@ -1523,6 +1710,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     id: "matrix-invertibility",
     sector: "matrices",
     program: "MPSI",
+    minInstrument: 14,
     label: "Inversibilité",
     description: "Reconnaître une matrice de déterminant non nul.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 2),
@@ -1531,6 +1719,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     id: "matrix-spectrum",
     sector: "matrices",
     program: "MP",
+    minInstrument: 15,
     label: "Valeurs propres",
     description: "Lire le spectre d’une matrice triangulaire.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 3),
@@ -1539,6 +1728,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     id: "matrix-determinant-2",
     sector: "matrices",
     program: "MPSI",
+    minInstrument: 12,
     label: "Déterminant 2×2",
     description: "Calculer ad − bc avec des coefficients entiers.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 5),
@@ -1547,6 +1737,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     id: "matrix-determinant-3",
     sector: "matrices",
     program: "MPSI",
+    minInstrument: 14,
     label: "Déterminant 3×3",
     description: "Calculer mentalement un déterminant triangulaire ou creux.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 4),
@@ -1555,6 +1746,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     id: "matrix-product",
     sector: "matrices",
     program: "MPSI",
+    minInstrument: 13,
     label: "Produit de matrices 2×2",
     description: "Multiplier les lignes de A par les colonnes de B.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 6),
@@ -1563,36 +1755,75 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     id: "matrix-block-determinant",
     sector: "matrices",
     program: "MP",
+    minInstrument: 15,
     label: "Déterminant par blocs",
     description: "Exploiter des blocs triangulaires aux ordres 4 et 5.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 7),
+  },
+  {
+    id: "matrix-characteristic-polynomial",
+    sector: "matrices",
+    program: "MP",
+    minInstrument: 16,
+    label: "Polynôme caractéristique",
+    description: "Calculer det(XI − A) et retrouver les valeurs propres.",
+    generate: (spaceDimension) => matrixQuestion(spaceDimension, 8),
+  },
+  {
+    id: "matrix-eigenspace",
+    sector: "matrices",
+    program: "MP",
+    minInstrument: 17,
+    label: "Espaces propres",
+    description: "Reconnaître un vecteur propre associé à une valeur propre.",
+    generate: (spaceDimension) => matrixQuestion(spaceDimension, 9),
+  },
+  {
+    id: "matrix-diagonalization",
+    sector: "matrices",
+    program: "MP",
+    minInstrument: 18,
+    label: "Diagonalisation",
+    description: "Décider si les sous-espaces propres forment une base.",
+    generate: (spaceDimension) => matrixQuestion(spaceDimension, 10),
+  },
+  {
+    id: "matrix-triangularization",
+    sector: "matrices",
+    program: "MP",
+    minInstrument: 19,
+    label: "Trigonalisation",
+    description: "Lire le spectre avec multiplicité sur une forme triangulaire.",
+    generate: (spaceDimension) => matrixQuestion(spaceDimension, 11),
   },
 ] as const;
 
 export function availableExerciseFamilies(
   sectors: Sector[],
-  includeMp = false,
+  highestOwnedInstrument = 14,
 ) {
-  const programFamilies = EXERCISE_FAMILIES.filter(
-    (family) => includeMp || family.program === "MPSI",
-  );
-  return programFamilies.filter((family) =>
-    sectors.includes(family.sector),
+  return EXERCISE_FAMILIES.filter(
+    (family) =>
+      sectors.includes(family.sector) &&
+      family.minInstrument <= highestOwnedInstrument,
   );
 }
 
 export function generateQuestion(
   sectors: Sector[],
   spaceDimension: number,
-  includeMp = false,
+  highestOwnedInstrument = 14,
 ) {
-  const programFamilies = EXERCISE_FAMILIES.filter(
-    (family) => includeMp || family.program === "MPSI",
+  const unlockedFamilies = EXERCISE_FAMILIES.filter(
+    (family) => family.minInstrument <= highestOwnedInstrument,
   );
-  const availableFamilies = availableExerciseFamilies(sectors, includeMp);
+  const availableFamilies = availableExerciseFamilies(
+    sectors,
+    highestOwnedInstrument,
+  );
   return pick(
     availableFamilies.length > 0
       ? availableFamilies
-      : programFamilies,
+      : unlockedFamilies,
   ).generate(spaceDimension);
 }

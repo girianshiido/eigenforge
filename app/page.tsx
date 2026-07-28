@@ -502,6 +502,7 @@ function formatNumber(value: number) {
     return value < 100 ? value.toFixed(value < 10 ? 1 : 0) : Math.floor(value).toString();
   }
   const units = [
+    { value: 1e15, suffix: " Qa" },
     { value: 1e12, suffix: " B" },
     { value: 1e9, suffix: " Md" },
     { value: 1e6, suffix: " M" },
@@ -800,8 +801,13 @@ export default function Home() {
       (left, right) => game.mastery[left] - game.mastery[right],
     );
     const pool = Math.random() < 0.55 ? [weakest[0]] : sectors;
-    const mpUnlocked = game.instruments[15] > 0;
-    setQuestion(generateExercise(pool, spaceDimension, mpUnlocked));
+    const highestOwnedInstrument = game.instruments.reduce(
+      (highest, count, index) => (count > 0 ? index : highest),
+      -1,
+    );
+    setQuestion(
+      generateExercise(pool, spaceDimension, highestOwnedInstrument),
+    );
     setAnswer(null);
   }
 
@@ -1036,6 +1042,9 @@ export default function Home() {
                 game.instruments[11] > 0 ? "rank-balanced" : "",
                 game.instruments[12] > 0 ? "has-matrix" : "",
                 game.instruments[15] > 0 ? "has-spectrum" : "",
+                game.instruments[16] > 0 ? "has-characteristic" : "",
+                game.instruments[18] > 0 ? "is-diagonalized" : "",
+                game.instruments[19] > 0 ? "is-triangularized" : "",
               ]
                 .filter(Boolean)
                 .join(" ")}
@@ -1089,6 +1098,15 @@ export default function Home() {
               >
                 <span>λ₁</span>
                 <span>λ₂</span>
+              </div>
+              <div
+                className={`reduction-sequence ${game.instruments[16] > 0 ? "visible" : ""}`}
+                aria-label="Progression de la réduction spectrale"
+              >
+                <span className={game.instruments[16] > 0 ? "active" : ""}>χA</span>
+                <span className={game.instruments[17] > 0 ? "active" : ""}>Eλ</span>
+                <span className={game.instruments[18] > 0 ? "active" : ""}>D</span>
+                <span className={game.instruments[19] > 0 ? "active" : ""}>T</span>
               </div>
               <div
                 className={`vector-line vector-one ${game.instruments[0] > 0 ? "visible" : ""}`}

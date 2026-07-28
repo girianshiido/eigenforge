@@ -2,6 +2,7 @@ export const PRESTIGE_SCALE = 750_000;
 export const INSTRUMENT_MILESTONES = [10, 25, 50] as const;
 export const STRUCTURAL_WORKSHOP_COUNT = 4;
 export const MATRIX_WORKSHOP_START = 12;
+export const REDUCTION_WORKSHOP_START = 16;
 
 export const INVARIANT_PROTOCOLS = [
   {
@@ -231,6 +232,50 @@ export const INSTRUMENTS = [
     unlock: 8_000_000_000_000,
     sector: "Spectre",
   },
+  {
+    name: "Traceur caractéristique",
+    mark: "χ",
+    description: "Déploie χ_A et augmente de 4 % la production du cycle Matrices.",
+    chapter: "Réduction spectrale · MP",
+    mission: "Tracer le polynôme caractéristique",
+    baseCost: 28_000_000_000_000,
+    baseProduction: 6_800_000_000,
+    unlock: 36_000_000_000_000,
+    sector: "Polynôme caractéristique",
+  },
+  {
+    name: "Extracteur propre",
+    mark: "Eλ",
+    description: "Isole les espaces propres et augmente de 2 % les récompenses des réponses justes.",
+    chapter: "Réduction spectrale · MP",
+    mission: "Extraire les espaces propres",
+    baseCost: 130_000_000_000_000,
+    baseProduction: 30_000_000_000,
+    unlock: 170_000_000_000_000,
+    sector: "Espaces propres",
+  },
+  {
+    name: "Diagonaliseur",
+    mark: "D",
+    description: "Assemble une base de vecteurs propres et amplifie toute la production de 2 %.",
+    chapter: "Réduction spectrale · MP",
+    mission: "Former une base propre",
+    baseCost: 610_000_000_000_000,
+    baseProduction: 140_000_000_000,
+    unlock: 780_000_000_000_000,
+    sector: "Diagonalisation",
+  },
+  {
+    name: "Trigonaliseur",
+    mark: "T",
+    description: "Stabilise les formes triangulaires et réduit de 1 % le prix de tous les ateliers.",
+    chapter: "Réduction spectrale · MP",
+    mission: "Achever la réduction",
+    baseCost: 2_850_000_000_000_000,
+    baseProduction: 650_000_000_000,
+    unlock: 3_600_000_000_000_000,
+    sector: "Trigonalisation",
+  },
 ] as const;
 
 export function milestoneMultiplier(owned: number) {
@@ -302,7 +347,10 @@ export function basePassiveProduction(
     .slice(8, MATRIX_WORKSHOP_START)
     .reduce((sum, output) => sum + output, 0);
   const matrixOutput = outputs
-    .slice(MATRIX_WORKSHOP_START)
+    .slice(MATRIX_WORKSHOP_START, REDUCTION_WORKSHOP_START)
+    .reduce((sum, output) => sum + output, 0);
+  const reductionOutput = outputs
+    .slice(REDUCTION_WORKSHOP_START)
     .reduce((sum, output) => sum + output, 0);
   const directionalMultiplier = 1 + (instruments[4] ?? 0) * 0.04;
   const familyMultiplier = 1 + (instruments[5] ?? 0) * 0.03;
@@ -312,23 +360,30 @@ export function basePassiveProduction(
   const matrixEncodingMultiplier = 1 + (instruments[12] ?? 0) * 0.04;
   const matrixCompositionMultiplier = 1 + (instruments[13] ?? 0) * 0.03;
   const spectralMultiplier = 1 + (instruments[15] ?? 0) * 0.02;
+  const characteristicMultiplier = 1 + (instruments[16] ?? 0) * 0.04;
+  const diagonalMultiplier = 1 + (instruments[18] ?? 0) * 0.02;
 
   return (
     (directionalOutput * directionalMultiplier +
       familyOutput * familyMultiplier * transformationMultiplier +
       applicationOutput * matrixCompositionMultiplier +
-      matrixOutput +
+      matrixOutput * characteristicMultiplier +
+      reductionOutput +
       applicationOutput * (matrixEncodingMultiplier - 1)) *
     rankMultiplier *
     rankTheoremMultiplier *
-    spectralMultiplier
+    spectralMultiplier *
+    diagonalMultiplier
   );
 }
 
 export function matrixWorkshopCostMultiplier(
   instruments: readonly number[],
 ) {
-  return Math.pow(0.99, instruments[14] ?? 0);
+  return Math.pow(
+    0.99,
+    (instruments[14] ?? 0) + (instruments[19] ?? 0),
+  );
 }
 
 export function resonanceDecayRate(instruments: readonly number[]) {
@@ -338,7 +393,11 @@ export function resonanceDecayRate(instruments: readonly number[]) {
 export function correctAnomalyRewardMultiplier(
   instruments: readonly number[],
 ) {
-  return 1 + (instruments[10] ?? 0) * 0.03;
+  return (
+    1 +
+    (instruments[10] ?? 0) * 0.03 +
+    (instruments[17] ?? 0) * 0.02
+  );
 }
 
 export function invariantGain(runTotal: number) {

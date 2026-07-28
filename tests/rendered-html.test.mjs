@@ -40,7 +40,10 @@ test("renders the unlimited exercise laboratory from the shared catalogue", asyn
     "utf8",
   );
   assert.match(laboratory, /EXERCISE_FAMILIES\.filter/);
-  assert.match(laboratory, /generateQuestion\(sectors, dimension, true\)/);
+  assert.match(
+    laboratory,
+    /generateQuestion\([\s\S]*Number\.POSITIVE_INFINITY/,
+  );
   assert.doesNotMatch(laboratory, /SAVE_KEY|localStorage/);
 });
 
@@ -95,7 +98,7 @@ test("formats generated expressions and previews basis changes", async () => {
   assert.match(questions, /function formatLinearExpression/);
   assert.match(
     page,
-    /generateExercise\(pool, spaceDimension, mpUnlocked\)/,
+    /generateExercise\(pool, spaceDimension, highestOwnedInstrument\)/,
   );
   assert.match(page, /Remis à zéro/);
   assert.match(page, /Multiplicateur actuel/);
@@ -161,13 +164,17 @@ test("keeps the network diagram consistent with its displayed dimension", async 
   assert.match(styles, /width: var\(--map-length\)/);
 });
 
-test("ships four ordered workshop cycles through matrix reduction", async () => {
+test("ships five ordered workshop cycles through MP reduction", async () => {
   const balance = await readFile(
     new URL("../app/game-balance.ts", import.meta.url),
     "utf8",
   );
   const page = await readFile(
     new URL("../app/page.tsx", import.meta.url),
+    "utf8",
+  );
+  const styles = await readFile(
+    new URL("../app/globals.css", import.meta.url),
     "utf8",
   );
 
@@ -182,6 +189,11 @@ test("ships four ordered workshop cycles through matrix reduction", async () => 
   assert.match(balance, /name: "Chambre spectrale"/);
   assert.match(balance, /Ouvre la partie MP/);
   assert.match(balance, /chapter: "Matrices et réduction"/);
+  assert.match(balance, /name: "Traceur caractéristique"/);
+  assert.match(balance, /name: "Extracteur propre"/);
+  assert.match(balance, /name: "Diagonaliseur"/);
+  assert.match(balance, /name: "Trigonaliseur"/);
+  assert.match(balance, /chapter: "Réduction spectrale · MP"/);
   assert.match(balance, /resonanceDecayRate/);
   assert.match(balance, /correctAnomalyRewardMultiplier/);
   assert.match(page, /const WORKSHOP_CHAPTERS/);
@@ -189,6 +201,11 @@ test("ships four ordered workshop cycles through matrix reduction", async () => 
   assert.match(page, /game\.instruments\[12\] > 0/);
   assert.match(page, /workshop-cycle-navigation/);
   assert.match(page, /activeWorkshopChapter/);
+  assert.match(page, /className=\{`reduction-sequence/);
+  assert.match(page, />χA<\/span>/);
+  assert.match(page, />Eλ<\/span>/);
+  assert.match(styles, /grid-template-columns: repeat\(5/);
+  assert.match(styles, /\.reduction-sequence/);
 });
 
 test("renders matrices as responsive grids instead of flattened text", async () => {

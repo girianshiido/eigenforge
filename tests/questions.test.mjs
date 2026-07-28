@@ -6,16 +6,21 @@ import {
   availableExerciseFamilies,
   basisQuestion,
   blockDeterminantQuestion,
+  characteristicPolynomialQuestion,
   combinationQuestion,
   determinant2MatrixQuestion,
   determinant3Question,
+  diagonalizabilityQuestion,
+  eigenvectorQuestion,
   explicitMapRankQuestion,
   familyRankQuestion,
+  generateQuestion,
   imageQuestion,
   matrixProductQuestion,
   rankTheoremQuestion,
   spanQuestion,
   subspaceQuestion,
+  triangularizationQuestion,
 } from "../app/question-generator.ts";
 
 function assertWellFormed(question) {
@@ -85,7 +90,7 @@ function multiply(first, second) {
 }
 
 test("the shared catalogue exposes every exercise family to the game and laboratory", () => {
-  assert.equal(EXERCISE_FAMILIES.length, 19);
+  assert.equal(EXERCISE_FAMILIES.length, 23);
   assert.deepEqual(
     new Set(EXERCISE_FAMILIES.map((family) => family.sector)),
     new Set(["vectors", "bases", "applications", "matrices"]),
@@ -110,12 +115,20 @@ test("the shared catalogue exposes every exercise family to the game and laborat
   }
 });
 
+test("vector anomalies remain available before the first workshop", () => {
+  for (let index = 0; index < 100; index += 1) {
+    const question = generateQuestion(["vectors"], 0, -1);
+    assertWellFormed(question);
+    assert.equal(question.sector, "vectors");
+  }
+});
+
 test("matrix questions use structured notation and mental 3 by 3 determinants", () => {
   const determinantTemplates = new Set();
   const matrixFamilies = EXERCISE_FAMILIES.filter(
     (family) => family.sector === "matrices",
   );
-  assert.equal(matrixFamilies.length, 8);
+  assert.equal(matrixFamilies.length, 12);
 
   for (const family of matrixFamilies) {
     for (let index = 0; index < 150; index += 1) {
@@ -238,26 +251,129 @@ test("matrix generators cover products and determinants from order two to five",
   assert.equal(sawLargeCoefficient, true);
 });
 
-test("MPSI questions exclude MP-only blocks and eigenvalues until the final workshop", () => {
+test("the MP exercise path unlocks one reduction topic per workshop", () => {
   assert.deepEqual(
     EXERCISE_FAMILIES.filter((family) => family.program === "MP").map(
       (family) => family.id,
     ),
-    ["matrix-spectrum", "matrix-block-determinant"],
+    [
+      "matrix-spectrum",
+      "matrix-block-determinant",
+      "matrix-characteristic-polynomial",
+      "matrix-eigenspace",
+      "matrix-diagonalization",
+      "matrix-triangularization",
+    ],
   );
 
   assert.equal(
-    availableExerciseFamilies(["matrices"]).every(
+    availableExerciseFamilies(["matrices"], 14).every(
       (family) => family.program === "MPSI",
     ),
     true,
   );
   assert.deepEqual(
-    availableExerciseFamilies(["matrices"], true)
+    availableExerciseFamilies(["matrices"], 15)
       .filter((family) => family.program === "MP")
       .map((family) => family.id),
     ["matrix-spectrum", "matrix-block-determinant"],
   );
+  assert.deepEqual(
+    [16, 17, 18, 19].map((highestOwnedInstrument) =>
+      availableExerciseFamilies(
+        ["matrices"],
+        highestOwnedInstrument,
+      )
+        .filter((family) => family.program === "MP")
+        .at(-1).id,
+    ),
+    [
+      "matrix-characteristic-polynomial",
+      "matrix-eigenspace",
+      "matrix-diagonalization",
+      "matrix-triangularization",
+    ],
+  );
+});
+
+test("MP reduction questions validate characteristic and eigenvector calculations", () => {
+  const characteristicForms = new Set();
+
+  for (let index = 0; index < 400; index += 1) {
+    const characteristic = characteristicPolynomialQuestion();
+    assertWellFormed(characteristic);
+    const rows = parseMatrix(characteristic.formula);
+    const trace = rows[0][0] + rows[1][1];
+    const determinantValue = determinant(rows);
+    const expected = (() => {
+      let result = "X²";
+      if (trace !== 0) {
+        const magnitude =
+          Math.abs(trace) === 1 ? "" : `${Math.abs(trace)}`;
+        result += trace > 0 ? ` − ${magnitude}X` : ` + ${magnitude}X`;
+      }
+      if (determinantValue !== 0) {
+        result +=
+          determinantValue > 0
+            ? ` + ${determinantValue}`
+            : ` − ${Math.abs(determinantValue)}`;
+      }
+      return result;
+    })();
+    assert.equal(
+      characteristic.choices.find((choice) => choice.correct).text,
+      expected,
+    );
+    characteristicForms.add(expected);
+
+    const eigenvector = eigenvectorQuestion();
+    assertWellFormed(eigenvector);
+    const matrixRows = parseMatrix(eigenvector.formula);
+    const vectorValue = parseVector(
+      eigenvector.choices.find((choice) => choice.correct).text,
+    );
+    const eigenvalue = Number(
+      eigenvector.prompt.match(/valeur propre (-?\d+)/)[1],
+    );
+    assert.deepEqual(
+      [
+        matrixRows[0][0] * vectorValue[0] +
+          matrixRows[0][1] * vectorValue[1],
+        matrixRows[1][0] * vectorValue[0] +
+          matrixRows[1][1] * vectorValue[1],
+      ].map((coordinate) => coordinate || 0),
+      vectorValue.map((coordinate) => eigenvalue * coordinate || 0),
+    );
+    assert.notDeepEqual(vectorValue, [0, 0]);
+  }
+
+  assert.ok(characteristicForms.size >= 20);
+});
+
+test("MP reduction questions vary diagonalizability and preserve multiplicities", () => {
+  const conclusions = new Set();
+  const triangularSpectra = new Set();
+
+  for (let index = 0; index < 400; index += 1) {
+    const diagonalization = diagonalizabilityQuestion();
+    assertWellFormed(diagonalization);
+    const conclusion = diagonalization.choices.find(
+      (choice) => choice.correct,
+    ).text;
+    conclusions.add(conclusion.includes("n’est pas") ? "no" : "yes");
+
+    const triangularization = triangularizationQuestion();
+    assertWellFormed(triangularization);
+    const answer = triangularization.choices.find(
+      (choice) => choice.correct,
+    ).text;
+    triangularSpectra.add(answer);
+    assert.match(answer, /^\{-?\d+ ; -?\d+ ; -?\d+\}$/);
+    assert.match(triangularization.explanation, /multiplicité/);
+  }
+
+  assert.deepEqual(conclusions, new Set(["yes", "no"]));
+  assert.ok(triangularSpectra.size >= 20);
 });
 
 test("image exercises genuinely determine images in dimensions two and three", () => {

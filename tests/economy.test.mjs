@@ -85,15 +85,24 @@ test("linear-map workshops transform production, resonance and anomaly rewards",
   );
 });
 
-test("the matrix cycle extends production and reduces workshop costs", () => {
-  assert.equal(INSTRUMENTS.length, 16);
+test("matrix and MP reduction cycles extend production and workshop synergies", () => {
+  assert.equal(INSTRUMENTS.length, 20);
   assert.deepEqual(
-    INSTRUMENTS.slice(12).map((instrument) => instrument.name),
+    INSTRUMENTS.slice(12, 16).map((instrument) => instrument.name),
     [
       "Encodeur matriciel",
       "Composeur matriciel",
       "Inverseur de Gauss",
       "Chambre spectrale",
+    ],
+  );
+  assert.deepEqual(
+    INSTRUMENTS.slice(16).map((instrument) => instrument.name),
+    [
+      "Traceur caractéristique",
+      "Extracteur propre",
+      "Diagonaliseur",
+      "Trigonaliseur",
     ],
   );
 
@@ -103,11 +112,23 @@ test("the matrix cycle extends production and reduces workshop costs", () => {
     1, 1, 1, 1,
     0, 0, 0, 0,
   ]);
-  const matrices = basePassiveProduction(INSTRUMENTS.map(() => 1));
+  const matrices = basePassiveProduction([
+    ...INSTRUMENTS.slice(0, 16).map(() => 1),
+    0, 0, 0, 0,
+  ]);
+  const reduction = basePassiveProduction(INSTRUMENTS.map(() => 1));
   assert.ok(
     matrices >
       applications +
-        INSTRUMENTS.slice(12).reduce(
+        INSTRUMENTS.slice(12, 16).reduce(
+          (sum, instrument) => sum + instrument.baseProduction,
+          0,
+        ),
+  );
+  assert.ok(
+    reduction >
+      matrices +
+        INSTRUMENTS.slice(16).reduce(
           (sum, instrument) => sum + instrument.baseProduction,
           0,
         ),
@@ -120,6 +141,25 @@ test("the matrix cycle extends production and reduces workshop costs", () => {
       0, 0, 0, 0,
       0, 0, 5,
     ]) < 1,
+  );
+  assert.ok(
+    matrixWorkshopCostMultiplier([
+      0, 0, 0, 0,
+      0, 0, 0, 0,
+      0, 0, 0, 0,
+      0, 0, 0, 0,
+      0, 0, 0, 5,
+    ]) < 1,
+  );
+  assert.equal(
+    correctAnomalyRewardMultiplier([
+      0, 0, 0, 0,
+      0, 0, 0, 0,
+      0, 0, 0, 0,
+      0, 0, 0, 0,
+      0, 2,
+    ]),
+    1.04,
   );
 });
 

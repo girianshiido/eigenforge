@@ -46,7 +46,11 @@ function makeQuestion(
     sector === "all"
       ? (["vectors", "bases", "applications", "matrices"] as Sector[])
       : [sector];
-  return generateQuestion(sectors, dimension, true);
+  return generateQuestion(
+    sectors,
+    dimension,
+    Number.POSITIVE_INFINITY,
+  );
 }
 
 export default function ExerciseLab() {
@@ -205,7 +209,7 @@ export default function ExerciseLab() {
                 <option value="all">Mélange automatique</option>
                 {visibleFamilies.map((family) => (
                   <option value={family.id} key={family.id}>
-                    {family.label}
+                    {family.program} · {family.label}
                   </option>
                 ))}
               </select>
