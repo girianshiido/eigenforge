@@ -262,6 +262,7 @@ test("renders matrices as responsive grids instead of flattened text", async () 
   assert.match(renderer, /className="math-atomic"/);
   assert.match(renderer, /INLINE_SCRIPT_PATTERN/);
   assert.match(renderer, /ATOMIC_MATH_PATTERN/);
+  assert.match(renderer, /\[A-Zℬ\]\\s\*=\\s\*\\\(/);
   assert.match(renderer, /SUPERSCRIPT_CHARACTERS/);
   assert.match(renderer, /"ᵀ": "T"/);
   assert.match(renderer, /rawSubscript\.replace\("-", "−"\)/);
