@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  basisQuestion,
   combinationQuestion,
   explicitMapRankQuestion,
   familyRankQuestion,
@@ -21,18 +22,44 @@ function assertWellFormed(question) {
   );
 }
 
+function parseVector(text) {
+  const match = text.match(/^\((-?\d+(?: ; -?\d+)+)\)$/);
+  assert.ok(match, `Vecteur attendu, reçu : ${text}`);
+  return match[1].split(" ; ").map(Number);
+}
+
+function assertNoSingleCoordinateRevealsAnswer(question) {
+  const correctChoice = question.choices.find((choice) => choice.correct);
+  const wrongChoices = question.choices.filter((choice) => !choice.correct);
+  const correct = parseVector(correctChoice.text);
+  const wrongVectors = wrongChoices.map((choice) => parseVector(choice.text));
+
+  for (let coordinate = 0; coordinate < correct.length; coordinate += 1) {
+    assert.ok(
+      wrongVectors.some(
+        (candidate) => candidate[coordinate] === correct[coordinate],
+      ),
+      `La coordonnée ${coordinate + 1} désigne seule la bonne réponse dans ${question.prompt}`,
+    );
+  }
+}
+
 test("linear combinations vary coefficients without displaying useless ones", () => {
   const prompts = new Set();
   const statements = new Set();
 
   for (let index = 0; index < 300; index += 1) {
-    const question = combinationQuestion(3);
+    const dimension = index % 2 === 0 ? 2 : 3;
+    const question = combinationQuestion(dimension);
     assertWellFormed(question);
+    assertNoSingleCoordinateRevealsAnswer(question);
     prompts.add(question.prompt);
     statements.add(`${question.prompt} ${question.formula}`);
     assert.doesNotMatch(question.prompt, /(?:^|\s)[+-]?1[uv]\b/);
     assert.doesNotMatch(question.prompt, /\+\s*−|-\s*-/);
-    assert.match(question.formula, /\([^)]* ; [^)]* ; [^)]*\)/);
+    if (dimension === 3) {
+      assert.match(question.formula, /\([^)]* ; [^)]* ; [^)]*\)/);
+    }
   }
 
   assert.ok(prompts.size >= 5);
@@ -40,6 +67,20 @@ test("linear combinations vary coefficients without displaying useless ones", ()
   assert.ok([...prompts].some((prompt) => prompt.includes("u − v")));
   assert.ok([...prompts].some((prompt) => prompt.includes("2u + v")));
   assert.ok([...prompts].some((prompt) => prompt.includes("u − 3v")));
+});
+
+test("coordinate calculations require checking every coordinate", () => {
+  let coordinateQuestions = 0;
+
+  for (let index = 0; index < 600; index += 1) {
+    const question = basisQuestion(2);
+    if (!question.id.startsWith("B-COORD")) continue;
+    coordinateQuestions += 1;
+    assertWellFormed(question);
+    assertNoSingleCoordinateRevealsAnswer(question);
+  }
+
+  assert.ok(coordinateQuestions >= 100);
 });
 
 test("span questions alternate membership and use planes in dimension three", () => {

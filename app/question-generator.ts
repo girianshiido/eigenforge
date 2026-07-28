@@ -149,6 +149,38 @@ function choices(correct: string, distractors: string[]) {
   );
 }
 
+function balancedCoordinateDistractors(
+  correct: readonly number[],
+  errorVectors: readonly (readonly number[])[],
+) {
+  const wrongCoordinates = correct.map((value, coordinateIndex) => {
+    const plausibleValues = Array.from(
+      new Set(
+        errorVectors
+          .map((candidate) => candidate[coordinateIndex])
+          .filter((candidate) => candidate !== value),
+      ),
+    );
+    return plausibleValues.length > 0
+      ? pick(plausibleValues)
+      : value + (value >= 0 ? 1 : -1);
+  });
+
+  const distractors = correct.map((_, preservedCoordinate) =>
+    correct.map((value, coordinateIndex) =>
+      coordinateIndex === preservedCoordinate
+        ? value
+        : wrongCoordinates[coordinateIndex],
+    ),
+  );
+
+  if (correct.length === 2) {
+    distractors.push(wrongCoordinates);
+  }
+
+  return distractors.slice(0, 3);
+}
+
 function ambientDimension(spaceDimension: number) {
   return spaceDimension >= 3 && Math.random() < 0.55 ? 3 : 2;
 }
@@ -175,6 +207,11 @@ export function combinationQuestion(dimension: 2 | 3): Question {
   const coordinateSum = first.map(
     (coordinate, index) => coordinate + second[index],
   );
+  const distractors = balancedCoordinateDistractors(result, [
+    wrongSign,
+    swapped,
+    coordinateSum,
+  ]);
 
   return {
     id: `V-COMB-${Date.now()}-${randomInt(100, 999)}`,
@@ -182,11 +219,10 @@ export function combinationQuestion(dimension: 2 | 3): Question {
     eyebrow: "Combinaison linéaire",
     prompt: `Quelles sont les coordonnées de ${combination} ?`,
     formula: `u = ${vector(first)}   et   v = ${vector(second)}`,
-    choices: choices(vector(result), [
-      vector(wrongSign),
-      vector(swapped),
-      vector(coordinateSum),
-    ]),
+    choices: choices(
+      vector(result),
+      distractors.map((candidate) => vector(candidate)),
+    ),
     explanation: `On applique les coefficients coordonnée par coordonnée : ${combination} = ${vector(result)}.`,
     geometry:
       "Une combinaison linéaire additionne des vecteurs après les avoir étirés, contractés ou retournés.",
@@ -564,6 +600,14 @@ export function basisQuestion(spaceDimension: number): Question {
       [1, "λ"],
       [p, "μ"],
     ]);
+    const distractors = balancedCoordinateDistractors(
+      [alpha, beta],
+      [
+        [canonicalX, beta],
+        [beta, alpha],
+        [alpha + p, beta],
+      ],
+    );
     return {
       id: `B-COORD-${Date.now()}-${randomInt(100, 999)}`,
       sector: "bases",
@@ -571,11 +615,10 @@ export function basisQuestion(spaceDimension: number): Question {
       prompt:
         "Quelles sont les coordonnées de x dans la base B = (e₁, e₂) ?",
       formula: `e₁ = ${vector([1, 0])}, e₂ = ${vector([p, 1])} et x = ${vector([canonicalX, beta])}`,
-      choices: choices(answer, [
-        vector([canonicalX, beta]),
-        vector([beta, alpha]),
-        vector([alpha + p, beta]),
-      ]),
+      choices: choices(
+        answer,
+        distractors.map((candidate) => vector(candidate)),
+      ),
       explanation: `On cherche x = λe₁ + μe₂. La seconde coordonnée donne μ = ${beta}, puis ${coordinateEquation} = ${canonicalX}, donc λ = ${alpha}. Ainsi [x]ᴮ = ${answer}.`,
       geometry:
         "Changer de base ne déplace pas le vecteur : seules les coordonnées utilisées pour le décrire changent.",
