@@ -2,13 +2,13 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-async function render() {
+async function render(path = "/") {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
   workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
   const { default: worker } = await import(workerUrl.href);
 
   return worker.fetch(
-    new Request("http://localhost/", {
+    new Request(`http://localhost${path}`, {
       headers: { accept: "text/html" },
     }),
     {
@@ -22,6 +22,27 @@ async function render() {
     },
   );
 }
+
+test("renders the unlimited exercise laboratory from the shared catalogue", async () => {
+  const response = await render("/exercises");
+  assert.equal(response.status, 200);
+
+  const html = await response.text();
+  assert.match(html, /Laboratoire d’exercices/);
+  assert.match(html, /Tester toutes les perturbations, sans limite/);
+  assert.match(html, /Tout le catalogue/);
+  assert.match(html, /Jusqu’à ℝ²/);
+  assert.match(html, /Jusqu’à ℝ³/);
+  assert.match(html, /Retour au jeu/);
+
+  const laboratory = await readFile(
+    new URL("../app/exercise-lab.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(laboratory, /EXERCISE_FAMILIES\.filter/);
+  assert.match(laboratory, /generateQuestion\(sectors, dimension\)/);
+  assert.doesNotMatch(laboratory, /SAVE_KEY|localStorage/);
+});
 
 test("renders the game shell and finished metadata", async () => {
   const response = await render();
@@ -178,10 +199,26 @@ test("exports a GitHub Pages build under the repository path", async () => {
     new URL("../docs/index.html", import.meta.url),
     "utf8",
   );
+  const exercisesHtml = await readFile(
+    new URL("../docs/exercises/index.html", import.meta.url),
+    "utf8",
+  );
 
   assert.match(html, /<title>EIGENFORGE<\/title>/);
-  assert.match(html, /\/eigenforge\/assets\/index-[^"]+\.js/);
-  assert.match(html, /\/eigenforge\/assets\/index-[^"]+\.css/);
+  assert.match(html, /\/eigenforge\/assets\/game-[^"]+\.js/);
+  assert.match(html, /\/eigenforge\/assets\/globals-[^"]+\.css/);
+  assert.match(
+    exercisesHtml,
+    /<title>Laboratoire d’exercices · EIGENFORGE<\/title>/,
+  );
+  assert.match(
+    exercisesHtml,
+    /\/eigenforge\/assets\/exercises-[^"]+\.js/,
+  );
+  assert.match(
+    exercisesHtml,
+    /\/eigenforge\/assets\/globals-[^"]+\.css/,
+  );
   await readFile(new URL("../docs/.nojekyll", import.meta.url), "utf8");
 });
 
@@ -209,6 +246,7 @@ test("exports an installable Android and iOS application", async () => {
   assert.match(html, /rel="manifest"/);
   assert.match(html, /rel="apple-touch-icon"/);
   assert.match(serviceWorker, /cache\.addAll\(PRECACHE\)/);
+  assert.match(serviceWorker, /\/eigenforge\/exercises\/index\.html/);
 
   for (const [file, expectedSize] of [
     ["icon-192.png", 192],

@@ -1,13 +1,17 @@
-const CACHE_NAME = "eigenforge-index-DKOF7k6g.js-index-DzRRR0Rh.css";
+const CACHE_NAME = "eigenforge-exercises-M9cQKY_D.js-game-DYRKpbBn.js-globals-B5aRjv0I.css-globals-ViW83V6V.js";
 const PRECACHE = [
   "/eigenforge/",
   "/eigenforge/index.html",
+  "/eigenforge/exercises/",
+  "/eigenforge/exercises/index.html",
   "/eigenforge/manifest.webmanifest",
   "/eigenforge/apple-touch-icon.png",
   "/eigenforge/icon-192.png",
   "/eigenforge/icon-512.png",
-  "/eigenforge/assets/index-DKOF7k6g.js",
-  "/eigenforge/assets/index-DzRRR0Rh.css"
+  "/eigenforge/assets/exercises-M9cQKY_D.js",
+  "/eigenforge/assets/game-DYRKpbBn.js",
+  "/eigenforge/assets/globals-B5aRjv0I.css",
+  "/eigenforge/assets/globals-ViW83V6V.js"
 ];
 
 self.addEventListener("install", (event) => {
@@ -35,14 +39,17 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin || !url.pathname.startsWith("/eigenforge/")) return;
 
   if (event.request.mode === "navigate") {
+    const fallback = url.pathname.startsWith("/eigenforge/exercises/")
+      ? "/eigenforge/exercises/index.html"
+      : "/eigenforge/";
     event.respondWith(
       fetch(event.request)
         .then((response) => {
           const copy = response.clone();
-          void caches.open(CACHE_NAME).then((cache) => cache.put("/eigenforge/", copy));
+          void caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
           return response;
         })
-        .catch(() => caches.match("/eigenforge/")),
+        .catch(() => caches.match(fallback)),
     );
     return;
   }

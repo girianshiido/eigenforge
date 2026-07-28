@@ -1,12 +1,15 @@
 import { readdir, writeFile } from "node:fs/promises";
 
 const base = "/eigenforge/";
+const exercisesBase = `${base}exercises/`;
 const files = await readdir(new URL("../docs/assets/", import.meta.url));
 const assets = files.map((file) => `${base}assets/${file}`);
 const cacheName = `eigenforge-${files.sort().join("-")}`;
 const precache = [
   base,
   `${base}index.html`,
+  `${base}exercises/`,
+  `${base}exercises/index.html`,
   `${base}manifest.webmanifest`,
   `${base}apple-touch-icon.png`,
   `${base}icon-192.png`,
@@ -42,14 +45,17 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin || !url.pathname.startsWith(${JSON.stringify(base)})) return;
 
   if (event.request.mode === "navigate") {
+    const fallback = url.pathname.startsWith(${JSON.stringify(exercisesBase)})
+      ? ${JSON.stringify(`${exercisesBase}index.html`)}
+      : ${JSON.stringify(base)};
     event.respondWith(
       fetch(event.request)
         .then((response) => {
           const copy = response.clone();
-          void caches.open(CACHE_NAME).then((cache) => cache.put(${JSON.stringify(base)}, copy));
+          void caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
           return response;
         })
-        .catch(() => caches.match(${JSON.stringify(base)})),
+        .catch(() => caches.match(fallback)),
     );
     return;
   }

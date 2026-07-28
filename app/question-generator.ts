@@ -12,6 +12,14 @@ export type Question = {
   trap: string;
 };
 
+export type ExerciseFamily = {
+  id: string;
+  sector: Sector;
+  label: string;
+  description: string;
+  generate: (spaceDimension: number) => Question;
+};
+
 function randomInt(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -443,9 +451,12 @@ export function subspaceQuestion(dimension: 2 | 3): Question {
   };
 }
 
-export function vectorQuestion(spaceDimension: number): Question {
+export function vectorQuestion(
+  spaceDimension: number,
+  forcedTemplate?: 0 | 1 | 2,
+): Question {
   const dimension = ambientDimension(spaceDimension);
-  const template = randomInt(0, 2);
+  const template = forcedTemplate ?? randomInt(0, 2);
   if (template === 0) return combinationQuestion(dimension);
   if (template === 1) return spanQuestion(dimension);
   return subspaceQuestion(dimension);
@@ -560,8 +571,11 @@ export function familyRankQuestion(dimension: 2 | 3): Question {
   };
 }
 
-export function basisQuestion(spaceDimension: number): Question {
-  const template = randomInt(0, 2);
+export function basisQuestion(
+  spaceDimension: number,
+  forcedTemplate?: 0 | 1 | 2,
+): Question {
+  const template = forcedTemplate ?? randomInt(0, 2);
 
   if (template === 0) {
     let first = randomVector(2);
@@ -808,8 +822,11 @@ function linearityQuestion(): Question {
   };
 }
 
-export function applicationQuestion(spaceDimension: number): Question {
-  const template = randomInt(0, 3);
+export function applicationQuestion(
+  spaceDimension: number,
+  forcedTemplate?: 0 | 1 | 2 | 3,
+): Question {
+  const template = forcedTemplate ?? randomInt(0, 3);
   if (template === 0) return kernelQuestion();
   if (template === 1) return rankTheoremQuestion();
   if (template === 2) {
@@ -818,14 +835,89 @@ export function applicationQuestion(spaceDimension: number): Question {
   return linearityQuestion();
 }
 
+export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
+  {
+    id: "vector-combination",
+    sector: "vectors",
+    label: "Combinaisons linéaires",
+    description: "Calculer les coordonnées de αu + βv.",
+    generate: (spaceDimension) => vectorQuestion(spaceDimension, 0),
+  },
+  {
+    id: "vector-span",
+    sector: "vectors",
+    label: "Appartenance à Vect",
+    description: "Reconnaître les vecteurs d’une droite ou d’un plan engendré.",
+    generate: (spaceDimension) => vectorQuestion(spaceDimension, 1),
+  },
+  {
+    id: "vector-subspace",
+    sector: "vectors",
+    label: "Sous-espaces vectoriels",
+    description: "Distinguer sous-espaces et ensembles non stables.",
+    generate: (spaceDimension) => vectorQuestion(spaceDimension, 2),
+  },
+  {
+    id: "basis-determinant",
+    sector: "bases",
+    label: "Déterminant d’une famille",
+    description: "Calculer un déterminant et reconnaître une base de ℝ².",
+    generate: (spaceDimension) => basisQuestion(spaceDimension, 0),
+  },
+  {
+    id: "basis-coordinates",
+    sector: "bases",
+    label: "Coordonnées dans une base",
+    description: "Exprimer un vecteur dans une base non canonique.",
+    generate: (spaceDimension) => basisQuestion(spaceDimension, 1),
+  },
+  {
+    id: "basis-rank",
+    sector: "bases",
+    label: "Rang d’une famille",
+    description: "Déterminer le nombre de directions indépendantes.",
+    generate: (spaceDimension) => basisQuestion(spaceDimension, 2),
+  },
+  {
+    id: "application-kernel",
+    sector: "applications",
+    label: "Noyau",
+    description: "Identifier un vecteur envoyé sur le vecteur nul.",
+    generate: (spaceDimension) => applicationQuestion(spaceDimension, 0),
+  },
+  {
+    id: "application-rank-theorem",
+    sector: "applications",
+    label: "Théorème du rang",
+    description: "Relier dimension du noyau, rang et dimension de départ.",
+    generate: (spaceDimension) => applicationQuestion(spaceDimension, 1),
+  },
+  {
+    id: "application-image-rank",
+    sector: "applications",
+    label: "Image et rang",
+    description: "Lire le rang d’une application donnée explicitement.",
+    generate: (spaceDimension) => applicationQuestion(spaceDimension, 2),
+  },
+  {
+    id: "application-linearity",
+    sector: "applications",
+    label: "Linéarité",
+    description: "Reconnaître les applications qui conservent les combinaisons linéaires.",
+    generate: (spaceDimension) => applicationQuestion(spaceDimension, 3),
+  },
+] as const;
+
 export function generateQuestion(
   sectors: Sector[],
   spaceDimension: number,
 ) {
-  const sector = pick(sectors);
-  if (sector === "bases") return basisQuestion(spaceDimension);
-  if (sector === "applications") {
-    return applicationQuestion(spaceDimension);
-  }
-  return vectorQuestion(spaceDimension);
+  const availableFamilies = EXERCISE_FAMILIES.filter((family) =>
+    sectors.includes(family.sector),
+  );
+  return pick(
+    availableFamilies.length > 0
+      ? availableFamilies
+      : EXERCISE_FAMILIES,
+  ).generate(spaceDimension);
 }

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  EXERCISE_FAMILIES,
   basisQuestion,
   combinationQuestion,
   explicitMapRankQuestion,
@@ -43,6 +44,28 @@ function assertNoSingleCoordinateRevealsAnswer(question) {
     );
   }
 }
+
+test("the shared catalogue exposes every exercise family to the game and laboratory", () => {
+  assert.equal(EXERCISE_FAMILIES.length, 10);
+  assert.deepEqual(
+    new Set(EXERCISE_FAMILIES.map((family) => family.sector)),
+    new Set(["vectors", "bases", "applications"]),
+  );
+  assert.equal(
+    new Set(EXERCISE_FAMILIES.map((family) => family.id)).size,
+    EXERCISE_FAMILIES.length,
+  );
+
+  for (const family of EXERCISE_FAMILIES) {
+    for (const dimension of [2, 3]) {
+      for (let index = 0; index < 40; index += 1) {
+        const question = family.generate(dimension);
+        assertWellFormed(question);
+        assert.equal(question.sector, family.sector);
+      }
+    }
+  }
+});
 
 test("linear combinations vary coefficients without displaying useless ones", () => {
   const prompts = new Set();

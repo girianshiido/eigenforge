@@ -820,18 +820,24 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="resource-strip" aria-label="Ressources">
-          <div className="resource">
-            <span>Coordonnées</span>
-            <strong>{formatNumber(game.coordinates)}</strong>
-          </div>
-          <div className="resource">
-            <span>Production</span>
-            <strong>{formatNumber(rate)}/s</strong>
-          </div>
-          <div className="resource invariant-resource">
-            <span>Invariants</span>
-            <strong>{game.invariants}</strong>
+        <div className="topbar-actions">
+          <a className="exercise-lab-link" href="./exercises/">
+            <span aria-hidden="true">∑</span>
+            <strong>Exercices libres</strong>
+          </a>
+          <div className="resource-strip" aria-label="Ressources">
+            <div className="resource">
+              <span>Coordonnées</span>
+              <strong>{formatNumber(game.coordinates)}</strong>
+            </div>
+            <div className="resource">
+              <span>Production</span>
+              <strong>{formatNumber(rate)}/s</strong>
+            </div>
+            <div className="resource invariant-resource">
+              <span>Invariants</span>
+              <strong>{game.invariants}</strong>
+            </div>
           </div>
         </div>
       </header>
