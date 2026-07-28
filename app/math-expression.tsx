@@ -5,11 +5,14 @@ type MathExpressionProps = {
   className?: string;
 };
 
-const STRUCTURED_MATH_PATTERN = /⟦([^⟧]+)⟧|⟪([^⟫]+)⟫/g;
+const STRUCTURED_MATH_PATTERN =
+  /⟦([^⟧]+)⟧|⟪([^⟫]+)⟫|⟬([^¦⟭]+)¦([^⟭]+)⟭/g;
+const SQUARE_ROOT_PATTERN =
+  /√(\{[^}]+\}|\([^)]*\)|[A-Za-z0-9]+(?:_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ]))?)/g;
 const INLINE_SCRIPT_PATTERN =
   /_(\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])|([₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎]+)|([⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ᵀ]+)/g;
 const ATOMIC_MATH_PATTERN =
-  /[A-Zℬ]\s*=\s*\((?:[^()]|\([^()]*\))*\)|N_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])\s*=\s*Ker\((?:[^()]|\([^()]*\))*\)|(?:Vect|Ker|Im|det|dim|Sp)\((?:[^()]|\([^()]*\))*\)|[χπ]_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])(?:\([^)]*\))?|N_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])/g;
+  /(?:[A-Zℬ]\s*=\s*\((?:[^()]|\([^()]*\))*\)|N_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])\s*=\s*Ker\((?:[^()]|\([^()]*\))*\)|(?:Vect|Ker|Im|det|dim|Sp)\((?:[^()]|\([^()]*\))*\)|[χπ]_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])(?:\([^)]*\))?|N_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ]))(?:\s*[?!.:,;])?/g;
 const SUBSCRIPT_CHARACTERS: Record<string, string> = {
   "₀": "0",
   "₁": "1",
@@ -103,6 +106,83 @@ function ScriptedText({ source }: { source: string }) {
   return <>{parts}</>;
 }
 
+function SquareRoot({ radicand }: { radicand: string }) {
+  const normalizedRadicand = radicand.replace(/^\{|\}$|^\(|\)$/g, "");
+
+  return (
+    <span
+      className="math-square-root"
+      role="img"
+      aria-label={`Racine carrée de ${normalizedRadicand}`}
+    >
+      <span className="math-radical-symbol" aria-hidden="true">
+        √
+      </span>
+      <span className="math-radicand" aria-hidden="true">
+        <ScriptedText source={normalizedRadicand} />
+      </span>
+    </span>
+  );
+}
+
+function RootedText({ source }: { source: string }) {
+  const parts: ReactNode[] = [];
+  let previousEnd = 0;
+
+  for (const match of source.matchAll(SQUARE_ROOT_PATTERN)) {
+    const start = match.index ?? 0;
+    if (start > previousEnd) {
+      parts.push(
+        <ScriptedText
+          source={source.slice(previousEnd, start)}
+          key={`root-text-${previousEnd}-${start}`}
+        />,
+      );
+    }
+    parts.push(
+      <SquareRoot
+        radicand={match[1]}
+        key={`square-root-${start}-${match[1]}`}
+      />,
+    );
+    previousEnd = start + match[0].length;
+  }
+
+  if (previousEnd < source.length) {
+    parts.push(
+      <ScriptedText
+        source={source.slice(previousEnd)}
+        key={`root-text-${previousEnd}-${source.length}`}
+      />,
+    );
+  }
+
+  return <>{parts}</>;
+}
+
+function Fraction({
+  numerator,
+  denominator,
+}: {
+  numerator: string;
+  denominator: string;
+}) {
+  return (
+    <span
+      className="math-fraction"
+      role="img"
+      aria-label={`${numerator} sur ${denominator.replace("√", "racine carrée de ")}`}
+    >
+      <span className="math-fraction-numerator" aria-hidden="true">
+        <RootedText source={numerator} />
+      </span>
+      <span className="math-fraction-denominator" aria-hidden="true">
+        <RootedText source={denominator} />
+      </span>
+    </span>
+  );
+}
+
 function PlainMath({ source }: { source: string }) {
   const parts: ReactNode[] = [];
   let previousEnd = 0;
@@ -111,7 +191,7 @@ function PlainMath({ source }: { source: string }) {
     const start = match.index ?? 0;
     if (start > previousEnd) {
       parts.push(
-        <ScriptedText
+        <RootedText
           source={source.slice(previousEnd, start)}
           key={`text-${previousEnd}-${start}`}
         />,
@@ -122,7 +202,7 @@ function PlainMath({ source }: { source: string }) {
         className="math-atomic"
         key={`atomic-${start}-${match[0]}`}
       >
-        <ScriptedText source={match[0]} />
+        <RootedText source={match[0]} />
       </span>,
     );
     previousEnd = start + match[0].length;
@@ -130,7 +210,7 @@ function PlainMath({ source }: { source: string }) {
 
   if (previousEnd < source.length) {
     parts.push(
-      <ScriptedText
+      <RootedText
         source={source.slice(previousEnd)}
         key={`text-${previousEnd}-${source.length}`}
       />,
@@ -192,10 +272,7 @@ function ColumnVector({ source }: { source: string }) {
   );
 }
 
-export default function MathExpression({
-  text,
-  className = "",
-}: MathExpressionProps) {
+function MathLine({ text }: { text: string }) {
   const parts: ReactNode[] = [];
   let previousEnd = 0;
 
@@ -212,10 +289,16 @@ export default function MathExpression({
     parts.push(
       match[1] !== undefined ? (
         <Matrix source={match[1]} key={`matrix-${start}-${match[1]}`} />
-      ) : (
+      ) : match[2] !== undefined ? (
         <ColumnVector
           source={match[2]}
           key={`column-${start}-${match[2]}`}
+        />
+      ) : (
+        <Fraction
+          numerator={match[3]}
+          denominator={match[4]}
+          key={`fraction-${start}-${match[3]}-${match[4]}`}
         />
       ),
     );
@@ -231,9 +314,28 @@ export default function MathExpression({
     );
   }
 
+  return <>{parts}</>;
+}
+
+export default function MathExpression({
+  text,
+  className = "",
+}: MathExpressionProps) {
+  const lines = text.split("\n");
+
   return (
-    <span className={`math-expression ${className}`.trim()}>
-      {parts}
+    <span
+      className={`math-expression ${lines.length > 1 ? "has-lines" : ""} ${className}`.trim()}
+    >
+      {lines.map((line, index) =>
+        lines.length > 1 ? (
+          <span className="math-expression-line" key={`${index}-${line}`}>
+            <MathLine text={line} />
+          </span>
+        ) : (
+          <MathLine text={line} key={`${index}-${line}`} />
+        ),
+      )}
     </span>
   );
 }

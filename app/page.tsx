@@ -23,6 +23,7 @@ import {
 } from "./game-balance";
 import { generateQuestion as generateExercise } from "./question-generator";
 import MathExpression from "./math-expression";
+import { useInteractionGuards } from "./use-interaction-guards";
 
 type Sector = "vectors" | "bases" | "applications" | "matrices";
 type GameTab = "network" | "instruments" | "anomalies" | "atlas";
@@ -552,6 +553,7 @@ function restoreState(raw: string | null): GameState {
 }
 
 export default function Home() {
+  useInteractionGuards();
   const [game, setGame] = useState<GameState>(INITIAL_STATE);
   const [hydrated, setHydrated] = useState(false);
   const [question, setQuestion] = useState<Question | null>(null);
@@ -592,26 +594,6 @@ export default function Home() {
     spaceDimension,
   );
   const spaceGeneratorList = basisVectors.join(", ");
-
-  useEffect(() => {
-    const preventGesture = (event: Event) => event.preventDefault();
-    const preventPinch = (event: TouchEvent) => {
-      if (event.touches.length > 1) event.preventDefault();
-    };
-    const nonPassive = { passive: false } as AddEventListenerOptions;
-
-    document.addEventListener("gesturestart", preventGesture, nonPassive);
-    document.addEventListener("gesturechange", preventGesture, nonPassive);
-    document.addEventListener("gestureend", preventGesture, nonPassive);
-    document.addEventListener("touchmove", preventPinch, nonPassive);
-
-    return () => {
-      document.removeEventListener("gesturestart", preventGesture);
-      document.removeEventListener("gesturechange", preventGesture);
-      document.removeEventListener("gestureend", preventGesture);
-      document.removeEventListener("touchmove", preventPinch);
-    };
-  }, []);
 
   useEffect(() => {
     const restored = restoreState(window.localStorage.getItem(SAVE_KEY));

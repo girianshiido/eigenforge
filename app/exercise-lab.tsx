@@ -8,6 +8,7 @@ import {
   type Sector,
 } from "./question-generator";
 import MathExpression from "./math-expression";
+import { useInteractionGuards } from "./use-interaction-guards";
 
 type SectorFilter = Sector | "all";
 
@@ -54,6 +55,7 @@ function makeQuestion(
 }
 
 export default function ExerciseLab() {
+  useInteractionGuards();
   const [sector, setSector] = useState<SectorFilter>("all");
   const [familyId, setFamilyId] = useState("all");
   const [dimension, setDimension] = useState<2 | 3>(3);

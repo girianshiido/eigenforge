@@ -82,7 +82,6 @@ test("ships the animated forge controls", async () => {
     new URL("../app/globals.css", import.meta.url),
     "utf8",
   );
-
   assert.match(page, /className=\{`core-button \$\{isEmitting/);
   assert.match(page, /className="core-impact"/);
   assert.match(page, /className=\{`workshop-buy/);
@@ -260,9 +259,15 @@ test("renders matrices as responsive grids instead of flattened text", async () 
   assert.match(renderer, /className="math-subscript"/);
   assert.match(renderer, /className="math-superscript"/);
   assert.match(renderer, /className="math-atomic"/);
+  assert.match(renderer, /className="math-fraction"/);
+  assert.match(renderer, /className="math-square-root"/);
+  assert.match(renderer, /className="math-expression-line"/);
+  assert.match(renderer, /text\.split\("\\n"\)/);
+  assert.match(renderer, /SQUARE_ROOT_PATTERN/);
   assert.match(renderer, /INLINE_SCRIPT_PATTERN/);
   assert.match(renderer, /ATOMIC_MATH_PATTERN/);
   assert.match(renderer, /\[A-Zℬ\]\\s\*=\\s\*\\\(/);
+  assert.match(renderer, /\(\?:\\s\*\[\?\!\.\:\,\;\]\)\?/);
   assert.match(renderer, /SUPERSCRIPT_CHARACTERS/);
   assert.match(renderer, /"ᵀ": "T"/);
   assert.match(renderer, /rawSubscript\.replace\("-", "−"\)/);
@@ -278,6 +283,14 @@ test("renders matrices as responsive grids instead of flattened text", async () 
   assert.match(styles, /\.math-subscript/);
   assert.match(styles, /\.math-superscript/);
   assert.match(styles, /\.math-atomic/);
+  assert.match(styles, /\.math-fraction-numerator/);
+  assert.match(styles, /\.math-fraction-denominator/);
+  assert.match(
+    styles,
+    /\.math-fraction[\s\S]*vertical-align: middle/,
+  );
+  assert.match(styles, /\.math-radicand/);
+  assert.match(styles, /\.math-expression\.has-lines/);
   assert.match(styles, /\.formula-card \.math-expression/);
   assert.match(styles, /\.lab-formula \.math-expression/);
   assert.match(styles, /\.correction-columns > div > span/);
@@ -329,14 +342,27 @@ test("keeps vertical scrolling while blocking selection and zoom gestures", asyn
     new URL("../app/globals.css", import.meta.url),
     "utf8",
   );
+  const guards = await readFile(
+    new URL("../app/use-interaction-guards.ts", import.meta.url),
+    "utf8",
+  );
+  const laboratory = await readFile(
+    new URL("../app/exercise-lab.tsx", import.meta.url),
+    "utf8",
+  );
 
   assert.match(layout, /maximumScale: 1/);
   assert.match(layout, /userScalable: false/);
   assert.match(sourceHtml, /maximum-scale=1\.0, user-scalable=no/);
   assert.match(styles, /touch-action: pan-y/);
   assert.match(styles, /user-select: none/);
-  assert.match(page, /gesturestart/);
-  assert.match(page, /event\.touches\.length > 1/);
+  assert.match(guards, /gesturestart/);
+  assert.match(guards, /event\.touches\.length > 1/);
+  assert.match(guards, /event\.ctrlKey/);
+  assert.match(guards, /"wheel", preventTrackpadZoom/);
+  assert.match(guards, /"dblclick", preventGesture/);
+  assert.match(page, /useInteractionGuards\(\)/);
+  assert.match(laboratory, /useInteractionGuards\(\)/);
 });
 
 test("exports a GitHub Pages build under the repository path", async () => {

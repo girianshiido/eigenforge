@@ -59,6 +59,17 @@ function columnVector(values: readonly (number | string)[]) {
   return `⟪${values.join(",")}⟫`;
 }
 
+function squareRoot(value: number | string) {
+  return `√${value}`;
+}
+
+function fraction(
+  numerator: number | string,
+  denominator: number | string,
+) {
+  return `⟬${numerator}¦${denominator}⟭`;
+}
+
 function zeroVector(dimension: number) {
   return Array.from({ length: dimension }, () => 0);
 }
@@ -1964,11 +1975,11 @@ export function spectralTheoremQuestion(): Question {
     id: `M-SPECTRAL-BASIS-${Date.now()}-${randomInt(100, 999)}`,
     sector: "matrices",
     eyebrow: "MP · Diagonalisation orthogonale",
-    prompt: "Quelle est la matrice diagonale de A dans la base orthonormée B = (v₁, v₂) ?",
-    formula: `A = ${matrix([
+    prompt: "Quelle est la matrice de u dans la base orthonormée B = (v₁, v₂) ?",
+    formula: `Dans la base canonique, Mat(u) = ${matrix([
       [diagonal, coupling],
       [coupling, diagonal],
-    ])},   v₁ = (1/√2)${columnVector([1, 1])},   v₂ = (1/√2)${columnVector([1, -1])}`,
+    ])},\nv₁ = ${fraction(1, squareRoot(2))} ${columnVector([1, 1])}   et   v₂ = ${fraction(1, squareRoot(2))} ${columnVector([1, -1])}`,
     choices: choices(answer, [
       matrix([
         [secondEigenvalue, 0],
@@ -1983,7 +1994,7 @@ export function spectralTheoremQuestion(): Question {
         [0, secondEigenvalue],
       ]),
     ]),
-    explanation: `Av₁ = ${firstEigenvalue}v₁ et Av₂ = ${secondEigenvalue}v₂. Dans l’ordre de B, la matrice diagonale est donc ${answer}.`,
+    explanation: `u(v₁) = ${firstEigenvalue}v₁ et u(v₂) = ${secondEigenvalue}v₂. Dans l’ordre de B, la matrice de u est donc ${answer}.`,
     geometry:
       "Les deux diagonales du plan deviennent les axes orthogonaux propres de la transformation.",
     trap:

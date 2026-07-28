@@ -64,9 +64,72 @@ button:focus-visible {
   white-space: pre-wrap;
 }
 
+.math-expression.has-lines {
+  display: inline-flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 0.32em;
+  white-space: nowrap;
+}
+
+.math-expression-line {
+  display: block;
+  min-width: max-content;
+  white-space: nowrap;
+}
+
 .math-atomic {
   display: inline-block;
   white-space: nowrap;
+}
+
+.math-fraction {
+  min-width: 1.05em;
+  margin-inline: 0.08em;
+  display: inline-flex;
+  align-items: stretch;
+  flex-direction: column;
+  justify-content: center;
+  vertical-align: middle;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.math-fraction-numerator,
+.math-fraction-denominator {
+  padding-inline: 0.13em;
+  display: block;
+  text-align: center;
+}
+
+.math-fraction-numerator {
+  padding-bottom: 0.08em;
+  border-bottom: 0.055em solid currentColor;
+}
+
+.math-fraction-denominator {
+  padding-top: 0.09em;
+}
+
+.math-square-root {
+  display: inline-flex;
+  align-items: flex-start;
+  vertical-align: -0.08em;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.math-radical-symbol {
+  margin-right: -0.02em;
+  font-size: 1.13em;
+  line-height: 1.03;
+}
+
+.math-radicand {
+  min-width: 0.48em;
+  padding: 0.04em 0.08em 0 0.04em;
+  border-top: 0.055em solid currentColor;
+  line-height: 0.92;
 }
 
 .math-subscript,

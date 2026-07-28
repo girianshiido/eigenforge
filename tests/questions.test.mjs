@@ -377,6 +377,16 @@ test("spectral and positivity questions cover theorem, computation and all signs
       );
     } else {
       spectralTemplates.add("basis");
+      assert.match(spectral.prompt, /matrice de u/);
+      assert.doesNotMatch(spectral.prompt, /matrice diagonale de A/);
+      assert.doesNotMatch(spectral.formula, /Mat\(u\) = A/);
+      assert.equal(
+        [...spectral.formula.matchAll(/⟬1¦√2⟭/g)].length,
+        2,
+      );
+      assert.match(spectral.formula, /\n/);
+      assert.match(spectral.formula, /⟧,\nv₁ =/);
+      assert.doesNotMatch(spectral.formula, /1\/√2/);
       const source = parseMatrix(spectral.formula);
       const answer = parseMatrix(
         spectral.choices.find((choice) => choice.correct).text,
