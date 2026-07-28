@@ -1457,7 +1457,7 @@ export function diagonalizabilityQuestion(): Question {
     id: `M-DIAGONAL-${diagonalizable ? "YES" : "NO"}-${Date.now()}-${randomInt(100, 999)}`,
     sector: "matrices",
     eyebrow: "MP · Diagonalisation",
-    prompt: "Soit u ∈ L(E) avec dim(E) = 3. Quelle conclusion est correcte ?",
+    prompt: "Quelle conclusion est correcte ?",
     formula: `χ_u(X) = ${polynomialRootFactor(repeatedEigenvalue)}²${polynomialRootFactor(simpleEigenvalue)},   dim(E_${repeatedEigenvalue}) = ${repeatedEigenspaceDimension},   dim(E_${simpleEigenvalue}) = 1`,
     choices: choices(answer, [
       "u est diagonalisable car son polynôme caractéristique est de degré 3.",
@@ -1540,7 +1540,7 @@ export function triangularizationQuestion(): Question {
     id: `M-TRIANGULAR-${Date.now()}-${randomInt(100, 999)}`,
     sector: "matrices",
     eyebrow: "MP · Trigonalisation",
-    prompt: "Soit u ∈ L(E) avec dim(E) = 3. À l’ordre près, quels sont les coefficients diagonaux d’une forme triangulaire de u ?",
+    prompt: "À l’ordre près, quels sont les coefficients diagonaux d’une forme triangulaire de u ?",
     formula: `χ_u(X) = ${polynomialRootFactor(repeatedEigenvalue)}²${polynomialRootFactor(simpleEigenvalue)}`,
     choices: choices(answer, [
       `{${repeatedEigenvalue} ; ${simpleEigenvalue} ; ${simpleEigenvalue}}`,

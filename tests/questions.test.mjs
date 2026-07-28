@@ -366,7 +366,6 @@ test("MP reduction questions vary diagonalizability and preserve multiplicities"
   const conclusions = new Set();
   const diagonalTemplates = new Set();
   const triangularTemplates = new Set();
-  let sawExplicitDimension = false;
 
   for (let index = 0; index < 400; index += 1) {
     const diagonalization = diagonalizabilityQuestion();
@@ -392,7 +391,6 @@ test("MP reduction questions vary diagonalizability and preserve multiplicities"
           ? "basis"
           : "diagonal",
     );
-    sawExplicitDimension ||= triangularization.prompt.includes("dim(E) = 3");
   }
 
   assert.deepEqual(conclusions, new Set(["yes", "no"]));
@@ -404,7 +402,6 @@ test("MP reduction questions vary diagonalizability and preserve multiplicities"
     triangularTemplates,
     new Set(["field", "basis", "diagonal"]),
   );
-  assert.equal(sawExplicitDimension, true);
 });
 
 test("polynomial reduction covers annihilators, minimal polynomial, Cayley-Hamilton and characteristic subspaces", () => {
