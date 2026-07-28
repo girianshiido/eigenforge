@@ -764,7 +764,8 @@ export default function Home() {
       (left, right) => game.mastery[left] - game.mastery[right],
     );
     const pool = Math.random() < 0.55 ? [weakest[0]] : sectors;
-    setQuestion(generateExercise(pool, spaceDimension));
+    const mpUnlocked = game.instruments[15] > 0;
+    setQuestion(generateExercise(pool, spaceDimension, mpUnlocked));
     setAnswer(null);
   }
 

@@ -15,6 +15,7 @@ export type Question = {
 export type ExerciseFamily = {
   id: string;
   sector: Sector;
+  program: "MPSI" | "MP";
   label: string;
   description: string;
   generate: (spaceDimension: number) => Question;
@@ -84,6 +85,21 @@ function combineVectors(
 ) {
   return first.map(
     (coordinate, index) => alpha * coordinate + beta * second[index],
+  );
+}
+
+function multiplyMatrices(
+  first: readonly (readonly number[])[],
+  second: readonly (readonly number[])[],
+) {
+  return first.map((row) =>
+    second[0].map((_, columnIndex) =>
+      row.reduce(
+        (sum, value, index) =>
+          sum + value * second[index][columnIndex],
+        0,
+      ),
+    ),
   );
 }
 
@@ -680,26 +696,47 @@ function kernelQuestion(): Question {
   };
 }
 
-function rankTheoremQuestion(): Question {
+export function rankTheoremQuestion(): Question {
   const dimension = randomInt(3, 7);
   const kernel = randomInt(0, dimension);
   const rank = dimension - kernel;
+  const unknown = pick(["rank", "kernel", "domain"] as const);
+  const prompt =
+    unknown === "rank"
+      ? "Quel est le rang de f ?"
+      : unknown === "kernel"
+        ? "Quelle est la dimension de Ker(f) ?"
+        : "Quelle est la dimension de E ?";
+  const formula =
+    unknown === "rank"
+      ? `dim(E) = ${dimension}   et   dim(Ker f) = ${kernel}`
+      : unknown === "kernel"
+        ? `dim(E) = ${dimension}   et   rg(f) = ${rank}`
+        : `dim(Ker f) = ${kernel}   et   rg(f) = ${rank}`;
+  const answer =
+    unknown === "rank" ? rank : unknown === "kernel" ? kernel : dimension;
+  const explanation =
+    unknown === "rank"
+      ? `Le théorème du rang donne dim(E) = dim(Ker f) + rg(f). Ainsi rg(f) = ${dimension} − ${kernel} = ${rank}.`
+      : unknown === "kernel"
+        ? `Le théorème du rang donne dim(E) = dim(Ker f) + rg(f). Ainsi dim(Ker f) = ${dimension} − ${rank} = ${kernel}.`
+        : `Le théorème du rang donne dim(E) = dim(Ker f) + rg(f). Ainsi dim(E) = ${kernel} + ${rank} = ${dimension}.`;
   return {
     id: `A-RANK-${Date.now()}-${randomInt(100, 999)}`,
     sector: "applications",
     eyebrow: "Théorème du rang",
-    prompt: "Quel est le rang de f ?",
-    formula: `dim(E) = ${dimension}   et   dim(Ker f) = ${kernel}`,
-    choices: choices(`${rank}`, [
+    prompt,
+    formula,
+    choices: choices(`${answer}`, [
       `${kernel}`,
-      `${dimension + kernel}`,
+      `${rank}`,
       `${dimension}`,
     ]),
-    explanation: `Le théorème du rang donne dim(E) = dim(Ker f) + rg(f). Ainsi rg(f) = ${dimension} − ${kernel} = ${rank}.`,
+    explanation,
     geometry:
       "La dimension de départ se partage entre les directions écrasées et les directions encore visibles dans l’image.",
     trap:
-      "Le rang complète la dimension du noyau ; il ne s’y ajoute pas au-delà de dim(E).",
+      "Repère d’abord la grandeur inconnue avant de choisir entre addition et soustraction.",
   };
 }
 
@@ -795,6 +832,115 @@ export function explicitMapRankQuestion(dimension: 2 | 3): Question {
   };
 }
 
+function sameLine(
+  first: readonly number[],
+  second: readonly number[],
+) {
+  const pivot = first.findIndex((coordinate) => coordinate !== 0);
+  if (pivot < 0) return second.every((coordinate) => coordinate === 0);
+  return first.every(
+    (coordinate, index) =>
+      coordinate * second[pivot] === second[index] * first[pivot],
+  );
+}
+
+function basisVectorLabel(index: number) {
+  return `e${["₁", "₂", "₃"][index]}`;
+}
+
+function canonicalSpan(indices: readonly number[], dimension: number) {
+  if (indices.length === 0) return "{0}";
+  if (indices.length === dimension) return `ℝ${dimension === 2 ? "²" : "³"}`;
+  return `Vect(${indices.map(basisVectorLabel).join(", ")})`;
+}
+
+export function imageQuestion(dimension: 2 | 3): Question {
+  const variables = ["x", "y", "z"].slice(0, dimension);
+  const field = dimension === 2 ? "ℝ²" : "ℝ³";
+
+  if (Math.random() < 0.55) {
+    const rank = randomInt(0, dimension);
+    const activeIndices = sample(
+      Array.from({ length: dimension }, (_, index) => index),
+      rank,
+    ).sort((left, right) => left - right);
+    const activeSet = new Set(activeIndices);
+    const coordinates = variables.map((variable, index) =>
+      activeSet.has(index)
+        ? formatLinearExpression([[nonZero(), variable]])
+        : "0",
+    );
+    const possibleImages = [
+      ...Array.from(
+        { length: 2 ** dimension },
+        (_, mask) =>
+          Array.from({ length: dimension }, (_, index) => index).filter(
+            (index) => mask & (1 << index),
+          ),
+      ).map((indices) => canonicalSpan(indices, dimension)),
+    ];
+    const answer = canonicalSpan(activeIndices, dimension);
+
+    return {
+      id: `A-IMAGE-CANONICAL-R${rank}-${Date.now()}-${randomInt(100, 999)}`,
+      sector: "applications",
+      eyebrow: "Image d’une application",
+      prompt: "Quelle est l’image de f ?",
+      formula: `f : ${field} → ${field},   f(${variables.join(", ")}) = (${coordinates.join(" ; ")})`,
+      choices: choices(
+        answer,
+        sample(
+          possibleImages.filter((candidate) => candidate !== answer),
+          3,
+        ),
+      ),
+      explanation:
+        rank === 0
+          ? "Toutes les coordonnées de f sont nulles : Im(f) = {0}."
+          : `Les coordonnées qui peuvent varier donnent les directions ${activeIndices.map(basisVectorLabel).join(", ")}. Ainsi Im(f) = ${answer}.`,
+      geometry:
+        rank === dimension
+          ? `L’application atteint tout ${field}.`
+          : `L’image est ici un sous-espace de dimension ${rank}.`,
+      trap:
+        "L’image est formée des vecteurs effectivement atteints, pas des vecteurs annulés.",
+    };
+  }
+
+  const direction = randomVector(dimension);
+  const linearForm = variables.map(
+    (variable) => [nonZero(), variable] as [number, string],
+  );
+  const wrongDirections: number[][] = [];
+  while (wrongDirections.length < 3) {
+    const candidate = randomVector(dimension);
+    if (
+      !sameLine(direction, candidate) &&
+      !wrongDirections.some((existing) => sameLine(existing, candidate))
+    ) {
+      wrongDirections.push(candidate);
+    }
+  }
+  const answer = `Vect(${vector(direction)})`;
+
+  return {
+    id: `A-IMAGE-LINE-${Date.now()}-${randomInt(100, 999)}`,
+    sector: "applications",
+    eyebrow: "Image d’une application",
+    prompt: "Quelle est l’image de f ?",
+    formula: `f : ${field} → ${field},   f(${variables.join(", ")}) = (${formatLinearExpression(linearForm)}) ${vector(direction)}`,
+    choices: choices(
+      answer,
+      wrongDirections.map((candidate) => `Vect(${vector(candidate)})`),
+    ),
+    explanation: `Toutes les valeurs de f sont des multiples de ${vector(direction)}, et la forme linéaire placée devant prend toute valeur réelle. Donc Im(f) = ${answer}.`,
+    geometry:
+      "L’application écrase l’espace de départ sur une seule droite vectorielle.",
+    trap:
+      "Le facteur dépendant de x, y ou z varie ; le vecteur fixe qui le suit donne la direction de l’image.",
+  };
+}
+
 function linearityQuestion(): Question {
   const a = nonZero();
   const b = nonZero();
@@ -832,19 +978,23 @@ function linearityQuestion(): Question {
 
 export function applicationQuestion(
   spaceDimension: number,
-  forcedTemplate?: 0 | 1 | 2 | 3,
+  forcedTemplate?: 0 | 1 | 2 | 3 | 4,
 ): Question {
-  const template = forcedTemplate ?? randomInt(0, 3);
+  const template = forcedTemplate ?? randomInt(0, 4);
   if (template === 0) return kernelQuestion();
   if (template === 1) return rankTheoremQuestion();
   if (template === 2) {
     return explicitMapRankQuestion(ambientDimension(spaceDimension));
   }
+  if (template === 3) return imageQuestion(ambientDimension(spaceDimension));
   return linearityQuestion();
 }
 
 function matrixVectorQuestion(): Question {
-  const coefficients = Array.from({ length: 4 }, () => nonZero());
+  let coefficients = Array.from({ length: 4 }, () => randomInt(-9, 9));
+  while (coefficients.every((coefficient) => coefficient === 0)) {
+    coefficients = Array.from({ length: 4 }, () => randomInt(-9, 9));
+  }
   const value = randomVector(2);
   const rows = [
     [coefficients[0], coefficients[1]],
@@ -887,6 +1037,91 @@ function matrixVectorQuestion(): Question {
       "La matrice décrit comment l’application transforme les vecteurs de la base, puis toutes leurs combinaisons linéaires.",
     trap:
       "La première ligne produit la première coordonnée et la seconde ligne produit la seconde.",
+  };
+}
+
+export function determinant2MatrixQuestion(): Question {
+  let rows = [
+    [randomInt(-9, 9), randomInt(-9, 9)],
+    [randomInt(-9, 9), randomInt(-9, 9)],
+  ];
+  while (rows.flat().every((coefficient) => coefficient === 0)) {
+    rows = [
+      [randomInt(-9, 9), randomInt(-9, 9)],
+      [randomInt(-9, 9), randomInt(-9, 9)],
+    ];
+  }
+  const [first, second] = rows;
+  const determinant = determinant2(first, second);
+
+  return {
+    id: `M-DET2-${Date.now()}-${randomInt(100, 999)}`,
+    sector: "matrices",
+    eyebrow: "Déterminant d’ordre 2",
+    prompt: "Quel est le déterminant de cette matrice ?",
+    formula: `A = ${matrix(rows)}`,
+    choices: choices(`${determinant}`, [
+      `${first[0] * second[1] + first[1] * second[0]}`,
+      `${first[0] * second[0] - first[1] * second[1]}`,
+      `${-determinant}`,
+    ]),
+    explanation: `det(A) = ${factor(first[0])} × ${factor(second[1])} − ${factor(first[1])} × ${factor(second[0])} = ${determinant}.`,
+    geometry:
+      "La valeur absolue du déterminant est le facteur par lequel A multiplie les aires.",
+    trap:
+      "Pour une matrice 2×2, les produits croisés se soustraient : ad − bc.",
+  };
+}
+
+export function matrixProductQuestion(): Question {
+  let first: number[][] = [];
+  let second: number[][] = [];
+  let result: number[][] = [];
+  let distractors: number[][][] = [];
+
+  do {
+    first = Array.from({ length: 2 }, () =>
+      Array.from({ length: 2 }, () => randomInt(-3, 3)),
+    );
+    second = Array.from({ length: 2 }, () =>
+      Array.from({ length: 2 }, () => randomInt(-3, 3)),
+    );
+    result = multiplyMatrices(first, second);
+    distractors = [
+      multiplyMatrices(second, first),
+      first.map((row, rowIndex) =>
+        row.map(
+          (value, columnIndex) =>
+            value * second[rowIndex][columnIndex],
+        ),
+      ),
+      multiplyMatrices(first, [
+        [second[0][0], second[1][0]],
+        [second[0][1], second[1][1]],
+      ]),
+    ];
+  } while (
+    new Set([
+      matrix(result),
+      ...distractors.map((candidate) => matrix(candidate)),
+    ]).size < 4
+  );
+
+  return {
+    id: `M-MATMUL-${Date.now()}-${randomInt(100, 999)}`,
+    sector: "matrices",
+    eyebrow: "Produit de matrices",
+    prompt: "Quel est le produit AB ?",
+    formula: `A = ${matrix(first)}   et   B = ${matrix(second)}`,
+    choices: choices(
+      matrix(result),
+      distractors.map((candidate) => matrix(candidate)),
+    ),
+    explanation: `Chaque coefficient de AB est obtenu par le produit d’une ligne de A avec une colonne de B. On trouve AB = ${matrix(result)}.`,
+    geometry:
+      "Le produit AB représente la composition où B agit d’abord, puis A.",
+    trap:
+      "Le produit matriciel n’est ni terme à terme ni commutatif : AB et BA sont généralement différents.",
   };
 }
 
@@ -998,7 +1233,7 @@ function eigenvalueQuestion(): Question {
   return {
     id: `M-SPEC-${Date.now()}-${randomInt(100, 999)}`,
     sector: "matrices",
-    eyebrow: "Valeurs propres",
+    eyebrow: "MP · Valeurs propres",
     prompt: "Lequel de ces nombres est une valeur propre de A ?",
     formula: `A = ${matrix([
       [firstEigenvalue, upperCoefficient],
@@ -1083,22 +1318,107 @@ export function determinant3Question(): Question {
   };
 }
 
+function nonSingularBlock2() {
+  let block = [
+    [nonZero(), nonZero()],
+    [nonZero(), nonZero()],
+  ];
+  while (determinant2(block[0], block[1]) === 0) {
+    block = [
+      [nonZero(), nonZero()],
+      [nonZero(), nonZero()],
+    ];
+  }
+  return block;
+}
+
+export function blockDeterminantQuestion(): Question {
+  const order = pick([4, 5] as const);
+  const firstBlock = nonSingularBlock2();
+  const firstDeterminant = determinant2(firstBlock[0], firstBlock[1]);
+  let rows: number[][];
+  let secondDeterminant: number;
+  let blockDescription: string;
+
+  if (order === 4) {
+    const secondBlock = nonSingularBlock2();
+    const upperRight = Array.from({ length: 2 }, () =>
+      Array.from({ length: 2 }, () => randomInt(-3, 3)),
+    );
+    rows = [
+      [...firstBlock[0], ...upperRight[0]],
+      [...firstBlock[1], ...upperRight[1]],
+      [0, 0, ...secondBlock[0]],
+      [0, 0, ...secondBlock[1]],
+    ];
+    secondDeterminant = determinant2(secondBlock[0], secondBlock[1]);
+    blockDescription = "deux blocs diagonaux 2×2";
+  } else {
+    const diagonal = [nonZero(), nonZero(), nonZero()];
+    const secondBlock = [
+      [diagonal[0], randomInt(-3, 3), randomInt(-3, 3)],
+      [0, diagonal[1], randomInt(-3, 3)],
+      [0, 0, diagonal[2]],
+    ];
+    const upperRight = Array.from({ length: 2 }, () =>
+      Array.from({ length: 3 }, () => randomInt(-3, 3)),
+    );
+    rows = [
+      [...firstBlock[0], ...upperRight[0]],
+      [...firstBlock[1], ...upperRight[1]],
+      [0, 0, ...secondBlock[0]],
+      [0, 0, ...secondBlock[1]],
+      [0, 0, ...secondBlock[2]],
+    ];
+    secondDeterminant = diagonal[0] * diagonal[1] * diagonal[2];
+    blockDescription = "un bloc 2×2 et un bloc triangulaire 3×3";
+  }
+
+  const determinant = firstDeterminant * secondDeterminant;
+  const diagonalProduct = rows.reduce(
+    (product, row, index) => product * row[index],
+    1,
+  );
+
+  return {
+    id: `M-DETBLOCK-${order}-${Date.now()}-${randomInt(100, 999)}`,
+    sector: "matrices",
+    eyebrow: `MP · Déterminant par blocs · ordre ${order}`,
+    prompt: "Quel est le déterminant de cette matrice triangulaire par blocs ?",
+    formula: `A = ${matrix(rows)}   (${blockDescription})`,
+    choices: choices(`${determinant}`, [
+      `${firstDeterminant + secondDeterminant}`,
+      `${diagonalProduct}`,
+      `${-determinant}`,
+    ]),
+    explanation: `A est triangulaire par blocs : son déterminant est le produit des déterminants des blocs diagonaux. Ainsi det(A) = ${firstDeterminant} × ${secondDeterminant} = ${determinant}.`,
+    geometry:
+      `Dans ℝ${order}, le déterminant mesure le facteur de dilatation des volumes de dimension ${order}.`,
+    trap:
+      "Les blocs hors diagonale n’interviennent pas dans le déterminant d’une matrice triangulaire par blocs.",
+  };
+}
+
 export function matrixQuestion(
   _spaceDimension: number,
-  forcedTemplate?: 0 | 1 | 2 | 3 | 4,
+  forcedTemplate?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7,
 ): Question {
-  const template = forcedTemplate ?? randomInt(0, 4);
+  const template = forcedTemplate ?? randomInt(0, 7);
   if (template === 0) return matrixVectorQuestion();
   if (template === 1) return representationMatrixQuestion();
   if (template === 2) return invertibleMatrixQuestion();
   if (template === 3) return eigenvalueQuestion();
-  return determinant3Question();
+  if (template === 4) return determinant3Question();
+  if (template === 5) return determinant2MatrixQuestion();
+  if (template === 6) return matrixProductQuestion();
+  return blockDeterminantQuestion();
 }
 
 export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
   {
     id: "vector-combination",
     sector: "vectors",
+    program: "MPSI",
     label: "Combinaisons linéaires",
     description: "Calculer les coordonnées de αu + βv.",
     generate: (spaceDimension) => vectorQuestion(spaceDimension, 0),
@@ -1106,6 +1426,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
   {
     id: "vector-span",
     sector: "vectors",
+    program: "MPSI",
     label: "Appartenance à Vect",
     description: "Reconnaître les vecteurs d’une droite ou d’un plan engendré.",
     generate: (spaceDimension) => vectorQuestion(spaceDimension, 1),
@@ -1113,6 +1434,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
   {
     id: "vector-subspace",
     sector: "vectors",
+    program: "MPSI",
     label: "Sous-espaces vectoriels",
     description: "Distinguer sous-espaces et ensembles non stables.",
     generate: (spaceDimension) => vectorQuestion(spaceDimension, 2),
@@ -1120,6 +1442,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
   {
     id: "basis-determinant",
     sector: "bases",
+    program: "MPSI",
     label: "Déterminant d’une famille",
     description: "Calculer un déterminant et reconnaître une base de ℝ².",
     generate: (spaceDimension) => basisQuestion(spaceDimension, 0),
@@ -1127,6 +1450,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
   {
     id: "basis-coordinates",
     sector: "bases",
+    program: "MPSI",
     label: "Coordonnées dans une base",
     description: "Exprimer un vecteur dans une base non canonique.",
     generate: (spaceDimension) => basisQuestion(spaceDimension, 1),
@@ -1134,6 +1458,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
   {
     id: "basis-rank",
     sector: "bases",
+    program: "MPSI",
     label: "Rang d’une famille",
     description: "Déterminer le nombre de directions indépendantes.",
     generate: (spaceDimension) => basisQuestion(spaceDimension, 2),
@@ -1141,6 +1466,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
   {
     id: "application-kernel",
     sector: "applications",
+    program: "MPSI",
     label: "Noyau",
     description: "Identifier un vecteur envoyé sur le vecteur nul.",
     generate: (spaceDimension) => applicationQuestion(spaceDimension, 0),
@@ -1148,27 +1474,39 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
   {
     id: "application-rank-theorem",
     sector: "applications",
+    program: "MPSI",
     label: "Théorème du rang",
     description: "Relier dimension du noyau, rang et dimension de départ.",
     generate: (spaceDimension) => applicationQuestion(spaceDimension, 1),
   },
   {
-    id: "application-image-rank",
+    id: "application-explicit-rank",
     sector: "applications",
-    label: "Image et rang",
+    program: "MPSI",
+    label: "Rang d’une application",
     description: "Lire le rang d’une application donnée explicitement.",
     generate: (spaceDimension) => applicationQuestion(spaceDimension, 2),
   },
   {
+    id: "application-image",
+    sector: "applications",
+    program: "MPSI",
+    label: "Image d’une application",
+    description: "Déterminer le sous-espace atteint par une application.",
+    generate: (spaceDimension) => applicationQuestion(spaceDimension, 3),
+  },
+  {
     id: "application-linearity",
     sector: "applications",
+    program: "MPSI",
     label: "Linéarité",
     description: "Reconnaître les applications qui conservent les combinaisons linéaires.",
-    generate: (spaceDimension) => applicationQuestion(spaceDimension, 3),
+    generate: (spaceDimension) => applicationQuestion(spaceDimension, 4),
   },
   {
     id: "matrix-vector-product",
     sector: "matrices",
+    program: "MPSI",
     label: "Produit matrice-vecteur",
     description: "Appliquer une matrice à un vecteur colonne.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 0),
@@ -1176,6 +1514,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
   {
     id: "matrix-representation",
     sector: "matrices",
+    program: "MPSI",
     label: "Matrice d’une application",
     description: "Encoder les images des vecteurs de base dans les colonnes.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 1),
@@ -1183,6 +1522,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
   {
     id: "matrix-invertibility",
     sector: "matrices",
+    program: "MPSI",
     label: "Inversibilité",
     description: "Reconnaître une matrice de déterminant non nul.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 2),
@@ -1190,29 +1530,69 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
   {
     id: "matrix-spectrum",
     sector: "matrices",
+    program: "MP",
     label: "Valeurs propres",
     description: "Lire le spectre d’une matrice triangulaire.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 3),
   },
   {
+    id: "matrix-determinant-2",
+    sector: "matrices",
+    program: "MPSI",
+    label: "Déterminant 2×2",
+    description: "Calculer ad − bc avec des coefficients entiers.",
+    generate: (spaceDimension) => matrixQuestion(spaceDimension, 5),
+  },
+  {
     id: "matrix-determinant-3",
     sector: "matrices",
+    program: "MPSI",
     label: "Déterminant 3×3",
     description: "Calculer mentalement un déterminant triangulaire ou creux.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 4),
   },
+  {
+    id: "matrix-product",
+    sector: "matrices",
+    program: "MPSI",
+    label: "Produit de matrices 2×2",
+    description: "Multiplier les lignes de A par les colonnes de B.",
+    generate: (spaceDimension) => matrixQuestion(spaceDimension, 6),
+  },
+  {
+    id: "matrix-block-determinant",
+    sector: "matrices",
+    program: "MP",
+    label: "Déterminant par blocs",
+    description: "Exploiter des blocs triangulaires aux ordres 4 et 5.",
+    generate: (spaceDimension) => matrixQuestion(spaceDimension, 7),
+  },
 ] as const;
+
+export function availableExerciseFamilies(
+  sectors: Sector[],
+  includeMp = false,
+) {
+  const programFamilies = EXERCISE_FAMILIES.filter(
+    (family) => includeMp || family.program === "MPSI",
+  );
+  return programFamilies.filter((family) =>
+    sectors.includes(family.sector),
+  );
+}
 
 export function generateQuestion(
   sectors: Sector[],
   spaceDimension: number,
+  includeMp = false,
 ) {
-  const availableFamilies = EXERCISE_FAMILIES.filter((family) =>
-    sectors.includes(family.sector),
+  const programFamilies = EXERCISE_FAMILIES.filter(
+    (family) => includeMp || family.program === "MPSI",
   );
+  const availableFamilies = availableExerciseFamilies(sectors, includeMp);
   return pick(
     availableFamilies.length > 0
       ? availableFamilies
-      : EXERCISE_FAMILIES,
+      : programFamilies,
   ).generate(spaceDimension);
 }

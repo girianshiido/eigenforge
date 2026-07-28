@@ -21,15 +21,19 @@ linéaire des classes préparatoires MPSI et MP.
   d’ateliers dimensionnels entre deux cycles ;
 - quatrième cycle « Matrices et réduction » portant la forge à seize ateliers,
   avec encodage, produit, inversibilité et spectre ;
-- matrices 2×2 et 3×3 rendues comme de vraies grilles responsives dans les
+- matrices 2×2 à 5×5 rendues comme de vraies grilles responsives dans les
   énoncés, les réponses et les corrections ;
 - notation contextuelle des vecteurs : tuples compacts pour les coordonnées,
   vecteurs-colonnes dès qu’une matrice agit ou que les colonnes d’une
   représentation sont explicitées, y compris pour le résultat d’un produit
   matrice-vecteur ;
-- perturbations sur le produit matrice-vecteur, la matrice d’une application,
-  l’inversibilité, les valeurs propres et les déterminants 3×3 calculables de
-  tête ;
+- perturbations sur l’image, le noyau, le rang et les trois inconnues du
+  théorème du rang ;
+- perturbations sur le produit matrice-vecteur, le produit de matrices 2×2, la
+  matrice d’une application, l’inversibilité et les déterminants 2×2 ou 3×3
+  calculables de tête ;
+- progression conforme aux deux années : le socle MPSI précède les matrices
+  par blocs et les valeurs propres, débloquées avec la Chambre spectrale MP ;
 - anomalies mathématiques générées sur les vecteurs, les bases et les
   applications linéaires ;
 - rappels mathématiques affichés seulement lorsqu’ils apportent une information

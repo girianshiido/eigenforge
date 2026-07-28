@@ -40,7 +40,7 @@ test("renders the unlimited exercise laboratory from the shared catalogue", asyn
     "utf8",
   );
   assert.match(laboratory, /EXERCISE_FAMILIES\.filter/);
-  assert.match(laboratory, /generateQuestion\(sectors, dimension\)/);
+  assert.match(laboratory, /generateQuestion\(sectors, dimension, true\)/);
   assert.doesNotMatch(laboratory, /SAVE_KEY|localStorage/);
 });
 
@@ -93,7 +93,10 @@ test("formats generated expressions and previews basis changes", async () => {
   );
 
   assert.match(questions, /function formatLinearExpression/);
-  assert.match(page, /generateExercise\(pool, spaceDimension\)/);
+  assert.match(
+    page,
+    /generateExercise\(pool, spaceDimension, mpUnlocked\)/,
+  );
   assert.match(page, /Remis à zéro/);
   assert.match(page, /Multiplicateur actuel/);
   assert.match(page, /Après le changement/);
@@ -165,6 +168,7 @@ test("ships four ordered workshop cycles through matrix reduction", async () => 
   assert.match(balance, /name: "Composeur matriciel"/);
   assert.match(balance, /name: "Inverseur de Gauss"/);
   assert.match(balance, /name: "Chambre spectrale"/);
+  assert.match(balance, /Ouvre la partie MP/);
   assert.match(balance, /chapter: "Matrices et réduction"/);
   assert.match(balance, /resonanceDecayRate/);
   assert.match(balance, /correctAnomalyRewardMultiplier/);

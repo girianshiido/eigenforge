@@ -18,7 +18,7 @@ function Matrix({ source }: { source: string }) {
 
   return (
     <span
-      className="math-matrix"
+      className={`math-matrix order-${Math.max(rows.length, columnCount)}`}
       role="img"
       aria-label={`Matrice, ${spokenRows}`}
     >

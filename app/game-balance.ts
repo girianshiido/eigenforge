@@ -223,7 +223,7 @@ export const INSTRUMENTS = [
   {
     name: "Chambre spectrale",
     mark: "λ",
-    description: "Isole les directions propres et amplifie de 2 % toute la production du réseau.",
+    description: "Ouvre la partie MP — matrices par blocs et éléments propres — et amplifie de 2 % toute la production du réseau.",
     chapter: "Matrices et réduction",
     mission: "Révéler le spectre",
     baseCost: 6_000_000_000_000,

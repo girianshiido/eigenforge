@@ -3,11 +3,17 @@ import test from "node:test";
 
 import {
   EXERCISE_FAMILIES,
+  availableExerciseFamilies,
   basisQuestion,
+  blockDeterminantQuestion,
   combinationQuestion,
+  determinant2MatrixQuestion,
   determinant3Question,
   explicitMapRankQuestion,
   familyRankQuestion,
+  imageQuestion,
+  matrixProductQuestion,
+  rankTheoremQuestion,
   spanQuestion,
   subspaceQuestion,
 } from "../app/question-generator.ts";
@@ -48,8 +54,38 @@ function assertNoSingleCoordinateRevealsAnswer(question) {
   }
 }
 
+function parseMatrix(text) {
+  const match = text.match(/⟦([^⟧]+)⟧/);
+  assert.ok(match, `Matrice attendue, reçu : ${text}`);
+  return match[1]
+    .split(";")
+    .map((row) => row.split(",").map(Number));
+}
+
+function determinant(rows) {
+  if (rows.length === 1) return rows[0][0];
+  return rows[0].reduce((sum, coefficient, column) => {
+    const minor = rows
+      .slice(1)
+      .map((row) => row.filter((_, index) => index !== column));
+    return sum + (column % 2 === 0 ? 1 : -1) * coefficient * determinant(minor);
+  }, 0);
+}
+
+function multiply(first, second) {
+  return first.map((row) =>
+    second[0].map((_, column) =>
+      row.reduce(
+        (sum, coefficient, index) =>
+          sum + coefficient * second[index][column],
+        0,
+      ),
+    ),
+  );
+}
+
 test("the shared catalogue exposes every exercise family to the game and laboratory", () => {
-  assert.equal(EXERCISE_FAMILIES.length, 15);
+  assert.equal(EXERCISE_FAMILIES.length, 19);
   assert.deepEqual(
     new Set(EXERCISE_FAMILIES.map((family) => family.sector)),
     new Set(["vectors", "bases", "applications", "matrices"]),
@@ -57,6 +93,10 @@ test("the shared catalogue exposes every exercise family to the game and laborat
   assert.equal(
     new Set(EXERCISE_FAMILIES.map((family) => family.id)).size,
     EXERCISE_FAMILIES.length,
+  );
+  assert.deepEqual(
+    new Set(EXERCISE_FAMILIES.map((family) => family.program)),
+    new Set(["MPSI", "MP"]),
   );
 
   for (const family of EXERCISE_FAMILIES) {
@@ -75,7 +115,7 @@ test("matrix questions use structured notation and mental 3 by 3 determinants", 
   const matrixFamilies = EXERCISE_FAMILIES.filter(
     (family) => family.sector === "matrices",
   );
-  assert.equal(matrixFamilies.length, 5);
+  assert.equal(matrixFamilies.length, 8);
 
   for (const family of matrixFamilies) {
     for (let index = 0; index < 150; index += 1) {
@@ -141,6 +181,122 @@ test("matrix questions use structured notation and mental 3 by 3 determinants", 
   assert.deepEqual(
     determinantTemplates,
     new Set(["triangular", "first-row", "second-row"]),
+  );
+});
+
+test("matrix generators cover products and determinants from order two to five", () => {
+  let sawLargeCoefficient = false;
+  const blockOrders = new Set();
+
+  for (let index = 0; index < 400; index += 1) {
+    const determinant2Question = determinant2MatrixQuestion();
+    assertWellFormed(determinant2Question);
+    const rows2 = parseMatrix(determinant2Question.formula);
+    assert.equal(
+      Number(
+        determinant2Question.choices.find((choice) => choice.correct).text,
+      ),
+      determinant(rows2),
+    );
+
+    const productQuestion = matrixProductQuestion();
+    assertWellFormed(productQuestion);
+    const matrices = [...productQuestion.formula.matchAll(/⟦([^⟧]+)⟧/g)].map(
+      (match) => parseMatrix(match[0]),
+    );
+    assert.equal(matrices.length, 2);
+    assert.deepEqual(
+      parseMatrix(
+        productQuestion.choices.find((choice) => choice.correct).text,
+      ),
+      multiply(matrices[0], matrices[1]),
+    );
+
+    const blockQuestion = blockDeterminantQuestion();
+    assertWellFormed(blockQuestion);
+    const blockRows = parseMatrix(blockQuestion.formula);
+    blockOrders.add(blockRows.length);
+    assert.equal(
+      Number(blockQuestion.choices.find((choice) => choice.correct).text),
+      determinant(blockRows),
+    );
+
+    const matrixVectorFamily = EXERCISE_FAMILIES.find(
+      (family) => family.id === "matrix-vector-product",
+    );
+    const matrixVector = matrixVectorFamily.generate(2);
+    const matrixRows = parseMatrix(matrixVector.formula);
+    sawLargeCoefficient ||= matrixRows
+      .flat()
+      .some((coefficient) => Math.abs(coefficient) >= 8);
+    assert.ok(
+      matrixRows.flat().every((coefficient) => Math.abs(coefficient) <= 9),
+    );
+  }
+
+  assert.deepEqual(blockOrders, new Set([4, 5]));
+  assert.equal(sawLargeCoefficient, true);
+});
+
+test("MPSI questions exclude MP-only blocks and eigenvalues until the final workshop", () => {
+  assert.deepEqual(
+    EXERCISE_FAMILIES.filter((family) => family.program === "MP").map(
+      (family) => family.id,
+    ),
+    ["matrix-spectrum", "matrix-block-determinant"],
+  );
+
+  assert.equal(
+    availableExerciseFamilies(["matrices"]).every(
+      (family) => family.program === "MPSI",
+    ),
+    true,
+  );
+  assert.deepEqual(
+    availableExerciseFamilies(["matrices"], true)
+      .filter((family) => family.program === "MP")
+      .map((family) => family.id),
+    ["matrix-spectrum", "matrix-block-determinant"],
+  );
+});
+
+test("image exercises genuinely determine images in dimensions two and three", () => {
+  const templates = new Set();
+  const answers = new Set();
+
+  for (let index = 0; index < 500; index += 1) {
+    const question = imageQuestion(index % 2 === 0 ? 2 : 3);
+    assertWellFormed(question);
+    assert.equal(question.prompt, "Quelle est l’image de f ?");
+    assert.equal(question.eyebrow, "Image d’une application");
+    templates.add(
+      question.id.includes("CANONICAL") ? "canonical" : "line",
+    );
+    answers.add(question.choices.find((choice) => choice.correct).text);
+    assert.match(question.explanation, /Im\(f\)/);
+  }
+
+  assert.deepEqual(templates, new Set(["canonical", "line"]));
+  assert.ok(answers.size >= 20);
+});
+
+test("rank theorem exercises ask for every term of the dimension formula", () => {
+  const prompts = new Set();
+
+  for (let index = 0; index < 400; index += 1) {
+    const question = rankTheoremQuestion();
+    assertWellFormed(question);
+    prompts.add(question.prompt);
+    assert.match(question.explanation, /dim\(E\) = dim\(Ker f\) \+ rg\(f\)/);
+  }
+
+  assert.deepEqual(
+    prompts,
+    new Set([
+      "Quel est le rang de f ?",
+      "Quelle est la dimension de Ker(f) ?",
+      "Quelle est la dimension de E ?",
+    ]),
   );
 });
 

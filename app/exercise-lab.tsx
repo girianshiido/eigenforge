@@ -44,9 +44,9 @@ function makeQuestion(
 
   const sectors =
     sector === "all"
-      ? (["vectors", "bases", "applications"] as Sector[])
+      ? (["vectors", "bases", "applications", "matrices"] as Sector[])
       : [sector];
-  return generateQuestion(sectors, dimension);
+  return generateQuestion(sectors, dimension, true);
 }
 
 export default function ExerciseLab() {
