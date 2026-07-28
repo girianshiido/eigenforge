@@ -86,7 +86,7 @@ test("linear-map workshops transform production, resonance and anomaly rewards",
 });
 
 test("matrix and MP reduction cycles extend production and workshop synergies", () => {
-  assert.equal(INSTRUMENTS.length, 20);
+  assert.equal(INSTRUMENTS.length, 24);
   assert.deepEqual(
     INSTRUMENTS.slice(12, 16).map((instrument) => instrument.name),
     [
@@ -97,12 +97,21 @@ test("matrix and MP reduction cycles extend production and workshop synergies", 
     ],
   );
   assert.deepEqual(
-    INSTRUMENTS.slice(16).map((instrument) => instrument.name),
+    INSTRUMENTS.slice(16, 20).map((instrument) => instrument.name),
     [
       "Traceur caractéristique",
       "Extracteur propre",
       "Diagonaliseur",
       "Trigonaliseur",
+    ],
+  );
+  assert.deepEqual(
+    INSTRUMENTS.slice(20).map((instrument) => instrument.name),
+    [
+      "Évaluateur polynomial",
+      "Extracteur minimal",
+      "Forge de Cayley-Hamilton",
+      "Décomposeur caractéristique",
     ],
   );
 
@@ -132,6 +141,17 @@ test("matrix and MP reduction cycles extend production and workshop synergies", 
           (sum, instrument) => sum + instrument.baseProduction,
           0,
         ),
+  );
+  assert.ok(
+    matrixWorkshopCostMultiplier(
+      INSTRUMENTS.map((_, index) => (index === 23 ? 5 : 0)),
+    ) < 1,
+  );
+  assert.equal(
+    correctAnomalyRewardMultiplier(
+      INSTRUMENTS.map((_, index) => (index === 21 ? 2 : 0)),
+    ),
+    1.04,
   );
   assert.equal(matrixWorkshopCostMultiplier([]), 1);
   assert.ok(

@@ -174,6 +174,10 @@ function polynomialRootFactor(root: number) {
   return root > 0 ? `(X − ${root})` : `(X + ${Math.abs(root)})`;
 }
 
+function shiftedMatrix(root: number) {
+  return root > 0 ? `A − ${root}I` : `A + ${Math.abs(root)}I`;
+}
+
 function choices(correct: string, distractors: string[]) {
   const unique = Array.from(new Set([correct, ...distractors]));
   let offset = 1;
@@ -1364,6 +1368,82 @@ export function eigenvectorQuestion(): Question {
 }
 
 export function diagonalizabilityQuestion(): Question {
+  const template = randomInt(0, 2);
+  if (template === 1) {
+    const eigenvalues = sample([-4, -3, -2, -1, 1, 2, 3, 4], 2);
+    const changeOfBasis = pick([
+      [[1, 1], [0, 1]],
+      [[1, 0], [1, 1]],
+      [[1, -1], [1, 0]],
+    ] as const);
+    const diagonal = [
+      [eigenvalues[0], 0],
+      [0, eigenvalues[1]],
+    ];
+    const value = multiplyMatrices(
+      multiplyMatrices(changeOfBasis, diagonal),
+      inverseUnimodular2(changeOfBasis),
+    );
+    return {
+      id: `M-DIAGONAL-SPECTRUM-${Date.now()}-${randomInt(100, 999)}`,
+      sector: "matrices",
+      eyebrow: "MP · Diagonalisation",
+      prompt: "Quelle conclusion est certaine ?",
+      formula: `A = ${matrix(value)},   Sp(A) = {${eigenvalues.join(" ; ")}}`,
+      choices: choices(
+        "A est diagonalisable car elle possède deux valeurs propres distinctes.",
+        [
+          "A n’est pas diagonalisable car elle n’est pas diagonale.",
+          "A est seulement trigonalisable car ses coefficients hors diagonale sont non nuls.",
+          "On ne peut conclure qu’après avoir calculé A².",
+        ],
+      ),
+      explanation:
+        "Dans un espace de dimension 2, deux valeurs propres distinctes fournissent deux directions propres indépendantes, donc une base de vecteurs propres.",
+      geometry:
+        "Les deux directions propres donnent les deux axes de la base qui diagonalise A.",
+      trap:
+        "Une matrice diagonalisable n’est pas nécessairement déjà diagonale dans la base canonique.",
+    };
+  }
+
+  if (template === 2) {
+    const [firstEigenvalue, secondEigenvalue] = sample(
+      [-4, -3, -2, -1, 1, 2, 3, 4],
+      2,
+    );
+    const answer = matrix([
+      [firstEigenvalue, 0],
+      [0, secondEigenvalue],
+    ]);
+    return {
+      id: `M-DIAGONAL-BASIS-${Date.now()}-${randomInt(100, 999)}`,
+      sector: "matrices",
+      eyebrow: "MP · Diagonalisation",
+      prompt: "Quelle est la matrice de u dans la base B = (v₁, v₂) ?",
+      formula: `u(v₁) = ${formatLinearExpression([[firstEigenvalue, "v₁"]])},   u(v₂) = ${formatLinearExpression([[secondEigenvalue, "v₂"]])},   B est une base de E`,
+      choices: choices(answer, [
+        matrix([
+          [secondEigenvalue, 0],
+          [0, firstEigenvalue],
+        ]),
+        matrix([
+          [firstEigenvalue, secondEigenvalue],
+          [0, 0],
+        ]),
+        matrix([
+          [0, firstEigenvalue],
+          [secondEigenvalue, 0],
+        ]),
+      ]),
+      explanation: `Les vecteurs de B sont propres. Les colonnes des coordonnées de u(v₁) et u(v₂) donnent donc la matrice diagonale ${answer}.`,
+      geometry:
+        "Dans une base propre, chaque axe est simplement multiplié par sa valeur propre.",
+      trap:
+        "L’ordre des valeurs propres sur la diagonale doit suivre l’ordre des vecteurs de la base.",
+    };
+  }
+
   const eigenvalues = sample([-3, -2, -1, 1, 2, 3], 2);
   const [repeatedEigenvalue, simpleEigenvalue] = eigenvalues;
   const diagonalizable = Math.random() < 0.5;
@@ -1377,7 +1457,7 @@ export function diagonalizabilityQuestion(): Question {
     id: `M-DIAGONAL-${diagonalizable ? "YES" : "NO"}-${Date.now()}-${randomInt(100, 999)}`,
     sector: "matrices",
     eyebrow: "MP · Diagonalisation",
-    prompt: "Quelle conclusion est correcte ?",
+    prompt: "Soit u ∈ L(E) avec dim(E) = 3. Quelle conclusion est correcte ?",
     formula: `χ_u(X) = ${polynomialRootFactor(repeatedEigenvalue)}²${polynomialRootFactor(simpleEigenvalue)},   dim(E_${repeatedEigenvalue}) = ${repeatedEigenspaceDimension},   dim(E_${simpleEigenvalue}) = 1`,
     choices: choices(answer, [
       "u est diagonalisable car son polynôme caractéristique est de degré 3.",
@@ -1395,6 +1475,59 @@ export function diagonalizabilityQuestion(): Question {
 }
 
 export function triangularizationQuestion(): Question {
+  const template = randomInt(0, 2);
+  if (template === 1) {
+    const realEigenvalue = nonZero();
+    return {
+      id: `M-TRIANGULAR-FIELD-${Date.now()}-${randomInt(100, 999)}`,
+      sector: "matrices",
+      eyebrow: "MP · Trigonalisation",
+      prompt: "Quelle affirmation est correcte sur ℝ ?",
+      formula: `u ∈ L(E),   χ_u(X) = (X² + 1)${polynomialRootFactor(realEigenvalue)}`,
+      choices: choices(
+        "u n’est pas trigonalisable sur ℝ car χ_u n’est pas scindé sur ℝ.",
+        [
+          "u est diagonalisable sur ℝ car χ_u possède une racine réelle.",
+          "u est trigonalisable sur ℝ car χ_u est de degré 3.",
+          "u est nilpotent car 0 n’est pas valeur propre.",
+        ],
+      ),
+      explanation:
+        "Un endomorphisme est trigonalisable sur le corps de base si et seulement si son polynôme caractéristique y est scindé. Le facteur X² + 1 ne se scinde pas sur ℝ.",
+      geometry:
+        "Sur ℝ, il manque deux directions spectrales réelles pour construire un drapeau stable complet.",
+      trap:
+        "Posséder une valeur propre réelle ne suffit pas : toutes les racines doivent appartenir au corps de base.",
+    };
+  }
+
+  if (template === 2) {
+    const eigenvalue = nonZero();
+    return {
+      id: `M-TRIANGULAR-BASIS-${Date.now()}-${randomInt(100, 999)}`,
+      sector: "matrices",
+      eyebrow: "MP · Trigonalisation",
+      prompt: "Quelle conclusion décrit u dans la base B = (v₁, v₂) ?",
+      formula: `u(v₁) = ${formatLinearExpression([[eigenvalue, "v₁"]])},   u(v₂) = ${formatLinearExpression([[1, "v₁"], [eigenvalue, "v₂"]])},   B est une base de E`,
+      choices: choices(
+        "La matrice de u est triangulaire, mais u n’est pas diagonalisable.",
+        [
+          "La matrice de u est diagonale.",
+          "u n’est pas trigonalisable.",
+          "u possède deux valeurs propres distinctes.",
+        ],
+      ),
+      explanation: `Dans B, la matrice est ${matrix([
+        [eigenvalue, 1],
+        [0, eigenvalue],
+      ])}. Elle est triangulaire. Son unique espace propre est engendré par v₁, donc il ne fournit pas une base propre.`,
+      geometry:
+        "Le terme v₁ dans u(v₂) crée un cisaillement le long de l’unique direction propre.",
+      trap:
+        "Une matrice triangulaire n’est diagonale que si ses coefficients hors diagonale sont nuls.",
+    };
+  }
+
   let eigenvalues = sample([-4, -3, -2, -1, 1, 2, 3, 4], 2);
   while (eigenvalues[0] + eigenvalues[1] === 0) {
     eigenvalues = sample([-4, -3, -2, -1, 1, 2, 3, 4], 2);
@@ -1407,7 +1540,7 @@ export function triangularizationQuestion(): Question {
     id: `M-TRIANGULAR-${Date.now()}-${randomInt(100, 999)}`,
     sector: "matrices",
     eyebrow: "MP · Trigonalisation",
-    prompt: "À l’ordre près, quels sont les coefficients diagonaux d’une forme triangulaire de u ?",
+    prompt: "Soit u ∈ L(E) avec dim(E) = 3. À l’ordre près, quels sont les coefficients diagonaux d’une forme triangulaire de u ?",
     formula: `χ_u(X) = ${polynomialRootFactor(repeatedEigenvalue)}²${polynomialRootFactor(simpleEigenvalue)}`,
     choices: choices(answer, [
       `{${repeatedEigenvalue} ; ${simpleEigenvalue} ; ${simpleEigenvalue}}`,
@@ -1419,6 +1552,154 @@ export function triangularizationQuestion(): Question {
       "La trigonalisation organise les directions généralisées tout en faisant apparaître le spectre sur la diagonale.",
     trap:
       "La multiplicité algébrique d’une valeur propre doit être conservée sur la diagonale.",
+  };
+}
+
+export function annihilatingPolynomialQuestion(): Question {
+  const [firstEigenvalue, secondEigenvalue] = sample(
+    [-4, -3, -2, -1, 1, 2, 3, 4],
+    2,
+  );
+  let outsider = nonZero();
+  while (
+    outsider === firstEigenvalue ||
+    outsider === secondEigenvalue
+  ) {
+    outsider = nonZero();
+  }
+  const answer = `${polynomialRootFactor(firstEigenvalue)}${polynomialRootFactor(secondEigenvalue)}`;
+
+  return {
+    id: `M-ANNULATOR-${Date.now()}-${randomInt(100, 999)}`,
+    sector: "matrices",
+    eyebrow: "MP · Polynôme annulateur",
+    prompt: "Lequel de ces polynômes annule A ?",
+    formula: `A = ${matrix([
+      [firstEigenvalue, nonZero()],
+      [0, secondEigenvalue],
+    ])}`,
+    choices: choices(answer, [
+      polynomialRootFactor(firstEigenvalue),
+      polynomialRootFactor(secondEigenvalue),
+      `${polynomialRootFactor(firstEigenvalue)}${polynomialRootFactor(outsider)}`,
+    ]),
+    explanation: `Les valeurs propres distinctes sont ${firstEigenvalue} et ${secondEigenvalue}. La matrice est diagonalisable, donc ${answer} annule A.`,
+    geometry:
+      "Le polynôme annulateur s’annule sur chacune des directions propres de la transformation.",
+    trap:
+      "Un polynôme qui ne s’annule que sur une seule valeur propre ne peut pas annuler tout l’endomorphisme.",
+  };
+}
+
+export function minimalPolynomialQuestion(): Question {
+  const template = randomInt(0, 2);
+  const eigenvalue = nonZero();
+  let value: number[][];
+  let answer: string;
+  let explanation: string;
+
+  if (template === 0) {
+    value = [[eigenvalue, 0], [0, eigenvalue]];
+    answer = polynomialRootFactor(eigenvalue);
+    explanation =
+      "A est une matrice scalaire : A − λI = 0. Le polynôme minimal est donc de degré 1.";
+  } else if (template === 1) {
+    value = [[eigenvalue, 1], [0, eigenvalue]];
+    answer = `${polynomialRootFactor(eigenvalue)}²`;
+    explanation =
+      "A − λI est non nulle mais son carré est nul. Le polynôme minimal est donc (X − λ)².";
+  } else {
+    let secondEigenvalue = nonZero();
+    while (secondEigenvalue === eigenvalue) secondEigenvalue = nonZero();
+    value = [[eigenvalue, 0], [0, secondEigenvalue]];
+    answer = `${polynomialRootFactor(eigenvalue)}${polynomialRootFactor(secondEigenvalue)}`;
+    explanation =
+      "Les deux valeurs propres distinctes doivent être racines du polynôme minimal, et leur produit annule la matrice diagonale.";
+  }
+
+  return {
+    id: `M-MINIMAL-${template}-${Date.now()}-${randomInt(100, 999)}`,
+    sector: "matrices",
+    eyebrow: "MP · Polynôme minimal",
+    prompt: "Quel est le polynôme minimal unitaire de A ?",
+    formula: `A = ${matrix(value)}`,
+    choices: choices(
+      answer,
+      [
+        "X",
+        polynomialRootFactor(eigenvalue),
+        `${polynomialRootFactor(eigenvalue)}²`,
+        `${polynomialRootFactor(eigenvalue)}³`,
+      ].filter((candidate) => candidate !== answer),
+    ),
+    explanation,
+    geometry:
+      "Le polynôme minimal mesure le nombre d’itérations nécessaires pour annuler chaque composante spectrale.",
+    trap:
+      "Le polynôme minimal divise le polynôme caractéristique, mais il ne lui est pas toujours égal.",
+  };
+}
+
+export function cayleyHamiltonQuestion(): Question {
+  let eigenvalues = sample([-4, -3, -2, -1, 1, 2, 3, 4], 2);
+  while (eigenvalues[0] + eigenvalues[1] === 0) {
+    eigenvalues = sample([-4, -3, -2, -1, 1, 2, 3, 4], 2);
+  }
+  const trace = eigenvalues[0] + eigenvalues[1];
+  const determinant = eigenvalues[0] * eigenvalues[1];
+  const relation = (a: number, b: number) =>
+    `A² = ${formatLinearExpression([[a, "A"], [b, "I"]])}`;
+  const answer = relation(trace, -determinant);
+
+  return {
+    id: `M-CAYLEY-${Date.now()}-${randomInt(100, 999)}`,
+    sector: "matrices",
+    eyebrow: "MP · Cayley-Hamilton",
+    prompt: "Quelle relation vérifie A d’après le théorème de Cayley-Hamilton ?",
+    formula: `A = ${matrix([
+      [eigenvalues[0], nonZero()],
+      [0, eigenvalues[1]],
+    ])},   χ_A(X) = ${characteristicPolynomial2(trace, determinant)}`,
+    choices: choices(answer, [
+      relation(-trace, -determinant),
+      relation(trace, determinant),
+      relation(-trace, determinant),
+    ]),
+    explanation: `Cayley-Hamilton donne χ_A(A) = 0. En isolant A² dans cette relation, on obtient ${answer}.`,
+    geometry:
+      "Les puissances élevées de A se replient sur l’espace engendré par I et A.",
+    trap:
+      "Dans χ_A(A), le terme constant devient un multiple de I, pas un simple nombre.",
+  };
+}
+
+export function characteristicSubspaceQuestion(): Question {
+  const [repeatedEigenvalue, simpleEigenvalue] = sample(
+    [-4, -3, -2, -1, 1, 2, 3, 4],
+    2,
+  );
+  const askRepeated = Math.random() < 0.5;
+  const selectedEigenvalue = askRepeated
+    ? repeatedEigenvalue
+    : simpleEigenvalue;
+  const answer = askRepeated ? "2" : "1";
+
+  return {
+    id: `M-CHARSPACE-${askRepeated ? "DOUBLE" : "SIMPLE"}-${Date.now()}-${randomInt(100, 999)}`,
+    sector: "matrices",
+    eyebrow: "MP · Sous-espace caractéristique",
+    prompt: `Quelle est la dimension de N_${selectedEigenvalue} = Ker((${shiftedMatrix(selectedEigenvalue)})³) ?`,
+    formula: `A = ${matrix([
+      [repeatedEigenvalue, 1, 0],
+      [0, repeatedEigenvalue, 0],
+      [0, 0, simpleEigenvalue],
+    ])}`,
+    choices: choices(answer, ["0", "1", "2", "3"].filter((item) => item !== answer)),
+    explanation: `La dimension du sous-espace caractéristique associé à ${selectedEigenvalue} est sa multiplicité algébrique dans χ_A : elle vaut ${answer}.`,
+    geometry:
+      "Les sous-espaces caractéristiques regroupent les directions propres et les directions généralisées associées à une même valeur propre.",
+    trap:
+      "Le sous-espace caractéristique peut être plus grand que l’espace propre lorsque la matrice n’est pas diagonalisable.",
   };
 }
 
@@ -1571,9 +1852,9 @@ export function blockDeterminantQuestion(): Question {
 
 export function matrixQuestion(
   _spaceDimension: number,
-  forcedTemplate?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11,
+  forcedTemplate?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15,
 ): Question {
-  const template = forcedTemplate ?? randomInt(0, 11);
+  const template = forcedTemplate ?? randomInt(0, 15);
   if (template === 0) return matrixVectorQuestion();
   if (template === 1) return representationMatrixQuestion();
   if (template === 2) return invertibleMatrixQuestion();
@@ -1585,7 +1866,11 @@ export function matrixQuestion(
   if (template === 8) return characteristicPolynomialQuestion();
   if (template === 9) return eigenvectorQuestion();
   if (template === 10) return diagonalizabilityQuestion();
-  return triangularizationQuestion();
+  if (template === 11) return triangularizationQuestion();
+  if (template === 12) return annihilatingPolynomialQuestion();
+  if (template === 13) return minimalPolynomialQuestion();
+  if (template === 14) return cayleyHamiltonQuestion();
+  return characteristicSubspaceQuestion();
 }
 
 export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
@@ -1795,6 +2080,42 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     label: "Trigonalisation",
     description: "Lire le spectre avec multiplicité sur une forme triangulaire.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 11),
+  },
+  {
+    id: "matrix-annihilating-polynomial",
+    sector: "matrices",
+    program: "MP",
+    minInstrument: 20,
+    label: "Polynômes annulateurs",
+    description: "Reconnaître un polynôme P tel que P(A) = 0.",
+    generate: (spaceDimension) => matrixQuestion(spaceDimension, 12),
+  },
+  {
+    id: "matrix-minimal-polynomial",
+    sector: "matrices",
+    program: "MP",
+    minInstrument: 21,
+    label: "Polynôme minimal",
+    description: "Déterminer le générateur unitaire de l’idéal annulateur.",
+    generate: (spaceDimension) => matrixQuestion(spaceDimension, 13),
+  },
+  {
+    id: "matrix-cayley-hamilton",
+    sector: "matrices",
+    program: "MP",
+    minInstrument: 22,
+    label: "Cayley-Hamilton",
+    description: "Réduire les puissances de A grâce à χ_A(A) = 0.",
+    generate: (spaceDimension) => matrixQuestion(spaceDimension, 14),
+  },
+  {
+    id: "matrix-characteristic-subspace",
+    sector: "matrices",
+    program: "MP",
+    minInstrument: 23,
+    label: "Sous-espaces caractéristiques",
+    description: "Lire les noyaux généralisés associés aux valeurs propres.",
+    generate: (spaceDimension) => matrixQuestion(spaceDimension, 15),
   },
 ] as const;
 

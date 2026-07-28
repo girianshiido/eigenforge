@@ -3,6 +3,7 @@ export const INSTRUMENT_MILESTONES = [10, 25, 50] as const;
 export const STRUCTURAL_WORKSHOP_COUNT = 4;
 export const MATRIX_WORKSHOP_START = 12;
 export const REDUCTION_WORKSHOP_START = 16;
+export const POLYNOMIAL_WORKSHOP_START = 20;
 
 export const INVARIANT_PROTOCOLS = [
   {
@@ -276,6 +277,50 @@ export const INSTRUMENTS = [
     unlock: 3_600_000_000_000_000,
     sector: "Trigonalisation",
   },
+  {
+    name: "Évaluateur polynomial",
+    mark: "P(u)",
+    description: "Évalue les polynômes en u et augmente de 4 % la production du cycle Réduction.",
+    chapter: "Calcul polynomial · MP",
+    mission: "Évaluer P(u)",
+    baseCost: 13_500_000_000_000_000,
+    baseProduction: 3_000_000_000_000,
+    unlock: 17_000_000_000_000_000,
+    sector: "Polynômes d’endomorphismes",
+  },
+  {
+    name: "Extracteur minimal",
+    mark: "π_u",
+    description: "Isole le polynôme minimal et augmente de 2 % les récompenses des réponses justes.",
+    chapter: "Calcul polynomial · MP",
+    mission: "Extraire le polynôme minimal",
+    baseCost: 63_000_000_000_000_000,
+    baseProduction: 14_000_000_000_000,
+    unlock: 80_000_000_000_000_000,
+    sector: "Polynôme minimal",
+  },
+  {
+    name: "Forge de Cayley-Hamilton",
+    mark: "χ_u(u)",
+    description: "Injecte χ_u(u) = 0 dans le réseau et amplifie toute la production de 2 %.",
+    chapter: "Calcul polynomial · MP",
+    mission: "Annuler l’endomorphisme",
+    baseCost: 295_000_000_000_000_000,
+    baseProduction: 65_000_000_000_000,
+    unlock: 380_000_000_000_000_000,
+    sector: "Cayley-Hamilton",
+  },
+  {
+    name: "Décomposeur caractéristique",
+    mark: "N_λ",
+    description: "Sépare les sous-espaces caractéristiques et réduit de 1 % le prix de tous les ateliers.",
+    chapter: "Calcul polynomial · MP",
+    mission: "Décomposer les noyaux",
+    baseCost: 1_380_000_000_000_000_000,
+    baseProduction: 300_000_000_000_000,
+    unlock: 1_750_000_000_000_000_000,
+    sector: "Sous-espaces caractéristiques",
+  },
 ] as const;
 
 export function milestoneMultiplier(owned: number) {
@@ -350,7 +395,10 @@ export function basePassiveProduction(
     .slice(MATRIX_WORKSHOP_START, REDUCTION_WORKSHOP_START)
     .reduce((sum, output) => sum + output, 0);
   const reductionOutput = outputs
-    .slice(REDUCTION_WORKSHOP_START)
+    .slice(REDUCTION_WORKSHOP_START, POLYNOMIAL_WORKSHOP_START)
+    .reduce((sum, output) => sum + output, 0);
+  const polynomialOutput = outputs
+    .slice(POLYNOMIAL_WORKSHOP_START)
     .reduce((sum, output) => sum + output, 0);
   const directionalMultiplier = 1 + (instruments[4] ?? 0) * 0.04;
   const familyMultiplier = 1 + (instruments[5] ?? 0) * 0.03;
@@ -362,18 +410,22 @@ export function basePassiveProduction(
   const spectralMultiplier = 1 + (instruments[15] ?? 0) * 0.02;
   const characteristicMultiplier = 1 + (instruments[16] ?? 0) * 0.04;
   const diagonalMultiplier = 1 + (instruments[18] ?? 0) * 0.02;
+  const polynomialMultiplier = 1 + (instruments[20] ?? 0) * 0.04;
+  const cayleyHamiltonMultiplier = 1 + (instruments[22] ?? 0) * 0.02;
 
   return (
     (directionalOutput * directionalMultiplier +
       familyOutput * familyMultiplier * transformationMultiplier +
       applicationOutput * matrixCompositionMultiplier +
       matrixOutput * characteristicMultiplier +
-      reductionOutput +
+      reductionOutput * polynomialMultiplier +
+      polynomialOutput +
       applicationOutput * (matrixEncodingMultiplier - 1)) *
     rankMultiplier *
     rankTheoremMultiplier *
     spectralMultiplier *
-    diagonalMultiplier
+    diagonalMultiplier *
+    cayleyHamiltonMultiplier
   );
 }
 
@@ -382,7 +434,9 @@ export function matrixWorkshopCostMultiplier(
 ) {
   return Math.pow(
     0.99,
-    (instruments[14] ?? 0) + (instruments[19] ?? 0),
+    (instruments[14] ?? 0) +
+      (instruments[19] ?? 0) +
+      (instruments[23] ?? 0),
   );
 }
 
@@ -396,7 +450,8 @@ export function correctAnomalyRewardMultiplier(
   return (
     1 +
     (instruments[10] ?? 0) * 0.03 +
-    (instruments[17] ?? 0) * 0.02
+    (instruments[17] ?? 0) * 0.02 +
+    (instruments[21] ?? 0) * 0.02
   );
 }
 

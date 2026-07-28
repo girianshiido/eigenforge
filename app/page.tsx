@@ -502,6 +502,7 @@ function formatNumber(value: number) {
     return value < 100 ? value.toFixed(value < 10 ? 1 : 0) : Math.floor(value).toString();
   }
   const units = [
+    { value: 1e18, suffix: " Qi" },
     { value: 1e15, suffix: " Qa" },
     { value: 1e12, suffix: " B" },
     { value: 1e9, suffix: " Md" },
@@ -1045,6 +1046,8 @@ export default function Home() {
                 game.instruments[16] > 0 ? "has-characteristic" : "",
                 game.instruments[18] > 0 ? "is-diagonalized" : "",
                 game.instruments[19] > 0 ? "is-triangularized" : "",
+                game.instruments[20] > 0 ? "has-polynomial" : "",
+                game.instruments[22] > 0 ? "has-cayley-hamilton" : "",
               ]
                 .filter(Boolean)
                 .join(" ")}
@@ -1107,6 +1110,15 @@ export default function Home() {
                 <span className={game.instruments[17] > 0 ? "active" : ""}>Eλ</span>
                 <span className={game.instruments[18] > 0 ? "active" : ""}>D</span>
                 <span className={game.instruments[19] > 0 ? "active" : ""}>T</span>
+              </div>
+              <div
+                className={`polynomial-sequence ${game.instruments[20] > 0 ? "visible" : ""}`}
+                aria-label="Progression du calcul polynomial"
+              >
+                <span className={game.instruments[20] > 0 ? "active" : ""}>P(u)</span>
+                <span className={game.instruments[21] > 0 ? "active" : ""}>πu</span>
+                <span className={game.instruments[22] > 0 ? "active" : ""}>χ(u)</span>
+                <span className={game.instruments[23] > 0 ? "active" : ""}>Nλ</span>
               </div>
               <div
                 className={`vector-line vector-one ${game.instruments[0] > 0 ? "visible" : ""}`}

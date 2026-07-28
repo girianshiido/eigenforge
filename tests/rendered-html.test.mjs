@@ -170,7 +170,7 @@ test("keeps the network diagram consistent with its displayed dimension", async 
   assert.match(styles, /width: var\(--map-length\)/);
 });
 
-test("ships five ordered workshop cycles through MP reduction", async () => {
+test("ships six ordered workshop cycles through polynomial reduction", async () => {
   const balance = await readFile(
     new URL("../app/game-balance.ts", import.meta.url),
     "utf8",
@@ -200,6 +200,11 @@ test("ships five ordered workshop cycles through MP reduction", async () => {
   assert.match(balance, /name: "Diagonaliseur"/);
   assert.match(balance, /name: "Trigonaliseur"/);
   assert.match(balance, /chapter: "Réduction spectrale · MP"/);
+  assert.match(balance, /name: "Évaluateur polynomial"/);
+  assert.match(balance, /name: "Extracteur minimal"/);
+  assert.match(balance, /name: "Forge de Cayley-Hamilton"/);
+  assert.match(balance, /name: "Décomposeur caractéristique"/);
+  assert.match(balance, /chapter: "Calcul polynomial · MP"/);
   assert.match(balance, /resonanceDecayRate/);
   assert.match(balance, /correctAnomalyRewardMultiplier/);
   assert.match(page, /const WORKSHOP_CHAPTERS/);
@@ -210,8 +215,12 @@ test("ships five ordered workshop cycles through MP reduction", async () => {
   assert.match(page, /className=\{`reduction-sequence/);
   assert.match(page, />χA<\/span>/);
   assert.match(page, />Eλ<\/span>/);
-  assert.match(styles, /grid-template-columns: repeat\(5/);
+  assert.match(page, /className=\{`polynomial-sequence/);
+  assert.match(page, />P\(u\)<\/span>/);
+  assert.match(page, />χ\(u\)<\/span>/);
+  assert.match(styles, /grid-template-columns: repeat\(6/);
   assert.match(styles, /\.reduction-sequence/);
+  assert.match(styles, /\.polynomial-sequence/);
 });
 
 test("renders matrices as responsive grids instead of flattened text", async () => {

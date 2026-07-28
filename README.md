@@ -28,6 +28,9 @@ linéaire des classes préparatoires MPSI et MP.
 - cinquième cycle « Réduction spectrale · MP » portant la forge à vingt
   ateliers : polynôme caractéristique, espaces propres, diagonalisation et
   trigonalisation ;
+- sixième cycle « Calcul polynomial · MP » portant la forge à vingt-quatre
+  ateliers : polynômes annulateurs, polynôme minimal, théorème de
+  Cayley-Hamilton et sous-espaces caractéristiques ;
 - matrices 2×2 à 5×5 rendues comme de vraies grilles responsives dans les
   énoncés, les réponses et les corrections ;
 - notation contextuelle des vecteurs : tuples compacts pour les coordonnées,
@@ -43,6 +46,9 @@ linéaire des classes préparatoires MPSI et MP.
   par blocs et les valeurs propres, débloquées avec la Chambre spectrale MP ;
 - déblocage progressif des exercices de réduction : chaque atelier MP ajoute
   sa propre famille au générateur au lieu d’ouvrir tout le chapitre d’un coup ;
+- variantes de diagonalisation et trigonalisation fondées sur les bases
+  propres, le corps de base et les formes triangulaires, sans dépendre
+  systématiquement du seul polynôme caractéristique ;
 - anomalies mathématiques générées sur les vecteurs, les bases et les
   applications linéaires ;
 - rappels mathématiques affichés seulement lorsqu’ils apportent une information
