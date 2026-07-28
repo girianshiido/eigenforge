@@ -1,6 +1,7 @@
 export const PRESTIGE_SCALE = 750_000;
 export const INSTRUMENT_MILESTONES = [10, 25, 50] as const;
 export const STRUCTURAL_WORKSHOP_COUNT = 4;
+export const MATRIX_WORKSHOP_START = 12;
 
 export const INVARIANT_PROTOCOLS = [
   {
@@ -186,6 +187,50 @@ export const INSTRUMENTS = [
     unlock: 18_000_000_000,
     sector: "Théorème du rang",
   },
+  {
+    name: "Encodeur matriciel",
+    mark: "Mat",
+    description: "Encode les applications dans une base et réinjecte 4 % du flux des transformateurs.",
+    chapter: "Matrices et réduction",
+    mission: "Encoder une application",
+    baseCost: 60_000_000_000,
+    baseProduction: 18_000_000,
+    unlock: 75_000_000_000,
+    sector: "Matrice",
+  },
+  {
+    name: "Composeur matriciel",
+    mark: "AB",
+    description: "Compose les transformations et renforce de 3 % la production du cycle Applications.",
+    chapter: "Matrices et réduction",
+    mission: "Composer deux matrices",
+    baseCost: 280_000_000_000,
+    baseProduction: 75_000_000,
+    unlock: 350_000_000_000,
+    sector: "Produit",
+  },
+  {
+    name: "Inverseur de Gauss",
+    mark: "A⁻¹",
+    description: "Automatise les opérations élémentaires et réduit de 1 % le prix de tous les ateliers.",
+    chapter: "Matrices et réduction",
+    mission: "Inverser la transformation",
+    baseCost: 1_300_000_000_000,
+    baseProduction: 330_000_000,
+    unlock: 1_700_000_000_000,
+    sector: "Inversibilité",
+  },
+  {
+    name: "Chambre spectrale",
+    mark: "λ",
+    description: "Isole les directions propres et amplifie de 2 % toute la production du réseau.",
+    chapter: "Matrices et réduction",
+    mission: "Révéler le spectre",
+    baseCost: 6_000_000_000_000,
+    baseProduction: 1_500_000_000,
+    unlock: 8_000_000_000_000,
+    sector: "Spectre",
+  },
 ] as const;
 
 export function milestoneMultiplier(owned: number) {
@@ -254,21 +299,36 @@ export function basePassiveProduction(
     .slice(STRUCTURAL_WORKSHOP_COUNT, 8)
     .reduce((sum, output) => sum + output, 0);
   const applicationOutput = outputs
-    .slice(8)
+    .slice(8, MATRIX_WORKSHOP_START)
+    .reduce((sum, output) => sum + output, 0);
+  const matrixOutput = outputs
+    .slice(MATRIX_WORKSHOP_START)
     .reduce((sum, output) => sum + output, 0);
   const directionalMultiplier = 1 + (instruments[4] ?? 0) * 0.04;
   const familyMultiplier = 1 + (instruments[5] ?? 0) * 0.03;
   const rankMultiplier = 1 + (instruments[7] ?? 0) * 0.02;
   const transformationMultiplier = 1 + (instruments[8] ?? 0) * 0.04;
   const rankTheoremMultiplier = 1 + (instruments[11] ?? 0) * 0.02;
+  const matrixEncodingMultiplier = 1 + (instruments[12] ?? 0) * 0.04;
+  const matrixCompositionMultiplier = 1 + (instruments[13] ?? 0) * 0.03;
+  const spectralMultiplier = 1 + (instruments[15] ?? 0) * 0.02;
 
   return (
     (directionalOutput * directionalMultiplier +
       familyOutput * familyMultiplier * transformationMultiplier +
-      applicationOutput) *
+      applicationOutput * matrixCompositionMultiplier +
+      matrixOutput +
+      applicationOutput * (matrixEncodingMultiplier - 1)) *
     rankMultiplier *
-    rankTheoremMultiplier
+    rankTheoremMultiplier *
+    spectralMultiplier
   );
+}
+
+export function matrixWorkshopCostMultiplier(
+  instruments: readonly number[],
+) {
+  return Math.pow(0.99, instruments[14] ?? 0);
 }
 
 export function resonanceDecayRate(instruments: readonly number[]) {

@@ -1,4 +1,4 @@
-export type Sector = "vectors" | "bases" | "applications";
+export type Sector = "vectors" | "bases" | "applications" | "matrices";
 
 export type Question = {
   id: string;
@@ -47,6 +47,10 @@ function sample<T>(items: readonly T[], count: number) {
 
 function vector(values: readonly number[]) {
   return `(${values.join(" ; ")})`;
+}
+
+function matrix(rows: readonly (readonly number[])[]) {
+  return `⟦${rows.map((row) => row.join(",")).join(";")}⟧`;
 }
 
 function zeroVector(dimension: number) {
@@ -835,6 +839,258 @@ export function applicationQuestion(
   return linearityQuestion();
 }
 
+function matrixVectorQuestion(): Question {
+  const coefficients = Array.from({ length: 4 }, () => nonZero());
+  const value = randomVector(2);
+  const rows = [
+    [coefficients[0], coefficients[1]],
+    [coefficients[2], coefficients[3]],
+  ];
+  const result = [
+    rows[0][0] * value[0] + rows[0][1] * value[1],
+    rows[1][0] * value[0] + rows[1][1] * value[1],
+  ];
+  const rowProduct = [
+    rows[0][0] * value[0] + rows[1][0] * value[1],
+    rows[0][1] * value[0] + rows[1][1] * value[1],
+  ];
+  const coordinateProduct = [
+    rows[0][0] * value[0],
+    rows[1][1] * value[1],
+  ];
+  const wrongSign = [
+    rows[0][0] * value[0] - rows[0][1] * value[1],
+    rows[1][0] * value[0] - rows[1][1] * value[1],
+  ];
+  const distractors = balancedCoordinateDistractors(result, [
+    rowProduct,
+    coordinateProduct,
+    wrongSign,
+  ]);
+
+  return {
+    id: `M-PROD-${Date.now()}-${randomInt(100, 999)}`,
+    sector: "matrices",
+    eyebrow: "Produit matrice-vecteur",
+    prompt: "Quelles sont les coordonnées de Au ?",
+    formula: `A = ${matrix(rows)}   et   u = ${vector(value)}`,
+    choices: choices(
+      vector(result),
+      distractors.map((candidate) => vector(candidate)),
+    ),
+    explanation: `Chaque coordonnée de Au est le produit d’une ligne de A par la colonne u. On obtient Au = ${vector(result)}.`,
+    geometry:
+      "La matrice décrit comment l’application transforme les vecteurs de la base, puis toutes leurs combinaisons linéaires.",
+    trap:
+      "La première ligne produit la première coordonnée et la seconde ligne produit la seconde.",
+  };
+}
+
+function representationMatrixQuestion(): Question {
+  let a = nonZero();
+  let b = nonZero();
+  let c = nonZero();
+  let d = nonZero();
+  let answer = "";
+  let distractors: string[] = [];
+  do {
+    a = nonZero();
+    b = nonZero();
+    c = nonZero();
+    d = nonZero();
+    answer = matrix([
+      [a, b],
+      [c, d],
+    ]);
+    distractors = [
+      matrix([
+        [a, c],
+        [b, d],
+      ]),
+      matrix([
+        [b, a],
+        [d, c],
+      ]),
+      matrix([
+        [a, -b],
+        [c, -d],
+      ]),
+    ];
+  } while (new Set([answer, ...distractors]).size < 4);
+
+  const firstCoordinate = formatLinearExpression([
+    [a, "x"],
+    [b, "y"],
+  ]);
+  const secondCoordinate = formatLinearExpression([
+    [c, "x"],
+    [d, "y"],
+  ]);
+
+  return {
+    id: `M-REP-${Date.now()}-${randomInt(100, 999)}`,
+    sector: "matrices",
+    eyebrow: "Matrice d’une application",
+    prompt: "Quelle est la matrice de f dans la base canonique ?",
+    formula: `f(x, y) = (${firstCoordinate} ; ${secondCoordinate})`,
+    choices: choices(answer, distractors),
+    explanation: `Les colonnes sont f(e₁) = ${vector([a, c])} et f(e₂) = ${vector([b, d])}. La matrice est donc ${answer}.`,
+    geometry:
+      "Chaque colonne enregistre l’image d’un vecteur de la base de départ.",
+    trap:
+      "Les coordonnées de f(e₁) et f(e₂) forment des colonnes, pas des lignes.",
+  };
+}
+
+function invertibleMatrixQuestion(): Question {
+  let invertible = [
+    randomVector(2),
+    randomVector(2),
+  ];
+  while (determinant2(invertible[0], invertible[1]) === 0) {
+    invertible = [randomVector(2), randomVector(2)];
+  }
+  const singular: number[][][] = [];
+  while (singular.length < 3) {
+    const row = randomVector(2);
+    const scalar = pick([0, 2, -1]);
+    const candidate = [row, scaleVector(scalar, row)];
+    const candidateText = matrix(candidate);
+    if (
+      candidateText !== matrix(invertible) &&
+      !singular.some((item) => matrix(item) === candidateText)
+    ) {
+      singular.push(candidate);
+    }
+  }
+  const determinant = determinant2(invertible[0], invertible[1]);
+
+  return {
+    id: `M-INV-${Date.now()}-${randomInt(100, 999)}`,
+    sector: "matrices",
+    eyebrow: "Inversibilité",
+    prompt: "Laquelle de ces matrices est inversible ?",
+    formula: "Une matrice carrée est inversible si et seulement si son déterminant est non nul.",
+    choices: choices(
+      matrix(invertible),
+      singular.map((candidate) => matrix(candidate)),
+    ),
+    explanation: `Le déterminant de ${matrix(invertible)} vaut ${determinant}, qui est non nul. Les autres matrices ont deux lignes proportionnelles.`,
+    geometry:
+      "Une matrice inversible ne détruit aucune direction : elle transforme une base en une base.",
+    trap:
+      "Des coefficients tous non nuls ne garantissent pas l’inversibilité ; seule l’indépendance des lignes ou des colonnes compte.",
+  };
+}
+
+function eigenvalueQuestion(): Question {
+  const values = sample([-3, -2, 2, 3], 2);
+  const [firstEigenvalue, secondEigenvalue] = values;
+  const upperCoefficient = nonZero();
+  const answer = pick(values);
+  const trace = firstEigenvalue + secondEigenvalue;
+  const determinant = firstEigenvalue * secondEigenvalue;
+
+  return {
+    id: `M-SPEC-${Date.now()}-${randomInt(100, 999)}`,
+    sector: "matrices",
+    eyebrow: "Valeurs propres",
+    prompt: "Lequel de ces nombres est une valeur propre de A ?",
+    formula: `A = ${matrix([
+      [firstEigenvalue, upperCoefficient],
+      [0, secondEigenvalue],
+    ])}`,
+    choices: choices(`${answer}`, [
+      `${trace}`,
+      `${determinant}`,
+      `${-answer}`,
+    ]),
+    explanation: `A est triangulaire : ses valeurs propres sont les coefficients de sa diagonale, ${firstEigenvalue} et ${secondEigenvalue}.`,
+    geometry:
+      "Une direction propre est conservée par la transformation, à un facteur multiplicatif près.",
+    trap:
+      "La trace et le déterminant combinent les valeurs propres, mais ne sont pas en général eux-mêmes des valeurs propres.",
+  };
+}
+
+export function determinant3Question(): Question {
+  const template = randomInt(0, 2);
+  let rows: number[][];
+  let determinant: number;
+  let explanation: string;
+  let temptingDiagonal: number;
+
+  if (template === 0) {
+    const diagonal = [nonZero(), nonZero(), nonZero()];
+    rows = [
+      [diagonal[0], randomInt(-3, 3), randomInt(-3, 3)],
+      [0, diagonal[1], randomInt(-3, 3)],
+      [0, 0, diagonal[2]],
+    ];
+    determinant = diagonal[0] * diagonal[1] * diagonal[2];
+    temptingDiagonal = diagonal.reduce((sum, value) => sum + value, 0);
+    explanation = `La matrice est triangulaire : son déterminant est le produit des coefficients diagonaux, soit ${diagonal[0]} × ${diagonal[1]} × ${diagonal[2]} = ${determinant}.`;
+  } else if (template === 1) {
+    const a = nonZero();
+    const b = nonZero();
+    const c = nonZero();
+    const d = nonZero();
+    const e = nonZero();
+    rows = [
+      [a, 0, 0],
+      [randomInt(-3, 3), b, c],
+      [randomInt(-3, 3), d, e],
+    ];
+    determinant = a * (b * e - c * d);
+    temptingDiagonal = a * b * e;
+    explanation = `On développe selon la première ligne : det(A) = ${a} × (${b} × ${e} − ${c} × ${d}) = ${determinant}.`;
+  } else {
+    const a = nonZero();
+    const b = nonZero();
+    const c = nonZero();
+    const d = nonZero();
+    const e = nonZero();
+    rows = [
+      [a, randomInt(-3, 3), b],
+      [0, c, 0],
+      [d, randomInt(-3, 3), e],
+    ];
+    determinant = c * (a * e - b * d);
+    temptingDiagonal = a * c * e;
+    explanation = `On développe selon la deuxième ligne. Le signe du coefficient central est positif : det(A) = ${c} × (${a} × ${e} − ${b} × ${d}) = ${determinant}.`;
+  }
+
+  return {
+    id: `M-DET3-${Date.now()}-${randomInt(100, 999)}`,
+    sector: "matrices",
+    eyebrow: "Déterminant d’ordre 3",
+    prompt: "Quel est le déterminant de cette matrice ?",
+    formula: `A = ${matrix(rows)}`,
+    choices: choices(`${determinant}`, [
+      `${-determinant}`,
+      `${temptingDiagonal}`,
+      `${determinant + pick([-3, -2, -1, 1, 2, 3])}`,
+    ]),
+    explanation,
+    geometry:
+      "La valeur absolue du déterminant mesure le facteur de dilatation des volumes.",
+    trap:
+      "Le produit de la diagonale suffit seulement pour une matrice triangulaire.",
+  };
+}
+
+export function matrixQuestion(
+  _spaceDimension: number,
+  forcedTemplate?: 0 | 1 | 2 | 3 | 4,
+): Question {
+  const template = forcedTemplate ?? randomInt(0, 4);
+  if (template === 0) return matrixVectorQuestion();
+  if (template === 1) return representationMatrixQuestion();
+  if (template === 2) return invertibleMatrixQuestion();
+  if (template === 3) return eigenvalueQuestion();
+  return determinant3Question();
+}
+
 export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
   {
     id: "vector-combination",
@@ -905,6 +1161,41 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     label: "Linéarité",
     description: "Reconnaître les applications qui conservent les combinaisons linéaires.",
     generate: (spaceDimension) => applicationQuestion(spaceDimension, 3),
+  },
+  {
+    id: "matrix-vector-product",
+    sector: "matrices",
+    label: "Produit matrice-vecteur",
+    description: "Appliquer une matrice à un vecteur colonne.",
+    generate: (spaceDimension) => matrixQuestion(spaceDimension, 0),
+  },
+  {
+    id: "matrix-representation",
+    sector: "matrices",
+    label: "Matrice d’une application",
+    description: "Encoder les images des vecteurs de base dans les colonnes.",
+    generate: (spaceDimension) => matrixQuestion(spaceDimension, 1),
+  },
+  {
+    id: "matrix-invertibility",
+    sector: "matrices",
+    label: "Inversibilité",
+    description: "Reconnaître une matrice de déterminant non nul.",
+    generate: (spaceDimension) => matrixQuestion(spaceDimension, 2),
+  },
+  {
+    id: "matrix-spectrum",
+    sector: "matrices",
+    label: "Valeurs propres",
+    description: "Lire le spectre d’une matrice triangulaire.",
+    generate: (spaceDimension) => matrixQuestion(spaceDimension, 3),
+  },
+  {
+    id: "matrix-determinant-3",
+    sector: "matrices",
+    label: "Déterminant 3×3",
+    description: "Calculer mentalement un déterminant triangulaire ou creux.",
+    generate: (spaceDimension) => matrixQuestion(spaceDimension, 4),
   },
 ] as const;
 

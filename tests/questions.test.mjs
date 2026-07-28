@@ -5,6 +5,7 @@ import {
   EXERCISE_FAMILIES,
   basisQuestion,
   combinationQuestion,
+  determinant3Question,
   explicitMapRankQuestion,
   familyRankQuestion,
   spanQuestion,
@@ -46,10 +47,10 @@ function assertNoSingleCoordinateRevealsAnswer(question) {
 }
 
 test("the shared catalogue exposes every exercise family to the game and laboratory", () => {
-  assert.equal(EXERCISE_FAMILIES.length, 10);
+  assert.equal(EXERCISE_FAMILIES.length, 15);
   assert.deepEqual(
     new Set(EXERCISE_FAMILIES.map((family) => family.sector)),
-    new Set(["vectors", "bases", "applications"]),
+    new Set(["vectors", "bases", "applications", "matrices"]),
   );
   assert.equal(
     new Set(EXERCISE_FAMILIES.map((family) => family.id)).size,
@@ -65,6 +66,67 @@ test("the shared catalogue exposes every exercise family to the game and laborat
       }
     }
   }
+});
+
+test("matrix questions use structured notation and mental 3 by 3 determinants", () => {
+  const determinantTemplates = new Set();
+  const matrixFamilies = EXERCISE_FAMILIES.filter(
+    (family) => family.sector === "matrices",
+  );
+  assert.equal(matrixFamilies.length, 5);
+
+  for (const family of matrixFamilies) {
+    for (let index = 0; index < 150; index += 1) {
+      const question = family.generate(3);
+      assertWellFormed(question);
+      assert.doesNotMatch(
+        question.choices.map((choice) => choice.text).join(" "),
+        /Autre proposition/,
+      );
+      if (question.formula.includes("⟦")) {
+        assert.match(question.formula, /⟦[^⟧]+⟧/);
+      }
+      if (family.id === "matrix-vector-product") {
+        assertNoSingleCoordinateRevealsAnswer(question);
+      }
+    }
+  }
+
+  for (let index = 0; index < 300; index += 1) {
+    const question = determinant3Question();
+    assertWellFormed(question);
+    const matrixToken = question.formula.match(/⟦([^⟧]+)⟧/);
+    assert.ok(matrixToken);
+    assert.equal(matrixToken[1].split(";").length, 3);
+    assert.ok(
+      matrixToken[1]
+        .split(";")
+        .every((row) => row.split(",").length === 3),
+    );
+    const rows = matrixToken[1]
+      .split(";")
+      .map((row) => row.split(",").map(Number));
+    const computedDeterminant =
+      rows[0][0] * (rows[1][1] * rows[2][2] - rows[1][2] * rows[2][1]) -
+      rows[0][1] * (rows[1][0] * rows[2][2] - rows[1][2] * rows[2][0]) +
+      rows[0][2] * (rows[1][0] * rows[2][1] - rows[1][1] * rows[2][0]);
+    assert.equal(
+      Number(question.choices.find((choice) => choice.correct).text),
+      computedDeterminant || 0,
+    );
+    if (question.explanation.includes("triangulaire")) {
+      determinantTemplates.add("triangular");
+    } else if (question.explanation.includes("première ligne")) {
+      determinantTemplates.add("first-row");
+    } else if (question.explanation.includes("deuxième ligne")) {
+      determinantTemplates.add("second-row");
+    }
+  }
+
+  assert.deepEqual(
+    determinantTemplates,
+    new Set(["triangular", "first-row", "second-row"]),
+  );
 });
 
 test("linear combinations vary coefficients without displaying useless ones", () => {

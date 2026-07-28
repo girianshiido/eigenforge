@@ -10,6 +10,7 @@ import {
   instrumentCost,
   invariantGain,
   invariantProtocolCost,
+  matrixWorkshopCostMultiplier,
   milestoneMultiplier,
   nextInvariantThreshold,
   protocolAnomalyMultiplier,
@@ -81,6 +82,44 @@ test("linear-map workshops transform production, resonance and anomaly rewards",
         INSTRUMENTS[9].baseProduction +
         INSTRUMENTS[10].baseProduction +
         INSTRUMENTS[11].baseProduction,
+  );
+});
+
+test("the matrix cycle extends production and reduces workshop costs", () => {
+  assert.equal(INSTRUMENTS.length, 16);
+  assert.deepEqual(
+    INSTRUMENTS.slice(12).map((instrument) => instrument.name),
+    [
+      "Encodeur matriciel",
+      "Composeur matriciel",
+      "Inverseur de Gauss",
+      "Chambre spectrale",
+    ],
+  );
+
+  const applications = basePassiveProduction([
+    1, 1, 1, 1,
+    1, 1, 1, 1,
+    1, 1, 1, 1,
+    0, 0, 0, 0,
+  ]);
+  const matrices = basePassiveProduction(INSTRUMENTS.map(() => 1));
+  assert.ok(
+    matrices >
+      applications +
+        INSTRUMENTS.slice(12).reduce(
+          (sum, instrument) => sum + instrument.baseProduction,
+          0,
+        ),
+  );
+  assert.equal(matrixWorkshopCostMultiplier([]), 1);
+  assert.ok(
+    matrixWorkshopCostMultiplier([
+      0, 0, 0, 0,
+      0, 0, 0, 0,
+      0, 0, 0, 0,
+      0, 0, 5,
+    ]) < 1,
   );
 });
 

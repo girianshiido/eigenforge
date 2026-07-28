@@ -11,6 +11,7 @@ import {
   instrumentCost,
   invariantGain,
   invariantProtocolCost,
+  matrixWorkshopCostMultiplier,
   milestoneMultiplier,
   nextInvariantThreshold,
   protocolAnomalyMultiplier,
@@ -21,8 +22,9 @@ import {
   resonanceDecayRate,
 } from "./game-balance";
 import { generateQuestion as generateExercise } from "./question-generator";
+import MathExpression from "./math-expression";
 
-type Sector = "vectors" | "bases" | "applications";
+type Sector = "vectors" | "bases" | "applications" | "matrices";
 type GameTab = "network" | "instruments" | "anomalies" | "atlas";
 
 type GameState = {
@@ -66,7 +68,7 @@ const INITIAL_STATE: GameState = {
   runTotal: 0,
   allTime: 0,
   instruments: INSTRUMENTS.map(() => 0),
-  mastery: { vectors: 0, bases: 0, applications: 0 },
+  mastery: { vectors: 0, bases: 0, applications: 0, matrices: 0 },
   correctAnswers: 0,
   anomalies: 0,
   nextAnomalyAt: 0,
@@ -81,6 +83,7 @@ const SECTOR_LABELS: Record<Sector, string> = {
   vectors: "Vecteurs",
   bases: "Bases",
   applications: "Applications",
+  matrices: "Matrices",
 };
 
 const GAME_TABS: Array<{
@@ -461,7 +464,8 @@ function clickPower(state: GameState) {
 function workshopCost(state: GameState, index: number) {
   return Math.ceil(
     instrumentCost(index, state.instruments[index]) *
-      protocolWorkshopCostMultiplier(state.protocols),
+      protocolWorkshopCostMultiplier(state.protocols) *
+      matrixWorkshopCostMultiplier(state.instruments),
   );
 }
 
@@ -528,6 +532,7 @@ function restoreState(raw: string | null): GameState {
         vectors: Number(saved.mastery?.vectors) || 0,
         bases: Number(saved.mastery?.bases) || 0,
         applications: Number(saved.mastery?.applications) || 0,
+        matrices: Number(saved.mastery?.matrices) || 0,
       },
       lastTick: Number(saved.lastTick) || Date.now(),
       nextAnomalyAt: Number(saved.nextAnomalyAt) || Date.now() + 8000,
@@ -546,6 +551,9 @@ export default function Home() {
   const [confirmReset, setConfirmReset] = useState(false);
   const [confirmBasisChange, setConfirmBasisChange] = useState(false);
   const [activeTab, setActiveTab] = useState<GameTab>("network");
+  const [activeWorkshopChapter, setActiveWorkshopChapter] = useState(
+    WORKSHOP_CHAPTERS[0],
+  );
   const [emitBurst, setEmitBurst] = useState(0);
   const [isEmitting, setIsEmitting] = useState(false);
 
@@ -669,6 +677,14 @@ export default function Home() {
     return () => window.clearTimeout(timer);
   }, [notice]);
 
+  useEffect(() => {
+    if (!hydrated) return;
+    const nextIndex = game.instruments.findIndex((count) => count === 0);
+    if (nextIndex >= 0) {
+      setActiveWorkshopChapter(INSTRUMENTS[nextIndex].chapter);
+    }
+  }, [hydrated]);
+
   function emitVector() {
     if (!hydrated) return;
     setEmitBurst((current) => current + 1);
@@ -740,6 +756,9 @@ export default function Home() {
     if (game.instruments[1] > 0) sectors.push("bases");
     if (game.instruments[8] > 0) {
       sectors.push("applications");
+    }
+    if (game.instruments[12] > 0) {
+      sectors.push("matrices");
     }
     const weakest = [...sectors].sort(
       (left, right) => game.mastery[left] - game.mastery[right],
@@ -834,7 +853,8 @@ export default function Home() {
   const unlockedSectorCount =
     1 +
     (game.instruments[1] > 0 ? 1 : 0) +
-    (game.instruments[8] > 0 ? 1 : 0);
+    (game.instruments[8] > 0 ? 1 : 0) +
+    (game.instruments[12] > 0 ? 1 : 0);
   const nextWorkshopIndex = game.instruments.findIndex((count) => count === 0);
   const nextWorkshop =
     nextWorkshopIndex >= 0 ? INSTRUMENTS[nextWorkshopIndex] : null;
@@ -873,7 +893,8 @@ export default function Home() {
                 (game.coordinates /
                   Math.ceil(
                     instrumentCost(nextWorkshopIndex, 0) *
-                      protocolWorkshopCostMultiplier(game.protocols),
+                      protocolWorkshopCostMultiplier(game.protocols) *
+                      matrixWorkshopCostMultiplier(game.instruments),
                   )) *
                   100,
               ),
@@ -976,6 +997,8 @@ export default function Home() {
                 game.instruments[9] > 0 ? "has-kernel" : "",
                 game.instruments[10] > 0 ? "has-image" : "",
                 game.instruments[11] > 0 ? "rank-balanced" : "",
+                game.instruments[12] > 0 ? "has-matrix" : "",
+                game.instruments[15] > 0 ? "has-spectrum" : "",
               ]
                 .filter(Boolean)
                 .join(" ")}
@@ -1010,6 +1033,25 @@ export default function Home() {
                 aria-hidden="true"
               >
                 <span>Im(f)</span>
+              </div>
+              <div
+                className={`matrix-operator ${game.instruments[12] > 0 ? "visible" : ""}`}
+                aria-label="Matrice de l’application f dans la base de l’espace"
+              >
+                <span>Mat(f)</span>
+                <div aria-hidden="true">
+                  <i>a</i>
+                  <i>b</i>
+                  <i>c</i>
+                  <i>d</i>
+                </div>
+              </div>
+              <div
+                className={`spectral-marker ${game.instruments[15] > 0 ? "visible" : ""}`}
+                aria-hidden="true"
+              >
+                <span>λ₁</span>
+                <span>λ₂</span>
               </div>
               <div
                 className={`vector-line vector-one ${game.instruments[0] > 0 ? "visible" : ""}`}
@@ -1133,10 +1175,63 @@ export default function Home() {
             <span className="status-dot">Actif</span>
           </div>
 
+          <nav
+            className="workshop-cycle-navigation"
+            aria-label="Cycles d’ateliers"
+          >
+            {WORKSHOP_CHAPTERS.map((chapter, chapterIndex) => {
+              const chapterIndices = INSTRUMENTS.flatMap(
+                (instrument, index) =>
+                  instrument.chapter === chapter ? [index] : [],
+              );
+              const firstIndex = chapterIndices[0];
+              const accessible =
+                firstIndex === 0 ||
+                (game.instruments[firstIndex - 1] ?? 0) > 0;
+              const builtWorkshops = chapterIndices.filter(
+                (index) => (game.instruments[index] ?? 0) > 0,
+              ).length;
+              const chapterRate = chapterIndices.reduce(
+                (sum, index) =>
+                  sum +
+                  (game.instruments[index] ?? 0) *
+                    INSTRUMENTS[index].baseProduction *
+                    milestoneMultiplier(game.instruments[index] ?? 0),
+                0,
+              );
+              return (
+                <button
+                  type="button"
+                  className={[
+                    activeWorkshopChapter === chapter ? "active" : "",
+                    accessible ? "" : "preview",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  aria-pressed={activeWorkshopChapter === chapter}
+                  onClick={() => setActiveWorkshopChapter(chapter)}
+                  key={chapter}
+                >
+                  <span>Cycle {String(chapterIndex + 1).padStart(2, "0")}</span>
+                  <strong>{chapter}</strong>
+                  <small>
+                    {accessible
+                      ? `${builtWorkshops}/4 actifs · ${formatNumber(chapterRate)}/s`
+                      : "Aperçu verrouillé"}
+                  </small>
+                </button>
+              );
+            })}
+          </nav>
+
           <div className="instrument-list">
             {WORKSHOP_CHAPTERS.map(
               (chapter, chapterIndex) => (
-                <section className="workshop-sector" key={chapter}>
+                <section
+                  className="workshop-sector"
+                  hidden={activeWorkshopChapter !== chapter}
+                  key={chapter}
+                >
                   <div className="workshop-sector-heading">
                     <span>Cycle 0{chapterIndex + 1}</span>
                     <h3>{chapter}</h3>
@@ -1301,6 +1396,9 @@ export default function Home() {
                 <span className={game.instruments[8] === 0 ? "locked" : ""}>
                   Applications
                 </span>
+                <span className={game.instruments[12] === 0 ? "locked" : ""}>
+                  Matrices
+                </span>
               </div>
             </section>
           </div>
@@ -1334,6 +1432,8 @@ export default function Home() {
                   ? game.instruments[1] === 0
                   : sector === "applications"
                     ? game.instruments[8] === 0
+                    : sector === "matrices"
+                      ? game.instruments[12] === 0
                     : false;
               return (
                 <div className={`mastery-row ${locked ? "locked" : ""}`} key={sector}>
@@ -1493,9 +1593,13 @@ export default function Home() {
               )}
             </div>
 
-            <h2 id="question-title">{question.prompt}</h2>
+            <h2 id="question-title">
+              <MathExpression text={question.prompt} />
+            </h2>
             {question.formula && (
-              <div className="formula-card">{question.formula}</div>
+              <div className="formula-card">
+                <MathExpression text={question.formula} />
+              </div>
             )}
 
             <div className="answer-grid">
@@ -1511,7 +1615,7 @@ export default function Home() {
                     className={`${chosen ? "chosen" : ""} ${revealCorrect ? "correct" : ""} ${chosen && answer && !answer.correct ? "wrong" : ""}`}
                   >
                     <span>{String.fromCharCode(65 + index)}</span>
-                    <strong>{choice.text}</strong>
+                    <strong><MathExpression text={choice.text} /></strong>
                   </button>
                 );
               })}
@@ -1528,7 +1632,7 @@ export default function Home() {
                 </div>
                 <div className="correction-block">
                   <span>Méthode</span>
-                  <p>{question.explanation}</p>
+                  <p><MathExpression text={question.explanation} /></p>
                 </div>
                 <div className="correction-columns">
                   <div>

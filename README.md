@@ -19,6 +19,13 @@ linéaire des classes préparatoires MPSI et MP.
 - six principes permanents à renforcer avec les invariants : production
   manuelle ou passive, prix des ateliers, résonance, anomalies et héritage
   d’ateliers dimensionnels entre deux cycles ;
+- quatrième cycle « Matrices et réduction » portant la forge à seize ateliers,
+  avec encodage, produit, inversibilité et spectre ;
+- matrices 2×2 et 3×3 rendues comme de vraies grilles responsives dans les
+  énoncés, les réponses et les corrections ;
+- perturbations sur le produit matrice-vecteur, la matrice d’une application,
+  l’inversibilité, les valeurs propres et les déterminants 3×3 calculables de
+  tête ;
 - anomalies mathématiques générées sur les vecteurs, les bases et les
   applications linéaires ;
 - rappels mathématiques affichés seulement lorsqu’ils apportent une information

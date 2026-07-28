@@ -60,6 +60,54 @@ button:focus-visible {
   outline-offset: 3px;
 }
 
+.math-expression {
+  white-space: pre-wrap;
+}
+
+.math-matrix {
+  position: relative;
+  margin: 0 0.18em;
+  padding: 0.08em 0.58em;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  line-height: 1.05;
+}
+
+.math-matrix::before,
+.math-matrix::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  width: 0.36em;
+  opacity: 0.82;
+}
+
+.math-matrix::before {
+  left: 0;
+  border-left: 1.5px solid currentColor;
+  border-radius: 55% 0 0 55%;
+}
+
+.math-matrix::after {
+  right: 0;
+  border-right: 1.5px solid currentColor;
+  border-radius: 0 55% 55% 0;
+}
+
+.math-matrix-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--matrix-columns), minmax(1.05em, auto));
+  gap: 0.2em 0.48em;
+  align-items: center;
+  justify-items: center;
+}
+
+.math-matrix-grid > span {
+  min-width: 1.05em;
+  text-align: center;
+}
+
 .app-shell {
   min-height: 100vh;
   padding: 24px clamp(16px, 3vw, 48px) 18px;
@@ -1757,6 +1805,110 @@ button:disabled {
   top: -20px;
 }
 
+.matrix-operator {
+  position: absolute;
+  z-index: 4;
+  right: 18px;
+  bottom: 52px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  opacity: 0;
+  border: 1px solid rgba(155, 141, 197, 0.3);
+  border-radius: 8px;
+  background: rgba(9, 24, 32, 0.78);
+  color: var(--violet);
+  pointer-events: none;
+  transform: translateY(8px) scale(0.94);
+  transition: opacity 700ms ease, transform 850ms ease;
+}
+
+.matrix-operator.visible {
+  opacity: 0.88;
+  transform: translateY(0) scale(1);
+  animation: matrixPulse 6s ease-in-out infinite;
+}
+
+.matrix-operator > span {
+  font-family: Georgia, serif;
+  font-size: 9px;
+  font-style: italic;
+}
+
+.matrix-operator > div {
+  position: relative;
+  padding: 1px 6px;
+  display: grid;
+  grid-template-columns: repeat(2, 10px);
+  gap: 2px 5px;
+  color: var(--ivory-muted);
+  font-family: Georgia, serif;
+  font-size: 8px;
+  text-align: center;
+}
+
+.matrix-operator > div::before,
+.matrix-operator > div::after {
+  content: "";
+  position: absolute;
+  inset-block: -2px;
+  width: 3px;
+  border-block: 1px solid var(--violet);
+}
+
+.matrix-operator > div::before {
+  left: 0;
+  border-left: 1px solid var(--violet);
+}
+
+.matrix-operator > div::after {
+  right: 0;
+  border-right: 1px solid var(--violet);
+}
+
+.matrix-operator i {
+  font-style: normal;
+}
+
+.spectral-marker {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: 50%;
+  width: 58%;
+  aspect-ratio: 1;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%) rotate(-8deg) scale(0.75);
+  transition: opacity 800ms ease, transform 1s ease;
+}
+
+.spectral-marker.visible {
+  opacity: 0.68;
+  transform: translate(-50%, -50%) rotate(-8deg) scale(1);
+  animation: spectralOrbit 13s linear infinite;
+}
+
+.spectral-marker span {
+  position: absolute;
+  color: var(--violet);
+  font-family: Georgia, serif;
+  font-size: 10px;
+  font-style: italic;
+  text-shadow: 0 0 8px rgba(155, 141, 197, 0.55);
+}
+
+.spectral-marker span:first-child {
+  left: 8%;
+  top: 25%;
+}
+
+.spectral-marker span:last-child {
+  right: 6%;
+  bottom: 22%;
+}
+
 .vector-line {
   --angle: 0deg;
   --length: 30%;
@@ -2787,6 +2939,19 @@ footer {
   }
 }
 
+@keyframes matrixPulse {
+  50% {
+    border-color: rgba(155, 141, 197, 0.55);
+    box-shadow: 0 0 18px rgba(155, 141, 197, 0.09);
+  }
+}
+
+@keyframes spectralOrbit {
+  to {
+    transform: translate(-50%, -50%) rotate(352deg) scale(1);
+  }
+}
+
 @keyframes forgedVector {
   0% {
     opacity: 0;
@@ -3175,6 +3340,60 @@ footer {
   min-height: 610px;
 }
 
+.workshop-cycle-navigation {
+  margin-bottom: 22px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.workshop-cycle-navigation button {
+  min-width: 0;
+  min-height: 83px;
+  padding: 11px;
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.016);
+  color: var(--ivory-muted);
+  text-align: left;
+}
+
+.workshop-cycle-navigation button > span {
+  color: var(--copper);
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.workshop-cycle-navigation button > strong {
+  font-family: Georgia, serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.15;
+}
+
+.workshop-cycle-navigation button > small {
+  margin-top: auto;
+  color: rgba(241, 234, 217, 0.42);
+  font-size: 7px;
+  line-height: 1.25;
+}
+
+.workshop-cycle-navigation button.active {
+  border-color: rgba(213, 145, 84, 0.5);
+  background: rgba(213, 145, 84, 0.075);
+  color: var(--ivory);
+}
+
+.workshop-cycle-navigation button.preview {
+  opacity: 0.5;
+}
+
 .tab-stage .instruments-panel .instrument-list {
   display: flex;
   gap: 26px;
@@ -3184,6 +3403,10 @@ footer {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.workshop-sector[hidden] {
+  display: none;
 }
 
 .workshop-sector-heading {
@@ -3655,6 +3878,25 @@ footer {
     border-radius: 14px 14px 0 0;
     background: rgba(8, 20, 27, 0.94);
     box-shadow: 0 -16px 44px rgba(1, 7, 10, 0.34);
+  }
+
+  .workshop-cycle-navigation {
+    margin-inline: -4px;
+    padding: 0 4px 5px;
+    display: flex;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+  }
+
+  .workshop-cycle-navigation::-webkit-scrollbar {
+    display: none;
+  }
+
+  .workshop-cycle-navigation button {
+    min-width: 154px;
+    scroll-snap-align: start;
   }
 
   .tab-navigation button {

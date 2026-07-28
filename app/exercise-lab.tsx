@@ -7,6 +7,7 @@ import {
   type Question,
   type Sector,
 } from "./question-generator";
+import MathExpression from "./math-expression";
 
 type SectorFilter = Sector | "all";
 
@@ -19,12 +20,14 @@ const SECTORS: Array<{
   { id: "vectors", label: "Vecteurs", mark: "→" },
   { id: "bases", label: "Bases", mark: "◇" },
   { id: "applications", label: "Applications", mark: "ƒ" },
+  { id: "matrices", label: "Matrices", mark: "▦" },
 ];
 
 const SECTOR_LABELS: Record<Sector, string> = {
   vectors: "Vecteurs",
   bases: "Bases",
   applications: "Applications",
+  matrices: "Matrices",
 };
 
 const LETTERS = ["A", "B", "C", "D"];
@@ -254,8 +257,12 @@ export default function ExerciseLab() {
           <article className="lab-question-card">
             <div className="lab-question-copy">
               <p>Énoncé actuel</p>
-              <h2>{question.prompt}</h2>
-              {question.formula && <div className="lab-formula">{question.formula}</div>}
+              <h2><MathExpression text={question.prompt} /></h2>
+              {question.formula && (
+                <div className="lab-formula">
+                  <MathExpression text={question.formula} />
+                </div>
+              )}
             </div>
 
             <div className="lab-answer-grid">
@@ -276,7 +283,7 @@ export default function ExerciseLab() {
                     key={`${question.id}-${choice.text}`}
                   >
                     <span>{LETTERS[index]}</span>
-                    <strong>{choice.text}</strong>
+                    <strong><MathExpression text={choice.text} /></strong>
                   </button>
                 );
               })}
@@ -297,7 +304,7 @@ export default function ExerciseLab() {
                 </div>
                 <div className="lab-correction-main">
                   <span>Correction</span>
-                  <p>{question.explanation}</p>
+                  <p><MathExpression text={question.explanation} /></p>
                 </div>
                 <div className="lab-correction-notes">
                   <div>

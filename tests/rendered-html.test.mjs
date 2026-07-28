@@ -146,7 +146,7 @@ test("keeps the network diagram consistent with its displayed dimension", async 
   assert.match(styles, /@keyframes mappedVector/);
 });
 
-test("ships three ordered workshop cycles with linear-map mechanics", async () => {
+test("ships four ordered workshop cycles through matrix reduction", async () => {
   const balance = await readFile(
     new URL("../app/game-balance.ts", import.meta.url),
     "utf8",
@@ -161,10 +161,47 @@ test("ships three ordered workshop cycles with linear-map mechanics", async () =
   assert.match(balance, /name: "Forge de l’image"/);
   assert.match(balance, /name: "Balance du rang"/);
   assert.match(balance, /chapter: "Applications linéaires"/);
+  assert.match(balance, /name: "Encodeur matriciel"/);
+  assert.match(balance, /name: "Composeur matriciel"/);
+  assert.match(balance, /name: "Inverseur de Gauss"/);
+  assert.match(balance, /name: "Chambre spectrale"/);
+  assert.match(balance, /chapter: "Matrices et réduction"/);
   assert.match(balance, /resonanceDecayRate/);
   assert.match(balance, /correctAnomalyRewardMultiplier/);
   assert.match(page, /const WORKSHOP_CHAPTERS/);
   assert.match(page, /game\.instruments\[8\] > 0/);
+  assert.match(page, /game\.instruments\[12\] > 0/);
+  assert.match(page, /workshop-cycle-navigation/);
+  assert.match(page, /activeWorkshopChapter/);
+});
+
+test("renders matrices as responsive grids instead of flattened text", async () => {
+  const page = await readFile(
+    new URL("../app/page.tsx", import.meta.url),
+    "utf8",
+  );
+  const renderer = await readFile(
+    new URL("../app/math-expression.tsx", import.meta.url),
+    "utf8",
+  );
+  const questions = await readFile(
+    new URL("../app/question-generator.ts", import.meta.url),
+    "utf8",
+  );
+  const styles = await readFile(
+    new URL("../app/globals.css", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(page, /<MathExpression text=\{question\.formula\}/);
+  assert.match(page, /<MathExpression text=\{choice\.text\}/);
+  assert.match(renderer, /className="math-matrix-grid"/);
+  assert.match(renderer, /--matrix-columns/);
+  assert.match(questions, /Déterminant d’ordre 3/);
+  assert.match(questions, /⟦\$\{rows/);
+  assert.match(styles, /\.math-matrix::before/);
+  assert.match(styles, /\.matrix-operator/);
+  assert.match(styles, /\.spectral-marker/);
 });
 
 test("turns invariants into a permanent post-basis progression", async () => {
