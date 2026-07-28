@@ -310,8 +310,25 @@ test("the MP exercise path unlocks one reduction topic per workshop", () => {
 
 test("MP reduction questions validate characteristic and eigenvector calculations", () => {
   const characteristicForms = new Set();
+  const spectrumFamily = EXERCISE_FAMILIES.find(
+    (family) => family.id === "matrix-spectrum",
+  );
 
   for (let index = 0; index < 400; index += 1) {
+    const spectrumQuestion = spectrumFamily.generate(3);
+    assertWellFormed(spectrumQuestion);
+    const spectrumMatrix = parseMatrix(spectrumQuestion.formula);
+    const eigenvalues = new Set([
+      spectrumMatrix[0][0],
+      spectrumMatrix[1][1],
+    ]);
+    assert.equal(
+      spectrumQuestion.choices.filter((choice) =>
+        eigenvalues.has(Number(choice.text)),
+      ).length,
+      1,
+    );
+
     const characteristic = characteristicPolynomialQuestion();
     assertWellFormed(characteristic);
     const rows = parseMatrix(characteristic.formula);

@@ -1254,6 +1254,32 @@ function eigenvalueQuestion(): Question {
   const answer = pick(values);
   const trace = firstEigenvalue + secondEigenvalue;
   const determinant = firstEigenvalue * secondEigenvalue;
+  const distractorCandidates = [
+    trace,
+    determinant,
+    -answer,
+    firstEigenvalue + secondEigenvalue + 1,
+    firstEigenvalue * secondEigenvalue - 1,
+    0,
+    -4,
+    -1,
+    1,
+    4,
+  ];
+  const distractors = Array.from(
+    new Set(
+      distractorCandidates.filter(
+        (candidate) => !values.includes(candidate),
+      ),
+    ),
+  );
+  let fallback = -8;
+  while (distractors.length < 3) {
+    if (!values.includes(fallback) && !distractors.includes(fallback)) {
+      distractors.push(fallback);
+    }
+    fallback += 1;
+  }
 
   return {
     id: `M-SPEC-${Date.now()}-${randomInt(100, 999)}`,
@@ -1264,11 +1290,10 @@ function eigenvalueQuestion(): Question {
       [firstEigenvalue, upperCoefficient],
       [0, secondEigenvalue],
     ])}`,
-    choices: choices(`${answer}`, [
-      `${trace}`,
-      `${determinant}`,
-      `${-answer}`,
-    ]),
+    choices: choices(
+      `${answer}`,
+      distractors.slice(0, 3).map(String),
+    ),
     explanation: `A est triangulaire : ses valeurs propres sont les coefficients de sa diagonale, ${firstEigenvalue} et ${secondEigenvalue}.`,
     geometry:
       "Une direction propre est conservée par la transformation, à un facteur multiplicatif près.",
