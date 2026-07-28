@@ -23,6 +23,10 @@ linéaire des classes préparatoires MPSI et MP.
   avec encodage, produit, inversibilité et spectre ;
 - matrices 2×2 et 3×3 rendues comme de vraies grilles responsives dans les
   énoncés, les réponses et les corrections ;
+- notation contextuelle des vecteurs : tuples compacts pour les coordonnées,
+  vecteurs-colonnes dès qu’une matrice agit ou que les colonnes d’une
+  représentation sont explicitées, y compris pour le résultat d’un produit
+  matrice-vecteur ;
 - perturbations sur le produit matrice-vecteur, la matrice d’une application,
   l’inversibilité, les valeurs propres et les déterminants 3×3 calculables de
   tête ;

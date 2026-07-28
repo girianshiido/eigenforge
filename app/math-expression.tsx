@@ -5,7 +5,7 @@ type MathExpressionProps = {
   className?: string;
 };
 
-const MATRIX_PATTERN = /⟦([^⟧]+)⟧/g;
+const STRUCTURED_MATH_PATTERN = /⟦([^⟧]+)⟧|⟪([^⟫]+)⟫/g;
 
 function Matrix({ source }: { source: string }) {
   const rows = source
@@ -39,6 +39,24 @@ function Matrix({ source }: { source: string }) {
   );
 }
 
+function ColumnVector({ source }: { source: string }) {
+  const coordinates = source.split(",").map((coordinate) => coordinate.trim());
+
+  return (
+    <span
+      className="math-column-vector"
+      role="img"
+      aria-label={`Vecteur colonne : ${coordinates.join(", ")}`}
+    >
+      <span className="math-column-vector-grid" aria-hidden="true">
+        {coordinates.map((coordinate, index) => (
+          <span key={`${index}-${coordinate}`}>{coordinate}</span>
+        ))}
+      </span>
+    </span>
+  );
+}
+
 export default function MathExpression({
   text,
   className = "",
@@ -46,12 +64,21 @@ export default function MathExpression({
   const parts: ReactNode[] = [];
   let previousEnd = 0;
 
-  for (const match of text.matchAll(MATRIX_PATTERN)) {
+  for (const match of text.matchAll(STRUCTURED_MATH_PATTERN)) {
     const start = match.index ?? 0;
     if (start > previousEnd) {
       parts.push(text.slice(previousEnd, start));
     }
-    parts.push(<Matrix source={match[1]} key={`${start}-${match[1]}`} />);
+    parts.push(
+      match[1] !== undefined ? (
+        <Matrix source={match[1]} key={`matrix-${start}-${match[1]}`} />
+      ) : (
+        <ColumnVector
+          source={match[2]}
+          key={`column-${start}-${match[2]}`}
+        />
+      ),
+    );
     previousEnd = start + match[0].length;
   }
 

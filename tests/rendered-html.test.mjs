@@ -196,10 +196,15 @@ test("renders matrices as responsive grids instead of flattened text", async () 
   assert.match(page, /<MathExpression text=\{question\.formula\}/);
   assert.match(page, /<MathExpression text=\{choice\.text\}/);
   assert.match(renderer, /className="math-matrix-grid"/);
+  assert.match(renderer, /className="math-column-vector"/);
+  assert.match(renderer, /Vecteur colonne/);
   assert.match(renderer, /--matrix-columns/);
   assert.match(questions, /Déterminant d’ordre 3/);
   assert.match(questions, /⟦\$\{rows/);
+  assert.match(questions, /u = \$\{columnVector\(value\)\}/);
+  assert.doesNotMatch(questions, /u = \$\{vector\(value\)\}/);
   assert.match(styles, /\.math-matrix::before/);
+  assert.match(styles, /\.math-column-vector::before/);
   assert.match(styles, /\.matrix-operator/);
   assert.match(styles, /\.spectral-marker/);
 });

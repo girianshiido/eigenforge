@@ -64,7 +64,8 @@ button:focus-visible {
   white-space: pre-wrap;
 }
 
-.math-matrix {
+.math-matrix,
+.math-column-vector {
   position: relative;
   margin: 0 0.18em;
   padding: 0.08em 0.58em;
@@ -75,7 +76,9 @@ button:focus-visible {
 }
 
 .math-matrix::before,
-.math-matrix::after {
+.math-matrix::after,
+.math-column-vector::before,
+.math-column-vector::after {
   content: "";
   position: absolute;
   inset-block: 0;
@@ -83,13 +86,15 @@ button:focus-visible {
   opacity: 0.82;
 }
 
-.math-matrix::before {
+.math-matrix::before,
+.math-column-vector::before {
   left: 0;
   border-left: 1.5px solid currentColor;
   border-radius: 55% 0 0 55%;
 }
 
-.math-matrix::after {
+.math-matrix::after,
+.math-column-vector::after {
   right: 0;
   border-right: 1.5px solid currentColor;
   border-radius: 0 55% 55% 0;
@@ -103,7 +108,16 @@ button:focus-visible {
   justify-items: center;
 }
 
-.math-matrix-grid > span {
+.math-column-vector-grid {
+  display: grid;
+  grid-template-columns: minmax(1.05em, auto);
+  gap: 0.2em;
+  align-items: center;
+  justify-items: center;
+}
+
+.math-matrix-grid > span,
+.math-column-vector-grid > span {
   min-width: 1.05em;
   text-align: center;
 }

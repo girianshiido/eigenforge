@@ -53,6 +53,10 @@ function matrix(rows: readonly (readonly number[])[]) {
   return `⟦${rows.map((row) => row.join(",")).join(";")}⟧`;
 }
 
+function columnVector(values: readonly number[]) {
+  return `⟪${values.join(",")}⟫`;
+}
+
 function zeroVector(dimension: number) {
   return Array.from({ length: dimension }, () => 0);
 }
@@ -872,13 +876,13 @@ function matrixVectorQuestion(): Question {
     id: `M-PROD-${Date.now()}-${randomInt(100, 999)}`,
     sector: "matrices",
     eyebrow: "Produit matrice-vecteur",
-    prompt: "Quelles sont les coordonnées de Au ?",
-    formula: `A = ${matrix(rows)}   et   u = ${vector(value)}`,
+    prompt: "Quel est le vecteur Au ?",
+    formula: `A = ${matrix(rows)}   et   u = ${columnVector(value)}`,
     choices: choices(
-      vector(result),
-      distractors.map((candidate) => vector(candidate)),
+      columnVector(result),
+      distractors.map((candidate) => columnVector(candidate)),
     ),
-    explanation: `Chaque coordonnée de Au est le produit d’une ligne de A par la colonne u. On obtient Au = ${vector(result)}.`,
+    explanation: `Chaque coordonnée de Au est le produit d’une ligne de A par la colonne u. On obtient Au = ${columnVector(result)}.`,
     geometry:
       "La matrice décrit comment l’application transforme les vecteurs de la base, puis toutes leurs combinaisons linéaires.",
     trap:
@@ -934,7 +938,7 @@ function representationMatrixQuestion(): Question {
     prompt: "Quelle est la matrice de f dans la base canonique ?",
     formula: `f(x, y) = (${firstCoordinate} ; ${secondCoordinate})`,
     choices: choices(answer, distractors),
-    explanation: `Les colonnes sont f(e₁) = ${vector([a, c])} et f(e₂) = ${vector([b, d])}. La matrice est donc ${answer}.`,
+    explanation: `Les colonnes sont f(e₁) = ${columnVector([a, c])} et f(e₂) = ${columnVector([b, d])}. La matrice est donc ${answer}.`,
     geometry:
       "Chaque colonne enregistre l’image d’un vecteur de la base de départ.",
     trap:

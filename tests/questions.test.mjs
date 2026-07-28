@@ -25,9 +25,11 @@ function assertWellFormed(question) {
 }
 
 function parseVector(text) {
-  const match = text.match(/^\((-?\d+(?: ; -?\d+)+)\)$/);
+  const tupleMatch = text.match(/^\((-?\d+(?: ; -?\d+)+)\)$/);
+  const columnMatch = text.match(/^⟪(-?\d+(?:,-?\d+)+)⟫$/);
+  const match = tupleMatch ?? columnMatch;
   assert.ok(match, `Vecteur attendu, reçu : ${text}`);
-  return match[1].split(" ; ").map(Number);
+  return match[1].split(tupleMatch ? " ; " : ",").map(Number);
 }
 
 function assertNoSingleCoordinateRevealsAnswer(question) {
@@ -88,6 +90,19 @@ test("matrix questions use structured notation and mental 3 by 3 determinants", 
       }
       if (family.id === "matrix-vector-product") {
         assertNoSingleCoordinateRevealsAnswer(question);
+        assert.match(question.formula, /u = ⟪-?\d+,-?\d+⟫/);
+        assert.match(question.explanation, /Au = ⟪-?\d+,-?\d+⟫/);
+        assert.ok(
+          question.choices.every((choice) =>
+            /^⟪-?\d+,-?\d+⟫$/.test(choice.text),
+          ),
+        );
+      }
+      if (family.id === "matrix-representation") {
+        assert.equal(
+          [...question.explanation.matchAll(/⟪[^⟫]+⟫/g)].length,
+          2,
+        );
       }
     }
   }
