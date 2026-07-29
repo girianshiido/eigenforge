@@ -8,6 +8,7 @@ import {
   type Sector,
 } from "./question-generator";
 import MathExpression from "./math-expression";
+import ThemeToggle from "./theme-toggle";
 import { useInteractionGuards } from "./use-interaction-guards";
 
 type SectorFilter = Sector | "all";
@@ -153,10 +154,13 @@ export default function ExerciseLab() {
             <strong>Laboratoire d’exercices</strong>
           </span>
         </a>
-        <a className="lab-game-link" href="../">
-          <span aria-hidden="true">←</span>
-          Retour au jeu
-        </a>
+        <div className="lab-topbar-actions">
+          <ThemeToggle />
+          <a className="lab-game-link" href="../">
+            <span aria-hidden="true">←</span>
+            Retour au jeu
+          </a>
+        </div>
       </header>
 
       <section className="lab-intro">

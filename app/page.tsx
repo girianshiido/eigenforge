@@ -23,6 +23,7 @@ import {
 } from "./game-balance";
 import { generateQuestion as generateExercise } from "./question-generator";
 import MathExpression from "./math-expression";
+import ThemeToggle from "./theme-toggle";
 import { useInteractionGuards } from "./use-interaction-guards";
 
 type Sector = "vectors" | "bases" | "applications" | "matrices";
@@ -952,6 +953,7 @@ export default function Home() {
         </div>
 
         <div className="topbar-actions">
+          <ThemeToggle />
           <a className="exercise-lab-link" href="./exercises/">
             <span aria-hidden="true">∑</span>
             <strong>Exercices libres</strong>

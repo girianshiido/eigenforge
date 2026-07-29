@@ -15,7 +15,10 @@ createRoot(root).render(
   </StrictMode>,
 );
 
-if ("serviceWorker" in navigator) {
+if (
+  "serviceWorker" in navigator &&
+  window.location.pathname.startsWith("/eigenforge/")
+) {
   window.addEventListener("load", () => {
     void navigator.serviceWorker.register("/eigenforge/sw.js", {
       scope: "/eigenforge/",

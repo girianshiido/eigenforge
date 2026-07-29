@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr">
+<html lang="fr" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta
@@ -10,15 +10,25 @@
       name="description"
       content="EIGENFORGE, un jeu incrémental d’algèbre linéaire pour les classes préparatoires MPSI et MP."
     />
-    <meta name="theme-color" content="#07141b" />
+    <meta name="theme-color" content="#edf2ee" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="EIGENFORGE" />
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <link rel="icon" type="image/png" href="./icon-192.png" />
     <title>EIGENFORGE</title>
+    <script>
+      try {
+        const theme =
+          localStorage.getItem("eigenforge-theme") === "dark"
+            ? "dark"
+            : "light";
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.style.colorScheme = theme;
+      } catch (_) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

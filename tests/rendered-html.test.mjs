@@ -375,6 +375,85 @@ test("keeps vertical scrolling while blocking selection and zoom gestures", asyn
   assert.match(laboratory, /useInteractionGuards\(\)/);
 });
 
+test("defaults to a persistent light theme and keeps mobile resources visible", async () => {
+  const response = await render();
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  const page = await readFile(
+    new URL("../app/page.tsx", import.meta.url),
+    "utf8",
+  );
+  const laboratory = await readFile(
+    new URL("../app/exercise-lab.tsx", import.meta.url),
+    "utf8",
+  );
+  const layout = await readFile(
+    new URL("../app/layout.tsx", import.meta.url),
+    "utf8",
+  );
+  const toggle = await readFile(
+    new URL("../app/theme-toggle.tsx", import.meta.url),
+    "utf8",
+  );
+  const styles = await readFile(
+    new URL("../app/globals.css", import.meta.url),
+    "utf8",
+  );
+  const sourceHtml = await readFile(
+    new URL("../index.html", import.meta.url),
+    "utf8",
+  );
+  const manifest = JSON.parse(
+    await readFile(
+      new URL("../public/manifest.webmanifest", import.meta.url),
+      "utf8",
+    ),
+  );
+
+  assert.match(html, /data-theme="light"/);
+  assert.match(html, /Activer le thème sombre/);
+  assert.match(page, /<ThemeToggle \/>/);
+  assert.match(laboratory, /<ThemeToggle \/>/);
+  assert.match(layout, /themeColor: "#edf2ee"/);
+  assert.match(layout, /data-theme="light"/);
+  assert.match(layout, /themeBootstrap/);
+  assert.match(toggle, /const THEME_KEY = "eigenforge-theme"/);
+  assert.match(toggle, /useState<Theme>\("light"\)/);
+  assert.match(toggle, /document\.documentElement\.dataset\.theme = theme/);
+  assert.match(toggle, /window\.localStorage\.setItem\(THEME_KEY, nextTheme\)/);
+  assert.match(styles, /:root\[data-theme="light"\]/);
+  assert.match(styles, /html\[data-theme="light"\] \.network-stage/);
+  assert.match(
+    styles,
+    /html\[data-theme="light"\] \.star-field[\s\S]*?opacity: 0\.76/,
+  );
+  assert.match(
+    styles,
+    /html\[data-theme="light"\] \.coordinate-grid[\s\S]*?opacity: 0\.4/,
+  );
+  assert.match(
+    styles,
+    /html\[data-theme="light"\] \.plane[\s\S]*?border-color: rgba\(38, 122, 116, 0\.7\)/,
+  );
+  assert.match(styles, /\.star-field[\s\S]*?opacity: 0\.76/);
+  assert.match(styles, /\.coordinate-grid[\s\S]*?opacity: 0\.34/);
+  assert.match(styles, /\.plane\.visible[\s\S]*?opacity: 0\.7/);
+  assert.match(styles, /grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
+  const mobileResourcesStart = styles.lastIndexOf(
+    "  .topbar-actions .resource-strip {",
+  );
+  const mobileResourcesEnd = styles.indexOf("  }", mobileResourcesStart);
+  assert.ok(mobileResourcesStart >= 0);
+  assert.match(
+    styles.slice(mobileResourcesStart, mobileResourcesEnd),
+    /display: grid/,
+  );
+  assert.match(sourceHtml, /<html lang="fr" data-theme="light">/);
+  assert.match(sourceHtml, /localStorage\.getItem\("eigenforge-theme"\)/);
+  assert.equal(manifest.background_color, "#edf2ee");
+  assert.equal(manifest.theme_color, "#edf2ee");
+});
+
 test("exports a GitHub Pages build under the repository path", async () => {
   const html = await readFile(
     new URL("../docs/index.html", import.meta.url),
