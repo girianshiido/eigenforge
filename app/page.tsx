@@ -2,17 +2,17 @@
 
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import {
-  INSTRUMENT_MILESTONES,
   INSTRUMENTS,
   INVARIANT_PROTOCOLS,
+  WORKSHOP_MODULES,
   basePassiveProduction,
   correctAnomalyRewardMultiplier,
   inheritedStructuralWorkshops,
   instrumentCost,
   invariantGain,
   invariantProtocolCost,
+  legacyWorkshopModules,
   matrixWorkshopCostMultiplier,
-  milestoneMultiplier,
   nextInvariantThreshold,
   protocolAnomalyMultiplier,
   protocolManualMultiplier,
@@ -20,6 +20,12 @@ import {
   protocolResonanceMultiplier,
   protocolWorkshopCostMultiplier,
   resonanceDecayRate,
+  workshopMasteryCost,
+  workshopMasteryMultiplier,
+  workshopMasteryThreshold,
+  workshopModuleCost,
+  workshopModuleMultiplier,
+  workshopOutput,
 } from "./game-balance";
 import { generateQuestion as generateExercise } from "./question-generator";
 import MathExpression from "./math-expression";
@@ -34,6 +40,8 @@ type GameState = {
   runTotal: number;
   allTime: number;
   instruments: number[];
+  instrumentModules: number[][];
+  instrumentMasteries: number[];
   mastery: Record<Sector, number>;
   correctAnswers: number;
   anomalies: number;
@@ -77,6 +85,10 @@ const INITIAL_STATE: GameState = {
   runTotal: 0,
   allTime: 0,
   instruments: INSTRUMENTS.map(() => 0),
+  instrumentModules: INSTRUMENTS.map(() =>
+    WORKSHOP_MODULES.map(() => 0),
+  ),
+  instrumentMasteries: INSTRUMENTS.map(() => 0),
   mastery: { vectors: 0, bases: 0, applications: 0, matrices: 0 },
   correctAnswers: 0,
   anomalies: 0,
@@ -445,7 +457,11 @@ function generateQuestion(sectors: Sector[]) {
 }
 
 function production(state: GameState) {
-  const base = basePassiveProduction(state.instruments);
+  const base = basePassiveProduction(
+    state.instruments,
+    state.instrumentModules,
+    state.instrumentMasteries,
+  );
   const invariantMultiplier = 1 + state.totalInvariants * 0.15;
   const masteryTotal =
     state.mastery.vectors + state.mastery.bases + state.mastery.applications;
@@ -478,6 +494,22 @@ function workshopCost(state: GameState, index: number) {
   );
 }
 
+function moduleCost(state: GameState, index: number, moduleIndex: number) {
+  return Math.ceil(
+    workshopModuleCost(index, moduleIndex) *
+      protocolWorkshopCostMultiplier(state.protocols) *
+      matrixWorkshopCostMultiplier(state.instruments),
+  );
+}
+
+function masteryCost(state: GameState, index: number) {
+  return Math.ceil(
+    workshopMasteryCost(index, state.instrumentMasteries[index] ?? 0) *
+      protocolWorkshopCostMultiplier(state.protocols) *
+      matrixWorkshopCostMultiplier(state.instruments),
+  );
+}
+
 function protocolEffect(index: number, level: number) {
   if (level === 0) return "Aucun bonus actif";
   if (index === 0) return `Émission manuelle : +${level * 25} %`;
@@ -499,7 +531,8 @@ function anomalyDelay(allTime: number) {
 }
 
 function formatNumber(value: number) {
-  if (!Number.isFinite(value)) return "0";
+  if (Number.isNaN(value)) return "0";
+  if (!Number.isFinite(value)) return "∞";
   if (value < 1000) {
     return value < 100 ? value.toFixed(value < 10 ? 1 : 0) : Math.floor(value).toString();
   }
@@ -517,6 +550,13 @@ function formatNumber(value: number) {
   return `${(value / unit.value).toFixed(value / unit.value < 10 ? 1 : 0)}${unit.suffix}`;
 }
 
+function formatMultiplier(value: number) {
+  return value.toLocaleString("fr-FR", {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: value < 10 && !Number.isInteger(value) ? 1 : 0,
+  });
+}
+
 function restoreState(raw: string | null): GameState {
   if (!raw) return { ...INITIAL_STATE, lastTick: Date.now(), nextAnomalyAt: Date.now() + 8000 };
   try {
@@ -531,10 +571,41 @@ function restoreState(raw: string | null): GameState {
         instruments[index - 1] = Math.max(1, instruments[index - 1]);
       }
     }
+    const hasSavedModules = Array.isArray(saved.instrumentModules);
+    const instrumentModules = INSTRUMENTS.map((_, instrumentIndex) =>
+      WORKSHOP_MODULES.map((__, moduleIndex) => {
+        if (hasSavedModules) {
+          return (saved.instrumentModules?.[instrumentIndex]?.[moduleIndex] ?? 0) >
+            0
+            ? 1
+            : 0;
+        }
+        // Les anciens paliers automatiques donnaient ×2 aux niveaux 10, 25 et
+        // 50. Cette migration conserve exactement ces bonus dans les parties
+        // existantes, sans offrir automatiquement les nouveaux modules ensuite.
+        return legacyWorkshopModules(instruments[instrumentIndex])[moduleIndex];
+      }),
+    );
+    const instrumentMasteries = INSTRUMENTS.map((_, index) => {
+      const savedRank = Math.max(
+        0,
+        Math.floor(Number(saved.instrumentMasteries?.[index]) || 0),
+      );
+      let supportedRank = 0;
+      while (
+        supportedRank < savedRank &&
+        instruments[index] >= workshopMasteryThreshold(supportedRank)
+      ) {
+        supportedRank += 1;
+      }
+      return supportedRank;
+    });
     return {
       ...INITIAL_STATE,
       ...saved,
       instruments,
+      instrumentModules,
+      instrumentMasteries,
       protocols: INVARIANT_PROTOCOLS.map((protocol, index) =>
         Math.min(
           protocol.maxLevel,
@@ -567,6 +638,9 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<GameTab>("network");
   const [activeWorkshopChapter, setActiveWorkshopChapter] = useState(
     WORKSHOP_CHAPTERS[0],
+  );
+  const [expandedWorkshop, setExpandedWorkshop] = useState<number | null>(
+    null,
   );
   const [emitBurst, setEmitBurst] = useState(0);
   const [isEmitting, setIsEmitting] = useState(false);
@@ -752,6 +826,58 @@ export default function Home() {
     });
   }
 
+  function buyWorkshopModule(index: number, moduleIndex: number) {
+    setGame((previous) => {
+      const module = WORKSHOP_MODULES[moduleIndex];
+      const alreadyOwned =
+        (previous.instrumentModules[index]?.[moduleIndex] ?? 0) > 0;
+      const cost = moduleCost(previous, index, moduleIndex);
+      if (
+        !module ||
+        alreadyOwned ||
+        (previous.instruments[index] ?? 0) < module.threshold ||
+        previous.coordinates < cost
+      ) {
+        return previous;
+      }
+      const instrumentModules = previous.instrumentModules.map((modules) => [
+        ...modules,
+      ]);
+      instrumentModules[index][moduleIndex] = 1;
+      return {
+        ...previous,
+        coordinates: previous.coordinates - cost,
+        instrumentModules,
+      };
+    });
+  }
+
+  function buyWorkshopMastery(index: number) {
+    setGame((previous) => {
+      const rank = previous.instrumentMasteries[index] ?? 0;
+      const threshold = workshopMasteryThreshold(rank);
+      const modulesComplete = WORKSHOP_MODULES.every(
+        (_, moduleIndex) =>
+          (previous.instrumentModules[index]?.[moduleIndex] ?? 0) > 0,
+      );
+      const cost = masteryCost(previous, index);
+      if (
+        !modulesComplete ||
+        (previous.instruments[index] ?? 0) < threshold ||
+        previous.coordinates < cost
+      ) {
+        return previous;
+      }
+      const instrumentMasteries = [...previous.instrumentMasteries];
+      instrumentMasteries[index] = rank + 1;
+      return {
+        ...previous,
+        coordinates: previous.coordinates - cost,
+        instrumentMasteries,
+      };
+    });
+  }
+
   function buyProtocol(index: number) {
     setGame((previous) => {
       const currentLevel = previous.protocols[index] ?? 0;
@@ -859,6 +985,7 @@ export default function Home() {
     });
     setConfirmBasisChange(false);
     setActiveTab("network");
+    setExpandedWorkshop(null);
     setNotice(`${gained} invariant${gained > 1 ? "s" : ""} conservé${gained > 1 ? "s" : ""}. Le réseau adopte une nouvelle base.`);
   }
 
@@ -870,6 +997,7 @@ export default function Home() {
       nextAnomalyAt: Date.now() + 8000,
     });
     setConfirmReset(false);
+    setExpandedWorkshop(null);
     setNotice("La carte a été entièrement effacée.");
   }
 
@@ -954,10 +1082,6 @@ export default function Home() {
 
         <div className="topbar-actions">
           <ThemeToggle />
-          <a className="exercise-lab-link" href="./exercises/">
-            <span aria-hidden="true">∑</span>
-            <strong>Exercices libres</strong>
-          </a>
           <div className="resource-strip" aria-label="Ressources">
             <div className="resource">
               <span>Coordonnées</span>
@@ -1288,9 +1412,12 @@ export default function Home() {
               const chapterRate = chapterIndices.reduce(
                 (sum, index) =>
                   sum +
-                  (game.instruments[index] ?? 0) *
-                    INSTRUMENTS[index].baseProduction *
-                    milestoneMultiplier(game.instruments[index] ?? 0),
+                  workshopOutput(
+                    index,
+                    game.instruments[index] ?? 0,
+                    game.instrumentModules[index],
+                    game.instrumentMasteries[index] ?? 0,
+                  ),
                 0,
               );
               return (
@@ -1303,7 +1430,10 @@ export default function Home() {
                     .filter(Boolean)
                     .join(" ")}
                   aria-pressed={activeWorkshopChapter === chapter}
-                  onClick={() => setActiveWorkshopChapter(chapter)}
+                  onClick={() => {
+                    setActiveWorkshopChapter(chapter);
+                    setExpandedWorkshop(null);
+                  }}
                   key={chapter}
                 >
                   <span>Cycle {String(chapterIndex + 1).padStart(2, "0")}</span>
@@ -1317,6 +1447,9 @@ export default function Home() {
               );
             })}
           </nav>
+          <p className="cycle-scroll-hint" aria-hidden="true">
+            Balayez pour parcourir les 8 cycles <span>→</span>
+          </p>
 
           <div className="instrument-list">
             {WORKSHOP_CHAPTERS.map(
@@ -1340,19 +1473,60 @@ export default function Home() {
                       const count = game.instruments[index] ?? 0;
                       const cost = workshopCost(game, index);
                       const affordable = game.coordinates >= cost;
-                      const nextMilestone = INSTRUMENT_MILESTONES.find(
-                        (milestone) => milestone > count,
+                      const modules =
+                        game.instrumentModules[index] ??
+                        WORKSHOP_MODULES.map(() => 0);
+                      const moduleCount = modules.filter(
+                        (module) => module > 0,
+                      ).length;
+                      const masteryRank =
+                        game.instrumentMasteries[index] ?? 0;
+                      const nextModuleIndex = WORKSHOP_MODULES.findIndex(
+                        (_, moduleIndex) =>
+                          (modules[moduleIndex] ?? 0) === 0,
                       );
-                      const instrumentRate =
-                        count *
-                        instrument.baseProduction *
-                        milestoneMultiplier(count);
+                      const availableModuleCount =
+                        WORKSHOP_MODULES.filter(
+                          (module, moduleIndex) =>
+                            count >= module.threshold &&
+                            (modules[moduleIndex] ?? 0) === 0,
+                        ).length;
+                      const allModulesOwned =
+                        moduleCount === WORKSHOP_MODULES.length;
+                      const nextMasteryLevel =
+                        workshopMasteryThreshold(masteryRank);
+                      const masteryAvailable =
+                        allModulesOwned && count >= nextMasteryLevel;
+                      const availableUpgradeCount =
+                        availableModuleCount + (masteryAvailable ? 1 : 0);
+                      const instrumentRate = workshopOutput(
+                        index,
+                        count,
+                        modules,
+                        masteryRank,
+                      );
+                      const upgradeMultiplier =
+                        workshopModuleMultiplier(modules) *
+                        workshopMasteryMultiplier(masteryRank);
+                      const expanded = expandedWorkshop === index;
+                      const nextTarget =
+                        availableUpgradeCount > 0
+                          ? `${availableUpgradeCount} amélioration${availableUpgradeCount > 1 ? "s" : ""} disponible${availableUpgradeCount > 1 ? "s" : ""}`
+                          : nextModuleIndex >= 0
+                            ? `${Math.max(0, WORKSHOP_MODULES[nextModuleIndex].threshold - count)} niveaux avant ${WORKSHOP_MODULES[nextModuleIndex].name}`
+                            : `${Math.max(0, nextMasteryLevel - count)} niveaux avant la maîtrise ${masteryRank + 1}`;
                       const lockedDescription = !prerequisiteOwned
                         ? `Nécessite d’abord ${INSTRUMENTS[index - 1].name}.`
                         : `Se révèle à ${formatNumber(instrument.unlock)} coordonnées cumulées.`;
                       return (
                         <article
-                          className={`instrument-card ${unlocked ? "" : "locked"}`}
+                          className={[
+                            "instrument-card",
+                            unlocked ? "" : "locked",
+                            expanded ? "expanded" : "",
+                          ]
+                            .filter(Boolean)
+                            .join(" ")}
                           key={instrument.name}
                         >
                           <div className="instrument-mark" aria-hidden="true">
@@ -1372,26 +1546,35 @@ export default function Home() {
                               />
                             </p>
                             <div
-                              className="milestone-row"
-                              aria-label={`Paliers de ${instrument.name}`}
+                              className="module-pips"
+                              aria-label={`Modules de ${instrument.name} : ${moduleCount} sur ${WORKSHOP_MODULES.length} installés`}
                             >
-                              {INSTRUMENT_MILESTONES.map((milestone) => (
-                                <span
-                                  className={count >= milestone ? "reached" : ""}
-                                  key={milestone}
-                                >
-                                  {milestone}
-                                </span>
-                              ))}
+                              {WORKSHOP_MODULES.map((module, moduleIndex) => {
+                                const owned =
+                                  (modules[moduleIndex] ?? 0) > 0;
+                                const available =
+                                  !owned && count >= module.threshold;
+                                return (
+                                  <span
+                                    className={
+                                      owned
+                                        ? "owned"
+                                        : available
+                                          ? "available"
+                                          : ""
+                                    }
+                                    title={`${module.name} · niveau ${module.threshold}`}
+                                    key={module.name}
+                                  >
+                                    <small>{module.threshold}</small>
+                                  </span>
+                                );
+                              })}
                             </div>
                             <div className="instrument-bottom">
                               <div className="instrument-output">
                                 <span>{formatNumber(instrumentRate)}/s</span>
-                                <small>
-                                  {nextMilestone
-                                    ? `${nextMilestone - count} avant le prochain ×2`
-                                    : "Tous les paliers atteints"}
-                                </small>
+                                <small>{nextTarget}</small>
                               </div>
                               <button
                                 className={`workshop-buy ${unlocked && affordable ? "ready" : ""}`}
@@ -1423,6 +1606,152 @@ export default function Home() {
                               </button>
                             </div>
                           </div>
+                          <div className="workshop-upgrades">
+                              <button
+                                className={`upgrade-toggle ${availableUpgradeCount > 0 ? "ready" : ""}`}
+                                type="button"
+                                aria-expanded={expanded}
+                                aria-controls={`workshop-upgrades-${index}`}
+                                onClick={() =>
+                                  setExpandedWorkshop((current) =>
+                                    current === index ? null : index,
+                                  )
+                                }
+                                disabled={!unlocked || count === 0}
+                              >
+                                <span>
+                                  <small>Améliorations</small>
+                                  <strong>
+                                    {moduleCount}/{WORKSHOP_MODULES.length} modules
+                                    · maîtrise {masteryRank}
+                                  </strong>
+                                </span>
+                                <em>
+                                  {availableUpgradeCount > 0
+                                    ? `+${availableUpgradeCount}`
+                                    : expanded
+                                      ? "−"
+                                      : "+"}
+                                </em>
+                              </button>
+
+                              {expanded && (
+                                <div
+                                  className="upgrade-panel"
+                                  id={`workshop-upgrades-${index}`}
+                                >
+                                  <div className="upgrade-panel-heading">
+                                    <span>Architecture de l’atelier</span>
+                                    <strong>
+                                      Production ×{formatMultiplier(upgradeMultiplier)}
+                                    </strong>
+                                  </div>
+
+                                  <div className="module-list">
+                                    {WORKSHOP_MODULES.map(
+                                      (module, moduleIndex) => {
+                                        const owned =
+                                          (modules[moduleIndex] ?? 0) > 0;
+                                        const available =
+                                          !owned && count >= module.threshold;
+                                        const cost = moduleCost(
+                                          game,
+                                          index,
+                                          moduleIndex,
+                                        );
+                                        const affordable =
+                                          game.coordinates >= cost;
+                                        return (
+                                          <div
+                                            className={[
+                                              "module-row",
+                                              owned ? "owned" : "",
+                                              available ? "available" : "",
+                                            ]
+                                              .filter(Boolean)
+                                              .join(" ")}
+                                            key={module.name}
+                                          >
+                                            <span className="module-mark">
+                                              {module.mark}
+                                            </span>
+                                            <div className="module-copy">
+                                              <strong>{module.name}</strong>
+                                              <small>
+                                                Niv. {module.threshold} · ×
+                                                {formatMultiplier(
+                                                  module.multiplier,
+                                                )} · {module.description}
+                                              </small>
+                                            </div>
+                                            {owned ? (
+                                              <span className="module-state">
+                                                Installé
+                                              </span>
+                                            ) : (
+                                              <button
+                                                type="button"
+                                                onClick={() =>
+                                                  buyWorkshopModule(
+                                                    index,
+                                                    moduleIndex,
+                                                  )
+                                                }
+                                                disabled={
+                                                  !available || !affordable
+                                                }
+                                                aria-label={`Installer ${module.name} sur ${instrument.name} pour ${formatNumber(cost)} coordonnées`}
+                                              >
+                                                {available
+                                                  ? formatNumber(cost)
+                                                  : `Niv. ${module.threshold}`}
+                                              </button>
+                                            )}
+                                          </div>
+                                        );
+                                      },
+                                    )}
+                                  </div>
+
+                                  <div
+                                    className={`workshop-mastery-row ${masteryAvailable ? "available" : ""}`}
+                                  >
+                                    <span className="mastery-mark">
+                                      {masteryRank + 1}
+                                    </span>
+                                    <div>
+                                      <strong>
+                                        Maîtrise {masteryRank + 1}
+                                      </strong>
+                                      <small>
+                                        Niveau {nextMasteryLevel} · double la
+                                        production propre de l’atelier.
+                                      </small>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        buyWorkshopMastery(index)
+                                      }
+                                      disabled={
+                                        !masteryAvailable ||
+                                        game.coordinates <
+                                          masteryCost(game, index)
+                                      }
+                                      aria-label={`Acquérir la maîtrise ${masteryRank + 1} de ${instrument.name} pour ${formatNumber(masteryCost(game, index))} coordonnées`}
+                                    >
+                                      {allModulesOwned
+                                        ? masteryAvailable
+                                          ? formatNumber(
+                                              masteryCost(game, index),
+                                            )
+                                          : `Niv. ${nextMasteryLevel}`
+                                        : "5 modules"}
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                         </article>
                       );
                     })}

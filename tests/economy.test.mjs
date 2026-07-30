@@ -4,14 +4,15 @@ import test from "node:test";
 import {
   INVARIANT_PROTOCOLS,
   INSTRUMENTS,
+  WORKSHOP_MODULES,
   basePassiveProduction,
   correctAnomalyRewardMultiplier,
   inheritedStructuralWorkshops,
   instrumentCost,
   invariantGain,
   invariantProtocolCost,
+  legacyWorkshopModules,
   matrixWorkshopCostMultiplier,
-  milestoneMultiplier,
   nextInvariantThreshold,
   protocolAnomalyMultiplier,
   protocolManualMultiplier,
@@ -19,18 +20,57 @@ import {
   protocolResonanceMultiplier,
   protocolWorkshopCostMultiplier,
   resonanceDecayRate,
+  workshopMasteryCost,
+  workshopMasteryMultiplier,
+  workshopMasteryThreshold,
+  workshopModuleCost,
+  workshopModuleMultiplier,
+  workshopOutput,
 } from "../app/game-balance.ts";
 
-test("instrument milestones double passive production at 10, 25 and 50", () => {
-  assert.equal(milestoneMultiplier(9), 1);
-  assert.equal(milestoneMultiplier(10), 2);
-  assert.equal(milestoneMultiplier(24), 2);
-  assert.equal(milestoneMultiplier(25), 4);
-  assert.equal(milestoneMultiplier(49), 4);
-  assert.equal(milestoneMultiplier(50), 8);
+test("workshop levels unlock five purchased modules instead of automatic milestones", () => {
+  assert.deepEqual(
+    WORKSHOP_MODULES.map((module) => module.threshold),
+    [5, 10, 25, 50, 100],
+  );
+  assert.equal(workshopModuleMultiplier([]), 1);
+  assert.equal(workshopModuleMultiplier([1]), 1.25);
+  assert.equal(workshopModuleMultiplier([1, 1]), 2);
+  assert.equal(workshopModuleMultiplier([1, 1, 1]), 4);
+  assert.equal(workshopModuleMultiplier([1, 1, 1, 1]), 8);
+  assert.equal(workshopModuleMultiplier([1, 1, 1, 1, 1]), 20);
+  assert.ok(workshopModuleCost(0, 1) > workshopModuleCost(0, 0));
+  assert.deepEqual(legacyWorkshopModules(9), [0, 0, 0, 0, 0]);
+  assert.deepEqual(legacyWorkshopModules(10), [1, 1, 0, 0, 0]);
+  assert.deepEqual(legacyWorkshopModules(25), [1, 1, 1, 0, 0]);
+  assert.deepEqual(legacyWorkshopModules(50), [1, 1, 1, 1, 0]);
 
-  assert.equal(basePassiveProduction([10, 0, 0]), 10);
-  assert.equal(basePassiveProduction([25, 0, 0]), 50);
+  assert.equal(basePassiveProduction([10, 0, 0]), 5);
+  assert.equal(
+    basePassiveProduction(
+      [10, 0, 0],
+      [[1, 1, 0, 0, 0]],
+    ),
+    10,
+  );
+  assert.equal(
+    workshopOutput(0, 100, [1, 1, 1, 1, 1]),
+    1000,
+  );
+});
+
+test("workshop mastery continues at doubling thresholds beyond level 100", () => {
+  assert.equal(workshopMasteryThreshold(0), 200);
+  assert.equal(workshopMasteryThreshold(1), 400);
+  assert.equal(workshopMasteryThreshold(2), 800);
+  assert.equal(workshopMasteryThreshold(3), 1600);
+  assert.equal(workshopMasteryMultiplier(0), 1);
+  assert.equal(workshopMasteryMultiplier(3), 8);
+  assert.ok(workshopMasteryCost(0, 1) > workshopMasteryCost(0, 0));
+  assert.equal(
+    workshopOutput(0, 200, [1, 1, 1, 1, 1], 1),
+    4000,
+  );
 });
 
 test("advanced workshops add distinct family and rank synergies", () => {
@@ -272,6 +312,9 @@ test("invariant protocols create permanent strategic upgrades", () => {
 
 test("the active first-hour model unlocks the spatial forge before the first basis change", () => {
   const instruments = INSTRUMENTS.map(() => 0);
+  const instrumentModules = INSTRUMENTS.map(() =>
+    WORKSHOP_MODULES.map(() => 0),
+  );
   let coordinates = 0;
   let total = 0;
   let nextQuestion = 45;
@@ -280,7 +323,7 @@ test("the active first-hour model unlocks the spatial forge before the first bas
   let firstChange = null;
 
   function passiveRate() {
-    return basePassiveProduction(instruments);
+    return basePassiveProduction(instruments, instrumentModules);
   }
 
   function productionDelta(index) {
@@ -288,6 +331,14 @@ test("the active first-hour model unlocks the spatial forge before the first bas
     instruments[index] += 1;
     const after = passiveRate();
     instruments[index] -= 1;
+    return after - before;
+  }
+
+  function moduleDelta(index, moduleIndex) {
+    const before = passiveRate();
+    instrumentModules[index][moduleIndex] = 1;
+    const after = passiveRate();
+    instrumentModules[index][moduleIndex] = 0;
     return after - before;
   }
 
@@ -308,25 +359,59 @@ test("the active first-hour model unlocks the spatial forge before the first bas
     let purchased = true;
     while (purchased) {
       purchased = false;
-      let bestIndex = -1;
+      let bestAction = null;
       let bestPayback = Number.POSITIVE_INFINITY;
 
       for (let index = 0; index < INSTRUMENTS.length; index += 1) {
         const cost = instrumentCost(index, instruments[index]);
-        if (total < INSTRUMENTS[index].unlock || coordinates < cost) continue;
-        const payback = cost / productionDelta(index);
-        if (payback < bestPayback) {
-          bestPayback = payback;
-          bestIndex = index;
+        if (total >= INSTRUMENTS[index].unlock && coordinates >= cost) {
+          const payback = cost / productionDelta(index);
+          if (payback < bestPayback) {
+            bestPayback = payback;
+            bestAction = { type: "instrument", index, cost };
+          }
+        }
+
+        for (
+          let moduleIndex = 0;
+          moduleIndex < WORKSHOP_MODULES.length;
+          moduleIndex += 1
+        ) {
+          const module = WORKSHOP_MODULES[moduleIndex];
+          const modulePrice = workshopModuleCost(index, moduleIndex);
+          if (
+            instruments[index] < module.threshold ||
+            instrumentModules[index][moduleIndex] > 0 ||
+            coordinates < modulePrice
+          ) {
+            continue;
+          }
+          const modulePayback =
+            modulePrice / moduleDelta(index, moduleIndex);
+          if (modulePayback < bestPayback) {
+            bestPayback = modulePayback;
+            bestAction = {
+              type: "module",
+              index,
+              moduleIndex,
+              cost: modulePrice,
+            };
+          }
         }
       }
 
-      if (bestIndex >= 0) {
-        coordinates -= instrumentCost(bestIndex, instruments[bestIndex]);
-        instruments[bestIndex] += 1;
+      if (bestAction?.type === "instrument") {
+        coordinates -= bestAction.cost;
+        instruments[bestAction.index] += 1;
         purchased = true;
-        if (bestIndex === 1 && firstBasis === null) firstBasis = second;
-        if (bestIndex === 2 && firstApplication === null) firstApplication = second;
+        if (bestAction.index === 1 && firstBasis === null) firstBasis = second;
+        if (bestAction.index === 2 && firstApplication === null) {
+          firstApplication = second;
+        }
+      } else if (bestAction?.type === "module") {
+        coordinates -= bestAction.cost;
+        instrumentModules[bestAction.index][bestAction.moduleIndex] = 1;
+        purchased = true;
       }
     }
 

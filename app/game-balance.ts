@@ -1,5 +1,47 @@
 export const PRESTIGE_SCALE = 750_000;
-export const INSTRUMENT_MILESTONES = [10, 25, 50] as const;
+export const WORKSHOP_MODULES = [
+  {
+    threshold: 5,
+    name: "Calibration",
+    mark: "I",
+    description: "Stabilise le flux propre de l’atelier.",
+    multiplier: 1.25,
+    costFactor: 0.7,
+  },
+  {
+    threshold: 10,
+    name: "Amplification",
+    mark: "II",
+    description: "Amplifie chaque unité déjà construite.",
+    multiplier: 1.6,
+    costFactor: 0.7,
+  },
+  {
+    threshold: 25,
+    name: "Couplage",
+    mark: "III",
+    description: "Couple les unités de l’atelier en un même système.",
+    multiplier: 2,
+    costFactor: 0.55,
+  },
+  {
+    threshold: 50,
+    name: "Résonance",
+    mark: "IV",
+    description: "Accorde durablement la production de l’atelier.",
+    multiplier: 2,
+    costFactor: 0.4,
+  },
+  {
+    threshold: 100,
+    name: "Stabilisation",
+    mark: "V",
+    description: "Achève l’architecture initiale de l’atelier.",
+    multiplier: 2.5,
+    costFactor: 0.25,
+  },
+] as const;
+export const FIRST_MASTERY_THRESHOLD = 200;
 export const STRUCTURAL_WORKSHOP_COUNT = 4;
 export const MATRIX_WORKSHOP_START = 12;
 export const REDUCTION_WORKSHOP_START = 16;
@@ -413,15 +455,63 @@ export const INSTRUMENTS = [
   },
 ] as const;
 
-export function milestoneMultiplier(owned: number) {
-  const reached = INSTRUMENT_MILESTONES.filter(
-    (milestone) => owned >= milestone,
-  ).length;
-  return Math.pow(2, reached);
-}
-
 export function instrumentCost(index: number, owned: number) {
   return Math.ceil(INSTRUMENTS[index].baseCost * Math.pow(1.18, owned));
+}
+
+export function workshopModuleCost(index: number, moduleIndex: number) {
+  const module = WORKSHOP_MODULES[moduleIndex];
+  if (!module) return Number.POSITIVE_INFINITY;
+  return Math.ceil(
+    instrumentCost(index, module.threshold) * module.costFactor,
+  );
+}
+
+export function workshopModuleMultiplier(
+  modules: readonly number[] | undefined,
+) {
+  return WORKSHOP_MODULES.reduce(
+    (multiplier, module, index) =>
+      multiplier * ((modules?.[index] ?? 0) > 0 ? module.multiplier : 1),
+    1,
+  );
+}
+
+export function legacyWorkshopModules(owned: number) {
+  return WORKSHOP_MODULES.map((_, moduleIndex) => {
+    if (moduleIndex <= 1) return owned >= 10 ? 1 : 0;
+    if (moduleIndex === 2) return owned >= 25 ? 1 : 0;
+    if (moduleIndex === 3) return owned >= 50 ? 1 : 0;
+    return 0;
+  });
+}
+
+export function workshopMasteryThreshold(rank: number) {
+  return FIRST_MASTERY_THRESHOLD * Math.pow(2, Math.max(0, rank));
+}
+
+export function workshopMasteryCost(index: number, rank: number) {
+  return Math.ceil(
+    instrumentCost(index, workshopMasteryThreshold(rank)) * 0.2,
+  );
+}
+
+export function workshopMasteryMultiplier(rank: number) {
+  return Math.pow(2, Math.max(0, rank));
+}
+
+export function workshopOutput(
+  index: number,
+  owned: number,
+  modules?: readonly number[],
+  masteryRank = 0,
+) {
+  return (
+    owned *
+    INSTRUMENTS[index].baseProduction *
+    workshopModuleMultiplier(modules) *
+    workshopMasteryMultiplier(masteryRank)
+  );
 }
 
 export function invariantProtocolCost(index: number, level: number) {
@@ -467,10 +557,17 @@ export function inheritedStructuralWorkshops(
 
 export function basePassiveProduction(
   instruments: readonly number[],
+  instrumentModules: readonly (readonly number[])[] = [],
+  instrumentMasteries: readonly number[] = [],
 ) {
-  const outputs = INSTRUMENTS.map((instrument, index) => {
+  const outputs = INSTRUMENTS.map((_, index) => {
     const count = instruments[index] ?? 0;
-    return count * instrument.baseProduction * milestoneMultiplier(count);
+    return workshopOutput(
+      index,
+      count,
+      instrumentModules[index],
+      instrumentMasteries[index] ?? 0,
+    );
   });
   const directionalOutput = outputs
     .slice(0, STRUCTURAL_WORKSHOP_COUNT)

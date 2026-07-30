@@ -90,6 +90,44 @@ test("ships the animated forge controls", async () => {
   assert.match(styles, /\.workshop-buy\.ready/);
 });
 
+test("turns workshop milestones into compact purchased modules and infinite mastery", async () => {
+  const response = await render();
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  const page = await readFile(
+    new URL("../app/page.tsx", import.meta.url),
+    "utf8",
+  );
+  const balance = await readFile(
+    new URL("../app/game-balance.ts", import.meta.url),
+    "utf8",
+  );
+  const styles = await readFile(
+    new URL("../app/globals.css", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(balance, /threshold: 5/);
+  assert.match(balance, /threshold: 100/);
+  assert.match(balance, /FIRST_MASTERY_THRESHOLD = 200/);
+  assert.match(balance, /workshopMasteryThreshold/);
+  assert.match(page, /instrumentModules: number\[\]\[\]/);
+  assert.match(page, /instrumentMasteries: number\[\]/);
+  assert.match(page, /buyWorkshopModule/);
+  assert.match(page, /buyWorkshopMastery/);
+  assert.match(page, /className="module-pips"/);
+  assert.match(page, /className=\{`upgrade-toggle/);
+  assert.match(page, /className=\{`workshop-mastery-row/);
+  assert.match(page, /Les anciens paliers automatiques/);
+  assert.match(styles, /\.instrument-card\.expanded/);
+  assert.match(styles, /\.upgrade-panel/);
+  assert.match(styles, /\.module-row/);
+  assert.match(styles, /\.workshop-mastery-row/);
+  assert.doesNotMatch(page, /INSTRUMENT_MILESTONES|milestoneMultiplier/);
+  assert.doesNotMatch(html, /Exercices libres/);
+  assert.doesNotMatch(page, /className="exercise-lab-link"/);
+});
+
 test("formats generated expressions and previews basis changes", async () => {
   const page = await readFile(
     new URL("../app/page.tsx", import.meta.url),
@@ -220,6 +258,7 @@ test("ships eight ordered workshop cycles through MPSI Euclidean foundations", a
   assert.match(page, /game\.instruments\[8\] > 0/);
   assert.match(page, /game\.instruments\[12\] > 0/);
   assert.match(page, /workshop-cycle-navigation/);
+  assert.match(page, /Balayez pour parcourir les 8 cycles/);
   assert.match(page, /activeWorkshopChapter/);
   assert.match(page, /className=\{`reduction-sequence/);
   assert.match(page, />χA<\/span>/);
@@ -364,7 +403,8 @@ test("keeps vertical scrolling while blocking selection and zoom gestures", asyn
   assert.match(layout, /maximumScale: 1/);
   assert.match(layout, /userScalable: false/);
   assert.match(sourceHtml, /maximum-scale=1\.0, user-scalable=no/);
-  assert.match(styles, /touch-action: pan-y/);
+  assert.match(styles, /touch-action: pan-x pan-y/);
+  assert.match(styles, /\.workshop-cycle-navigation button[\s\S]*touch-action: pan-x/);
   assert.match(styles, /user-select: none/);
   assert.match(guards, /gesturestart/);
   assert.match(guards, /event\.touches\.length > 1/);
