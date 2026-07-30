@@ -1,4 +1,4 @@
-const CACHE_NAME = "eigenforge-exercises-D66ZCrje.js-game-D-hNVckp.js-globals-7smht0h7.css-globals-Do226cmG.js";
+const CACHE_NAME = "eigenforge-exercises-D66ZCrje.js-game-CYQTsQ7e.js-globals-7smht0h7.css-globals-Do226cmG.js";
 const PRECACHE = [
   "/eigenforge/",
   "/eigenforge/index.html",
@@ -9,7 +9,7 @@ const PRECACHE = [
   "/eigenforge/icon-192.png",
   "/eigenforge/icon-512.png",
   "/eigenforge/assets/exercises-D66ZCrje.js",
-  "/eigenforge/assets/game-D-hNVckp.js",
+  "/eigenforge/assets/game-CYQTsQ7e.js",
   "/eigenforge/assets/globals-7smht0h7.css",
   "/eigenforge/assets/globals-Do226cmG.js"
 ];

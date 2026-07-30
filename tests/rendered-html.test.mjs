@@ -383,6 +383,9 @@ test("turns invariants into a permanent post-basis progression", async () => {
   assert.match(page, /protocols: previous\.protocols/);
   assert.match(page, /inheritedStructuralWorkshops/);
   assert.match(page, /invariantProductionMultiplier/);
+  assert.match(page, /basisChangeGain/);
+  assert.match(page, /Résonance saturée · changez de base/);
+  assert.match(page, /Chaque cycle peut rapporter au plus un invariant de plus/);
   assert.match(page, /paliers cumulés 15, 31,/);
   assert.doesNotMatch(page, /accordent chacun \+15 %/);
   assert.match(balance, /name: "Principe d’homogénéité"/);

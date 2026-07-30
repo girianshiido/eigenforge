@@ -6,10 +6,10 @@ import {
   PRESTIGE_SCALE,
   WORKSHOP_MODULES,
   basePassiveProduction,
+  basisChangeGain,
   correctAnomalyRewardMultiplier,
   inheritedStructuralWorkshops,
   instrumentCost,
-  invariantGain,
   invariantProductionMultiplier,
   invariantProtocolCost,
   matrixWorkshopCostMultiplier,
@@ -275,7 +275,10 @@ export function simulateProgression({
     const targetGain = runTargets[changes.length];
     const targetTotal = PRESTIGE_SCALE * targetGain ** 2;
     if (state.runTotal >= targetTotal * (1 - 1e-12)) {
-      const gained = Math.max(targetGain, invariantGain(state.runTotal));
+      const gained = basisChangeGain(
+        state.runTotal,
+        state.totalInvariants,
+      );
       state.invariants += gained;
       state.totalInvariants += gained;
       spendProtocols(state);

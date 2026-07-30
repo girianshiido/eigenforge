@@ -6,6 +6,8 @@ import {
   INSTRUMENTS,
   WORKSHOP_MODULES,
   basePassiveProduction,
+  basisChangeGain,
+  basisChangeGainCap,
   correctAnomalyRewardMultiplier,
   inheritedStructuralWorkshops,
   instrumentBulkCost,
@@ -341,6 +343,17 @@ test("basis changes require a meaningful run and scale quadratically", () => {
   assert.equal(invariantGain(3_000_000), 2);
   assert.equal(nextInvariantThreshold(0), 750_000);
   assert.equal(nextInvariantThreshold(1), 3_000_000);
+});
+
+test("basis change gains saturate before a run can skip the next cycle", () => {
+  assert.equal(basisChangeGainCap(0), 1);
+  assert.equal(basisChangeGainCap(68), 69);
+  assert.equal(basisChangeGain(750_000, 0), 1);
+  assert.equal(basisChangeGain(3_000_000, 1), 2);
+  assert.equal(
+    basisChangeGain(750_000 * 1029 ** 2, 68),
+    69,
+  );
 });
 
 test("invariant resonance grows by readable doubling tiers", () => {

@@ -6,6 +6,8 @@ import {
   INVARIANT_PROTOCOLS,
   WORKSHOP_MODULES,
   basePassiveProduction,
+  basisChangeGain,
+  basisChangeGainCap,
   correctAnomalyRewardMultiplier,
   inheritedStructuralWorkshops,
   instrumentBulkCost,
@@ -1000,7 +1002,10 @@ export default function Home() {
   }
 
   function changeBasis() {
-    const gained = invariantGain(game.runTotal);
+    const gained = basisChangeGain(
+      game.runTotal,
+      game.totalInvariants,
+    );
     if (gained < 1) return;
     setGame((previous) => {
       const inheritedCount = inheritedStructuralWorkshops(
@@ -1040,7 +1045,14 @@ export default function Home() {
     setNotice("La carte a été entièrement effacée.");
   }
 
-  const pendingInvariantGain = invariantGain(game.runTotal);
+  const rawInvariantGain = invariantGain(game.runTotal);
+  const invariantGainCap = basisChangeGainCap(game.totalInvariants);
+  const pendingInvariantGain = basisChangeGain(
+    game.runTotal,
+    game.totalInvariants,
+  );
+  const invariantGainSaturated =
+    rawInvariantGain >= invariantGainCap;
   const followingInvariantThreshold = nextInvariantThreshold(pendingInvariantGain);
   const currentInvariantMultiplier = invariantProductionMultiplier(
     game.totalInvariants,
@@ -1986,9 +1998,11 @@ export default function Home() {
                   Bonus permanent actuel : ×{currentInvariantMultiplier.toFixed(2)}
                 </span>
                 <span className="basis-detail">
-                  Prochain invariant dans {formatNumber(
-                    Math.max(0, followingInvariantThreshold - game.runTotal),
-                  )} coordonnées
+                  {invariantGainSaturated
+                    ? "Résonance saturée · changez de base"
+                    : `Prochain invariant dans ${formatNumber(
+                        Math.max(0, followingInvariantThreshold - game.runTotal),
+                      )} coordonnées`}
                 </span>
               </div>
             </div>
@@ -2235,6 +2249,9 @@ export default function Home() {
             </div>
 
             <p className="basis-modal-note">
+              Chaque cycle peut rapporter au plus un invariant de plus que le
+              total déjà découvert. Une fois la résonance saturée, il faut
+              changer de base pour ouvrir le palier suivant.{" "}
               Les sept premiers invariants ajoutent chacun 15 % à la
               production et à l’émission. Ensuite, les paliers cumulés 15, 31,
               63… ajoutent chacun 20 % supplémentaires. Ce bonus permanent

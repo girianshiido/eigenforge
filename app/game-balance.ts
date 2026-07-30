@@ -716,6 +716,23 @@ export function invariantGain(runTotal: number) {
   return Math.floor(Math.sqrt(runTotal / PRESTIGE_SCALE));
 }
 
+export function basisChangeGainCap(totalInvariants: number) {
+  const normalizedTotal = Number.isFinite(totalInvariants)
+    ? Math.max(0, Math.floor(totalInvariants))
+    : 0;
+  return normalizedTotal + 1;
+}
+
+export function basisChangeGain(
+  runTotal: number,
+  totalInvariants: number,
+) {
+  return Math.min(
+    invariantGain(runTotal),
+    basisChangeGainCap(totalInvariants),
+  );
+}
+
 export function nextInvariantThreshold(currentGain: number) {
   return PRESTIGE_SCALE * Math.pow(currentGain + 1, 2);
 }
