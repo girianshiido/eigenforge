@@ -1926,10 +1926,6 @@ html[data-theme="light"] .basis-modal-actions button.confirm {
   transform: translateY(-1px);
 }
 
-.instrument-card.expanded {
-  grid-column: 1 / -1;
-}
-
 .upgrade-panel {
   margin-top: 9px;
   padding: 13px;
@@ -4326,6 +4322,7 @@ footer {
 .workshop-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
   gap: 14px;
 }
 

@@ -119,7 +119,11 @@ test("turns workshop milestones into compact purchased modules and infinite mast
   assert.match(page, /className=\{`upgrade-toggle/);
   assert.match(page, /className=\{`workshop-mastery-row/);
   assert.match(page, /Les anciens paliers automatiques/);
-  assert.match(styles, /\.instrument-card\.expanded/);
+  assert.match(styles, /\.workshop-grid \{[\s\S]*align-items: start/);
+  assert.doesNotMatch(
+    styles,
+    /\.instrument-card\.expanded\s*\{[\s\S]*?grid-column:\s*1\s*\/\s*-1/,
+  );
   assert.match(styles, /\.upgrade-panel/);
   assert.match(styles, /\.module-row/);
   assert.match(styles, /\.workshop-mastery-row/);
