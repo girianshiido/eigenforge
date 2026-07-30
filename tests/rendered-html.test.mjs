@@ -67,6 +67,7 @@ test("renders the game shell and finished metadata", async () => {
   assert.match(html, /Maîtrise et invariants/);
   assert.match(html, /E<sub class="math-subscript">λ<\/sub>/);
   assert.match(html, /F<sup class="math-superscript">⊥<\/sup>/);
+  assert.match(html, /S<sup class="math-superscript">\+\+<\/sup>/);
   assert.match(html, /role="tablist"/);
   assert.match(html, /aria-controls="panel-network"/);
   assert.match(html, /aria-controls="panel-instruments"/);
@@ -275,6 +276,7 @@ test("ships eight ordered workshop cycles through MPSI Euclidean foundations", a
   assert.match(page, /className=\{`euclidean-sequence/);
   assert.match(page, />u\*<\/span>/);
   assert.match(page, />PDPᵀ<\/span>/);
+  assert.match(page, /<MathExpression text="S\^\{\+\+\}" \/>/);
   assert.match(page, /className=\{`geometry-sequence/);
   assert.match(page, />⟨·,·⟩<\/span>/);
   assert.match(page, /<MathExpression text="F\^\{⊥\}" \/>/);

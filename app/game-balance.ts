@@ -400,7 +400,7 @@ export const INSTRUMENTS = [
   },
   {
     name: "Analyseur de positivité",
-    mark: "S++",
+    mark: "S^{++}",
     description: "Sépare positivité et positivité définie, puis réduit de 1 % le prix des ateliers.",
     chapter: "Réduction euclidienne · MP",
     mission: "Mesurer la positivité",

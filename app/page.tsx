@@ -1243,7 +1243,9 @@ export default function Home() {
                 <span className={game.instruments[24] > 0 ? "active" : ""}>u*</span>
                 <span className={game.instruments[25] > 0 ? "active" : ""}>S</span>
                 <span className={game.instruments[26] > 0 ? "active" : ""}>PDPᵀ</span>
-                <span className={game.instruments[27] > 0 ? "active" : ""}>S++</span>
+                <span className={game.instruments[27] > 0 ? "active" : ""}>
+                  <MathExpression text="S^{++}" />
+                </span>
               </div>
               <div
                 className={`geometry-sequence ${game.instruments[28] > 0 ? "visible" : ""}`}
