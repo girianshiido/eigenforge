@@ -45,6 +45,11 @@ function assertWellFormed(question) {
     new Set(question.choices.map((choice) => choice.text)).size,
     4,
   );
+  assert.doesNotMatch(
+    JSON.stringify(question),
+    /ℝ\d/,
+    "Les dimensions de ℝ doivent être écrites en exposant.",
+  );
 }
 
 function parseVector(text) {

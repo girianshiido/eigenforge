@@ -63,6 +63,25 @@ function squareRoot(value: number | string) {
   return `√${value}`;
 }
 
+function realSpace(dimension: number) {
+  const superscriptDigits: Record<string, string> = {
+    "0": "⁰",
+    "1": "¹",
+    "2": "²",
+    "3": "³",
+    "4": "⁴",
+    "5": "⁵",
+    "6": "⁶",
+    "7": "⁷",
+    "8": "⁸",
+    "9": "⁹",
+  };
+  return `ℝ${String(dimension)
+    .split("")
+    .map((digit) => superscriptDigits[digit] ?? digit)
+    .join("")}`;
+}
+
 function fraction(
   numerator: number | string,
   denominator: number | string,
@@ -927,7 +946,7 @@ function basisVectorLabel(index: number) {
 
 function canonicalSpan(indices: readonly number[], dimension: number) {
   if (indices.length === 0) return "{0}";
-  if (indices.length === dimension) return `ℝ${dimension === 2 ? "²" : "³"}`;
+  if (indices.length === dimension) return realSpace(dimension);
   return `Vect(${indices.map(basisVectorLabel).join(", ")})`;
 }
 
@@ -2251,7 +2270,7 @@ export function blockDeterminantQuestion(): Question {
     ]),
     explanation: `A est triangulaire par blocs : son déterminant est le produit des déterminants des blocs diagonaux. Ainsi det(A) = ${firstDeterminant} × ${secondDeterminant} = ${determinant}.`,
     geometry:
-      `Dans ℝ${order}, le déterminant mesure le facteur de dilatation des volumes de dimension ${order}.`,
+      `Dans ${realSpace(order)}, le déterminant mesure le facteur de dilatation des volumes de dimension ${order}.`,
     trap:
       "Les blocs hors diagonale n’interviennent pas dans le déterminant d’une matrice triangulaire par blocs.",
   };
@@ -2578,7 +2597,7 @@ export function orthogonalComplementQuestion(spaceDimension = 2): Question {
     sector: "bases",
     eyebrow: "MPSI · Vecteur normal",
     prompt: "Lequel de ces vecteurs est normal à l’hyperplan H ?",
-    formula: `H = {(${coordinates.join(" ; ")}) ∈ ℝ${dimension} | ${equation} = 0}`,
+    formula: `H = {(${coordinates.join(" ; ")}) ∈ ${realSpace(dimension)} | ${equation} = 0}`,
     choices: choices(correct, normalDistractors),
     explanation: `L’équation de H s’écrit ⟨${correct}, x⟩ = 0. Ainsi H = Vect(${correct})^{⊥} et ${correct} est un vecteur normal à H.`,
     geometry:
