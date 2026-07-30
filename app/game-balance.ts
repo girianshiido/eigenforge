@@ -595,6 +595,12 @@ export function protocolAnomalyMultiplier(
   return 1 + (protocols[4] ?? 0) * 0.15;
 }
 
+export function invariantProductionMultiplier(totalInvariants: number) {
+  const total = Math.max(0, totalInvariants);
+  if (total <= 7) return 1 + total * 0.15;
+  return 2.05 + Math.log2((total + 1) / 8) * 0.2;
+}
+
 export function inheritedStructuralWorkshops(
   protocols: readonly number[],
 ) {

@@ -11,6 +11,7 @@ import {
   instrumentBulkCost,
   instrumentCost,
   invariantGain,
+  invariantProductionMultiplier,
   invariantProtocolCost,
   legacyWorkshopModules,
   matrixWorkshopCostMultiplier,
@@ -29,6 +30,10 @@ import {
   workshopModuleMultiplier,
   workshopOutput,
 } from "../app/game-balance.ts";
+import {
+  DEFAULT_RUN_TARGETS,
+  simulateProgression,
+} from "../scripts/simulate-progression.mjs";
 
 test("grouped workshop purchases charge every forged unit exactly", () => {
   const multiplier = 0.83;
@@ -336,6 +341,52 @@ test("basis changes require a meaningful run and scale quadratically", () => {
   assert.equal(invariantGain(3_000_000), 2);
   assert.equal(nextInvariantThreshold(0), 750_000);
   assert.equal(nextInvariantThreshold(1), 3_000_000);
+});
+
+test("invariant resonance grows by readable doubling tiers", () => {
+  assert.equal(invariantProductionMultiplier(0), 1);
+  assert.equal(invariantProductionMultiplier(1), 1.15);
+  assert.equal(invariantProductionMultiplier(3), 1.45);
+  assert.equal(invariantProductionMultiplier(7), 2.05);
+  assert.equal(invariantProductionMultiplier(15), 2.25);
+  assert.ok(invariantProductionMultiplier(1_000_000) < 6);
+});
+
+test("five basis changes preserve deliberate one-hour runs", () => {
+  const report = simulateProgression();
+
+  assert.equal(report.completed, true);
+  assert.equal(report.changes.length, DEFAULT_RUN_TARGETS.length);
+  assert.ok(report.elapsed >= 4.5 * 3600);
+  assert.ok(report.elapsed <= 7 * 3600);
+  assert.ok(
+    report.changes.every(
+      (change) =>
+        change.runDuration >= 30 * 60 &&
+        change.runDuration <= 2 * 3600,
+    ),
+  );
+  assert.equal(report.changes[0].highestInstrument, 2);
+  assert.ok(report.changes.at(-1).highestInstrument >= 5);
+});
+
+test("the optimal long game reveals every cycle without late runaway", () => {
+  const report = simulateProgression({
+    runTargets: Array.from(
+      { length: 32 },
+      (_, index) => 2 ** index,
+    ),
+  });
+  const eighthCycle = report.unlocks.find(
+    (unlock) => unlock.cycle === 8,
+  );
+
+  assert.equal(report.completed, true);
+  assert.ok(eighthCycle);
+  assert.ok(eighthCycle.seconds >= 40 * 3600);
+  assert.ok(eighthCycle.seconds <= 56 * 3600);
+  assert.ok(report.changes.at(-1).runDuration >= 45 * 60);
+  assert.ok(report.changes.at(-1).runDuration <= 2 * 3600);
 });
 
 test("invariant protocols create permanent strategic upgrades", () => {

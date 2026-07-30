@@ -16,8 +16,8 @@ linéaire des classes préparatoires MPSI et MP.
 - direction et longueur du vecteur u renouvelées à chaque forge, puis image
   f(u) animée selon une nouvelle direction lorsque l’application est active ;
 - Émetteur vectoriel, Chambre des bases et Transformateur linéaire ;
-- paliers de production ×2 à 10, 25 et 50 instruments, avec une première
-  progression calibrée jusqu’au changement de base ;
+- cinq modules achetables aux niveaux 5, 10, 25, 50 et 100, puis maîtrises
+  successives aux niveaux 200, 400, 800… et achats groupés 1, 10, 25 ou Max ;
 - résonance, maîtrise et changement de base avec aperçu des pertes, éléments
   conservés et multiplicateur obtenu ;
 - six principes permanents à renforcer avec les invariants : production
@@ -68,6 +68,9 @@ linéaire des classes préparatoires MPSI et MP.
 - navigation par onglets Réseau, Instruments, Anomalies et Atlas, avec barre
   inférieure sur téléphone et tablette en portrait ;
 - sauvegarde locale et gains hors ligne plafonnés à deux heures ;
+- progression simulée sur cinq changements de base et jusqu’au huitième cycle,
+  avec une résonance logarithmique des invariants qui évite l’emballement de
+  fin de partie ;
 - installation comme application sur Android et iOS, avec icônes dédiées et
   cache hors ligne ;
 - interface responsive pour ordinateur et téléphone.

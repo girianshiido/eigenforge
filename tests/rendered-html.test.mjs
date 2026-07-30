@@ -382,8 +382,12 @@ test("turns invariants into a permanent post-basis progression", async () => {
   assert.match(page, /buyProtocol/);
   assert.match(page, /protocols: previous\.protocols/);
   assert.match(page, /inheritedStructuralWorkshops/);
+  assert.match(page, /invariantProductionMultiplier/);
+  assert.match(page, /paliers cumulés 15, 31,/);
+  assert.doesNotMatch(page, /accordent chacun \+15 %/);
   assert.match(balance, /name: "Principe d’homogénéité"/);
   assert.match(balance, /name: "Base héritée"/);
+  assert.match(balance, /Math\.log2/);
   assert.match(styles, /\.protocol-grid/);
   assert.match(styles, /\.protocol-card/);
 });

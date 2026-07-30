@@ -11,6 +11,7 @@ import {
   instrumentBulkCost,
   instrumentCost,
   invariantGain,
+  invariantProductionMultiplier,
   invariantProtocolCost,
   legacyWorkshopModules,
   maxAffordableInstrumentQuantity,
@@ -466,7 +467,9 @@ function production(state: GameState) {
     state.instrumentModules,
     state.instrumentMasteries,
   );
-  const invariantMultiplier = 1 + state.totalInvariants * 0.15;
+  const invariantMultiplier = invariantProductionMultiplier(
+    state.totalInvariants,
+  );
   const masteryTotal =
     state.mastery.vectors + state.mastery.bases + state.mastery.applications;
   return (
@@ -486,7 +489,7 @@ function clickPower(state: GameState) {
     basisExtractionBonus *
     resonanceBonus *
     protocolManualMultiplier(state.protocols) *
-    (1 + state.totalInvariants * 0.15)
+    invariantProductionMultiplier(state.totalInvariants)
   );
 }
 
@@ -1039,9 +1042,12 @@ export default function Home() {
 
   const pendingInvariantGain = invariantGain(game.runTotal);
   const followingInvariantThreshold = nextInvariantThreshold(pendingInvariantGain);
-  const currentInvariantMultiplier = 1 + game.totalInvariants * 0.15;
-  const futureInvariantMultiplier =
-    1 + (game.totalInvariants + pendingInvariantGain) * 0.15;
+  const currentInvariantMultiplier = invariantProductionMultiplier(
+    game.totalInvariants,
+  );
+  const futureInvariantMultiplier = invariantProductionMultiplier(
+    game.totalInvariants + pendingInvariantGain,
+  );
   const instrumentCount = game.instruments.reduce((sum, count) => sum + count, 0);
   const unlockedSectorCount =
     1 +
@@ -2229,10 +2235,10 @@ export default function Home() {
             </div>
 
             <p className="basis-modal-note">
-              Les invariants accordent chacun +15 % à la production et à
-              l’émission. Ce bonus est permanent et ne sera pas perdu lors des
-              changements suivants, même lorsqu’un invariant est dépensé dans
-              un principe.
+              Les sept premiers invariants ajoutent chacun 15 % à la
+              production et à l’émission. Ensuite, les paliers cumulés 15, 31,
+              63… ajoutent chacun 20 % supplémentaires. Ce bonus permanent
+              demeure même lorsqu’un invariant est dépensé dans un principe.
             </p>
 
             <div className="basis-modal-actions">
