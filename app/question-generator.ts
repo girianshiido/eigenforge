@@ -1005,12 +1005,12 @@ export function imageQuestion(dimension: 2 | 3): Question {
     sector: "applications",
     eyebrow: "Image d’une application",
     prompt: "Quelle est l’image de f ?",
-    formula: `f : ${field} → ${field},   f(${variables.join(", ")}) = (${formatLinearExpression(linearForm)}) ${vector(direction)}`,
+    formula: `f : ${field} → ${field},   f(${variables.join(", ")}) = (${formatLinearExpression(linearForm)}) · ${columnVector(direction)}`,
     choices: choices(
       answer,
       wrongDirections.map((candidate) => `Vect(${vector(candidate)})`),
     ),
-    explanation: `Toutes les valeurs de f sont des multiples de ${vector(direction)}, et la forme linéaire placée devant prend toute valeur réelle. Donc Im(f) = ${answer}.`,
+    explanation: `Toutes les valeurs de f sont des multiples de ${columnVector(direction)}, et la forme linéaire placée devant prend toute valeur réelle. Donc Im(f) = ${answer}.`,
     geometry:
       "L’application écrase l’espace de départ sur une seule droite vectorielle.",
     trap:

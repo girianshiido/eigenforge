@@ -847,6 +847,7 @@ test("polynomial reduction covers annihilators, minimal polynomial, Cayley-Hamil
 test("image exercises genuinely determine images in dimensions two and three", () => {
   const templates = new Set();
   const answers = new Set();
+  let lineTemplateCount = 0;
 
   for (let index = 0; index < 500; index += 1) {
     const question = imageQuestion(index % 2 === 0 ? 2 : 3);
@@ -856,11 +857,17 @@ test("image exercises genuinely determine images in dimensions two and three", (
     templates.add(
       question.id.includes("CANONICAL") ? "canonical" : "line",
     );
+    if (question.id.includes("LINE")) {
+      lineTemplateCount += 1;
+      assert.match(question.formula, /\) · ⟪[^⟫]+⟫$/);
+      assert.doesNotMatch(question.formula, /\)\s+\([^)]/);
+    }
     answers.add(question.choices.find((choice) => choice.correct).text);
     assert.match(question.explanation, /Im\(f\)/);
   }
 
   assert.deepEqual(templates, new Set(["canonical", "line"]));
+  assert.ok(lineTemplateCount > 0);
   assert.ok(answers.size >= 20);
 });
 
