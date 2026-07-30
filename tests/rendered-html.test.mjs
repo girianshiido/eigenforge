@@ -65,6 +65,7 @@ test("renders the game shell and finished metadata", async () => {
   assert.match(html, /Architecture productive/);
   assert.match(html, /Anomalies mathématiques/);
   assert.match(html, /Maîtrise et invariants/);
+  assert.match(html, /E<sub class="math-subscript">λ<\/sub>/);
   assert.match(html, /F<sup class="math-superscript">⊥<\/sup>/);
   assert.match(html, /role="tablist"/);
   assert.match(html, /aria-controls="panel-network"/);
@@ -267,7 +268,7 @@ test("ships eight ordered workshop cycles through MPSI Euclidean foundations", a
   assert.match(page, /activeWorkshopChapter/);
   assert.match(page, /className=\{`reduction-sequence/);
   assert.match(page, />χA<\/span>/);
-  assert.match(page, />Eλ<\/span>/);
+  assert.match(page, /<MathExpression text="E_λ" \/>/);
   assert.match(page, /className=\{`polynomial-sequence/);
   assert.match(page, />P\(u\)<\/span>/);
   assert.match(page, />χ\(u\)<\/span>/);

@@ -290,7 +290,7 @@ export const INSTRUMENTS = [
   },
   {
     name: "Extracteur propre",
-    mark: "Eλ",
+    mark: "E_λ",
     description: "Isole les espaces propres et augmente de 2 % les récompenses des réponses justes.",
     chapter: "Réduction spectrale · MP",
     mission: "Extraire les espaces propres",

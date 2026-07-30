@@ -1221,7 +1221,9 @@ export default function Home() {
                 aria-label="Progression de la réduction spectrale"
               >
                 <span className={game.instruments[16] > 0 ? "active" : ""}>χA</span>
-                <span className={game.instruments[17] > 0 ? "active" : ""}>Eλ</span>
+                <span className={game.instruments[17] > 0 ? "active" : ""}>
+                  <MathExpression text="E_λ" />
+                </span>
                 <span className={game.instruments[18] > 0 ? "active" : ""}>D</span>
                 <span className={game.instruments[19] > 0 ? "active" : ""}>T</span>
               </div>
