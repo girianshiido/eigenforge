@@ -10,9 +10,9 @@ const STRUCTURED_MATH_PATTERN =
 const SQUARE_ROOT_PATTERN =
   /√(\{[^}]+\}|\([^)]*\)|[A-Za-z0-9]+(?:_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ]))?)/g;
 const INLINE_SCRIPT_PATTERN =
-  /_(\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])|([₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎]+)|([⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ᵀ]+)/g;
+  /_(\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])|([₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎]+)|([⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ᵀ]+)|\^(\{[^}]+\}|[A-Za-z0-9⊥λμ])/g;
 const ATOMIC_MATH_PATTERN =
-  /(?:[A-Zℬ]\s*=\s*\((?:[^()]|\([^()]*\))*\)|N_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])\s*=\s*Ker\((?:[^()]|\([^()]*\))*\)|(?:Vect|Ker|Im|det|dim|Sp)\((?:[^()]|\([^()]*\))*\)|[χπ]_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])(?:\([^)]*\))?|N_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ]))(?:\s*[?!.:,;])?/g;
+  /(?:[A-Zℬ]\s*=\s*\((?:[^()]|\([^()]*\))*\)|N_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])\s*=\s*Ker\((?:[^()]|\([^()]*\))*\)|(?:Vect|Ker|Im|det|dim|Sp)\((?:[^()]|\([^()]*\))*\)(?:\^\{[^}]+\})?|[χπ]_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])(?:\([^)]*\))?|N_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ]))(?:\s*[?!.:,;])?/g;
 const SUBSCRIPT_CHARACTERS: Record<string, string> = {
   "₀": "0",
   "₁": "1",
@@ -68,11 +68,11 @@ function ScriptedText({ source }: { source: string }) {
       parts.push(source.slice(previousEnd, start));
     }
 
-    if (match[3] !== undefined) {
-      const superscript = normalizeScript(
-        match[3],
-        SUPERSCRIPT_CHARACTERS,
-      );
+    if (match[3] !== undefined || match[4] !== undefined) {
+      const superscript =
+        match[4] !== undefined
+          ? match[4].replace(/^\{|\}$/g, "")
+          : normalizeScript(match[3], SUPERSCRIPT_CHARACTERS);
       parts.push(
         <sup
           className="math-superscript"

@@ -2460,13 +2460,13 @@ export function orthonormalizationQuestion(): Question {
     sector: "bases",
     eyebrow: "MPSI · Procédé de Gram–Schmidt",
     prompt: "Quel vecteur obtient-on après la première étape d’orthogonalisation de v par rapport à u ?",
-    formula: `u = ${vector([1, 1])}, v = ${vector(source)} et v⊥ = v − ${fraction("⟨v, u⟩", "⟨u, u⟩")}u`,
+    formula: `u = ${vector([1, 1])}, v = ${vector(source)} et v^{⊥} = v − ${fraction("⟨v, u⟩", "⟨u, u⟩")}u`,
     choices: choices(vector(result), [
       vector(source),
       vector([source[0] - 2 * coefficient, source[1] - 2 * coefficient]),
       vector([result[1], result[0]]),
     ]),
-    explanation: `Le coefficient de projection vaut ${fraction(firstCoordinate + secondCoordinate, 2)} = ${coefficient}. Ainsi v⊥ = ${vector(result)}, et ⟨v⊥, u⟩ = 0.`,
+    explanation: `Le coefficient de projection vaut ${fraction(firstCoordinate + secondCoordinate, 2)} = ${coefficient}. Ainsi v^{⊥} = ${vector(result)}, et ⟨v^{⊥}, u⟩ = 0.`,
     geometry:
       "Gram–Schmidt retire à v sa composante parallèle à u.",
     trap:
@@ -2486,14 +2486,14 @@ export function orthogonalComplementQuestion(spaceDimension = 2): Question {
         id: `E-ORTHO-COMPLEMENT-3-${Date.now()}-${randomInt(100, 999)}`,
         sector: "bases",
         eyebrow: "MPSI · Orthogonal d’un sous-espace",
-        prompt: "Quel vecteur non nul appartient à F⊥ ?",
+        prompt: "Quel vecteur non nul appartient à F^{⊥} ?",
         formula: `F = Vect(${vector(first)}, ${vector(second)})`,
         choices: choices(vector(normal), [
           vector(first),
           vector(second),
           vector(first.map((value, index) => value + second[index])),
         ]),
-        explanation: `Le vecteur ${vector(normal)} a un produit scalaire nul avec chacun des deux générateurs de F. Il appartient donc à F⊥.`,
+        explanation: `Le vecteur ${vector(normal)} a un produit scalaire nul avec chacun des deux générateurs de F. Il appartient donc à F^{⊥}.`,
         geometry:
           "L’orthogonal d’un plan de ℝ³ est la droite portée par un vecteur normal au plan.",
         trap:
@@ -2507,14 +2507,14 @@ export function orthogonalComplementQuestion(spaceDimension = 2): Question {
       id: `E-ORTHO-COMPLEMENT-2-${Date.now()}-${randomInt(100, 999)}`,
       sector: "bases",
       eyebrow: "MPSI · Orthogonal d’un sous-espace",
-      prompt: "Quel vecteur non nul appartient à F⊥ ?",
+      prompt: "Quel vecteur non nul appartient à F^{⊥} ?",
       formula: `F = Vect(${vector(generator)})`,
       choices: choices(vector(normal), [
         vector(generator),
         vector(normal.map((value, index) => value + generator[index])),
         vector(normal.map((value, index) => value - generator[index])),
       ]),
-      explanation: `Le produit scalaire de ${vector(generator)} et ${vector(normal)} vaut 0. Ce dernier vecteur appartient donc à F⊥.`,
+      explanation: `Le produit scalaire de ${vector(generator)} et ${vector(normal)} vaut 0. Ce dernier vecteur appartient donc à F^{⊥}.`,
       geometry:
         "Dans le plan, l’orthogonal d’une droite est la droite perpendiculaire.",
       trap:
@@ -2530,18 +2530,18 @@ export function orthogonalComplementQuestion(spaceDimension = 2): Question {
       id: `E-ORTHO-DIM-${ambient}-${subspace}-${Date.now()}-${randomInt(100, 999)}`,
       sector: "bases",
       eyebrow: "MPSI · Dimension de l’orthogonal",
-      prompt: "Quelle est la dimension de F⊥ ?",
+      prompt: "Quelle est la dimension de F^{⊥} ?",
       formula: `F est un sous-espace d’un espace euclidien E, dim(E) = ${ambient} et dim(F) = ${subspace}.`,
       choices: choices(`${result}`, [
         `${subspace}`,
         `${ambient}`,
         `${Math.abs(ambient - 2 * subspace)}`,
       ]),
-      explanation: `Dans un espace euclidien de dimension finie, dim(F) + dim(F⊥) = dim(E). Ainsi dim(F⊥) = ${ambient} − ${subspace} = ${result}.`,
+      explanation: `Dans un espace euclidien de dimension finie, dim(F) + dim(F^{⊥}) = dim(E). Ainsi dim(F^{⊥}) = ${ambient} − ${subspace} = ${result}.`,
       geometry:
-        "Les directions de F et celles de F⊥ se complètent pour former tout l’espace.",
+        "Les directions de F et celles de F^{⊥} se complètent pour former tout l’espace.",
       trap:
-        "F⊥ n’a pas en général la même dimension que F.",
+        "F^{⊥} n’a pas en général la même dimension que F.",
     };
   }
 
@@ -2580,7 +2580,7 @@ export function orthogonalComplementQuestion(spaceDimension = 2): Question {
     prompt: "Lequel de ces vecteurs est normal à l’hyperplan H ?",
     formula: `H = {(${coordinates.join(" ; ")}) ∈ ℝ${dimension} | ${equation} = 0}`,
     choices: choices(correct, normalDistractors),
-    explanation: `L’équation de H s’écrit ⟨${correct}, x⟩ = 0. Ainsi H = Vect(${correct})⊥ et ${correct} est un vecteur normal à H.`,
+    explanation: `L’équation de H s’écrit ⟨${correct}, x⟩ = 0. Ainsi H = Vect(${correct})^{⊥} et ${correct} est un vecteur normal à H.`,
     geometry:
       "Un hyperplan est l’ensemble des vecteurs orthogonaux à une direction normale.",
     trap:
@@ -2673,19 +2673,19 @@ export function projectionDistanceQuestion(spaceDimension = 2): Question {
       prompt: "Quelle propriété caractérise p_F(x), la projection orthogonale de x sur F ?",
       formula: "F est un sous-espace de dimension finie d’un espace euclidien E.",
       choices: choices(
-        "p_F(x) ∈ F et x − p_F(x) ∈ F⊥",
+        "p_F(x) ∈ F et x − p_F(x) ∈ F^{⊥}",
         [
-          "p_F(x) ∈ F⊥ et x − p_F(x) ∈ F",
+          "p_F(x) ∈ F^{⊥} et x − p_F(x) ∈ F",
           "p_F(x) = x pour tout x ∈ E",
           "p_F(x) est toujours le vecteur nul",
         ],
       ),
       explanation:
-        "La décomposition orthogonale x = p_F(x) + (x − p_F(x)) place la première composante dans F et la seconde dans F⊥.",
+        "La décomposition orthogonale x = p_F(x) + (x − p_F(x)) place la première composante dans F et la seconde dans F^{⊥}.",
       geometry:
         "Parmi tous les vecteurs de F, p_F(x) est l’unique plus proche de x.",
       trap:
-        "La projection appartient à F ; c’est le résidu qui appartient à F⊥.",
+        "La projection appartient à F ; c’est le résidu qui appartient à F^{⊥}.",
     };
   }
 
@@ -3055,7 +3055,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     program: "MPSI",
     minInstrument: 30,
     label: "Orthogonal et hyperplans",
-    description: "Déterminer F⊥, sa dimension et une direction normale à un hyperplan.",
+    description: "Déterminer F^{⊥}, sa dimension et une direction normale à un hyperplan.",
     generate: (spaceDimension) => orthogonalComplementQuestion(spaceDimension),
   },
   {

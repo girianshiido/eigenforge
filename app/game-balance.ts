@@ -433,7 +433,7 @@ export const INSTRUMENTS = [
   },
   {
     name: "Chambre orthogonale",
-    mark: "F⊥",
+    mark: "F^{⊥}",
     description: "Isole les directions orthogonales à F et réduit de 1 % le prix de tous les ateliers.",
     chapter: "Fondations euclidiennes · MPSI",
     mission: "Déployer l’orthogonal",

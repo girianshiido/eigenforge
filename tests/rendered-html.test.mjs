@@ -65,6 +65,7 @@ test("renders the game shell and finished metadata", async () => {
   assert.match(html, /Architecture productive/);
   assert.match(html, /Anomalies mathématiques/);
   assert.match(html, /Maîtrise et invariants/);
+  assert.match(html, /F<sup class="math-superscript">⊥<\/sup>/);
   assert.match(html, /role="tablist"/);
   assert.match(html, /aria-controls="panel-network"/);
   assert.match(html, /aria-controls="panel-instruments"/);
@@ -275,7 +276,7 @@ test("ships eight ordered workshop cycles through MPSI Euclidean foundations", a
   assert.match(page, />PDPᵀ<\/span>/);
   assert.match(page, /className=\{`geometry-sequence/);
   assert.match(page, />⟨·,·⟩<\/span>/);
-  assert.match(page, />F⊥<\/span>/);
+  assert.match(page, /<MathExpression text="F\^\{⊥\}" \/>/);
   assert.match(styles, /grid-template-columns: repeat\(8/);
   assert.match(styles, /\.reduction-sequence/);
   assert.match(styles, /\.polynomial-sequence/);
@@ -323,6 +324,9 @@ test("renders matrices as responsive grids instead of flattened text", async () 
   assert.match(renderer, /\(\?:\\s\*\[\?\!\.\:\,\;\]\)\?/);
   assert.match(renderer, /SUPERSCRIPT_CHARACTERS/);
   assert.match(renderer, /"ᵀ": "T"/);
+  assert.match(renderer, /\\\^\(\\\{\[\^\}\]\+\\\}/);
+  assert.match(questions, /F\^\{⊥\}/);
+  assert.doesNotMatch(questions, /F⊥|\)⊥|v⊥/);
   assert.match(renderer, /rawSubscript\.replace\("-", "−"\)/);
   assert.match(renderer, /Vecteur colonne/);
   assert.match(renderer, /<ScriptedText source=\{coordinate\} \/>/);

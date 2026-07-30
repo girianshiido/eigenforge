@@ -1249,7 +1249,9 @@ export default function Home() {
               >
                 <span className={game.instruments[28] > 0 ? "active" : ""}>⟨·,·⟩</span>
                 <span className={game.instruments[29] > 0 ? "active" : ""}>ON</span>
-                <span className={game.instruments[30] > 0 ? "active" : ""}>F⊥</span>
+                <span className={game.instruments[30] > 0 ? "active" : ""}>
+                  <MathExpression text="F^{⊥}" />
+                </span>
                 <span className={game.instruments[31] > 0 ? "active" : ""}>pF</span>
               </div>
               <div
