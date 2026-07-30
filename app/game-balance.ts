@@ -459,6 +459,52 @@ export function instrumentCost(index: number, owned: number) {
   return Math.ceil(INSTRUMENTS[index].baseCost * Math.pow(1.18, owned));
 }
 
+export function instrumentBulkCost(
+  index: number,
+  owned: number,
+  quantity: number,
+  costMultiplier = 1,
+) {
+  const safeQuantity = Math.max(0, Math.floor(quantity));
+  let total = 0;
+  for (let offset = 0; offset < safeQuantity; offset += 1) {
+    const unitCost = Math.ceil(
+      instrumentCost(index, owned + offset) * costMultiplier,
+    );
+    if (!Number.isFinite(unitCost) || total > Number.MAX_VALUE - unitCost) {
+      return Number.POSITIVE_INFINITY;
+    }
+    total += unitCost;
+  }
+  return total;
+}
+
+export function maxAffordableInstrumentQuantity(
+  index: number,
+  owned: number,
+  budget: number,
+  costMultiplier = 1,
+) {
+  if (Number.isNaN(budget) || budget < 0) return 0;
+  let quantity = 0;
+  let spent = 0;
+  while (quantity < 10_000) {
+    const unitCost = Math.ceil(
+      instrumentCost(index, owned + quantity) * costMultiplier,
+    );
+    if (
+      !Number.isFinite(unitCost) ||
+      !Number.isFinite(spent + unitCost) ||
+      unitCost > budget - spent
+    ) {
+      break;
+    }
+    spent += unitCost;
+    quantity += 1;
+  }
+  return quantity;
+}
+
 export function workshopModuleCost(index: number, moduleIndex: number) {
   const module = WORKSHOP_MODULES[moduleIndex];
   if (!module) return Number.POSITIVE_INFINITY;

@@ -118,6 +118,9 @@ test("turns workshop milestones into compact purchased modules and infinite mast
   assert.match(page, /instrumentMasteries: number\[\]/);
   assert.match(page, /buyWorkshopModule/);
   assert.match(page, /buyWorkshopMastery/);
+  assert.match(page, /PURCHASE_AMOUNTS.*\[1, 10, 25, "max"\]/);
+  assert.match(page, /maxAffordableWorkshopQuantity/);
+  assert.match(page, /className="purchase-amount-control"/);
   assert.match(page, /className="module-pips"/);
   assert.match(page, /className=\{`upgrade-toggle/);
   assert.match(page, /className=\{`workshop-mastery-row/);

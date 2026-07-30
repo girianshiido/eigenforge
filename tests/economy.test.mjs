@@ -8,11 +8,13 @@ import {
   basePassiveProduction,
   correctAnomalyRewardMultiplier,
   inheritedStructuralWorkshops,
+  instrumentBulkCost,
   instrumentCost,
   invariantGain,
   invariantProtocolCost,
   legacyWorkshopModules,
   matrixWorkshopCostMultiplier,
+  maxAffordableInstrumentQuantity,
   nextInvariantThreshold,
   protocolAnomalyMultiplier,
   protocolManualMultiplier,
@@ -27,6 +29,49 @@ import {
   workshopModuleMultiplier,
   workshopOutput,
 } from "../app/game-balance.ts";
+
+test("grouped workshop purchases charge every forged unit exactly", () => {
+  const multiplier = 0.83;
+  const expected = Array.from(
+    { length: 25 },
+    (_, offset) => Math.ceil(instrumentCost(0, 37 + offset) * multiplier),
+  ).reduce((sum, cost) => sum + cost, 0);
+
+  assert.equal(instrumentBulkCost(0, 37, 25, multiplier), expected);
+  assert.equal(
+    maxAffordableInstrumentQuantity(0, 37, expected, multiplier),
+    25,
+  );
+  assert.equal(
+    maxAffordableInstrumentQuantity(
+      0,
+      37,
+      expected +
+        Math.ceil(instrumentCost(0, 62) * multiplier) -
+        1,
+      multiplier,
+    ),
+    25,
+  );
+  assert.equal(instrumentBulkCost(0, 37, 0, multiplier), 0);
+  const infiniteBudgetQuantity = maxAffordableInstrumentQuantity(
+    0,
+    37,
+    Number.POSITIVE_INFINITY,
+    multiplier,
+  );
+  assert.ok(infiniteBudgetQuantity > 25);
+  assert.ok(
+    Number.isFinite(
+      instrumentBulkCost(
+        0,
+        37,
+        infiniteBudgetQuantity,
+        multiplier,
+      ),
+    ),
+  );
+});
 
 test("workshop levels unlock five purchased modules instead of automatic milestones", () => {
   assert.deepEqual(

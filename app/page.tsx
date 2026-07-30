@@ -8,10 +8,12 @@ import {
   basePassiveProduction,
   correctAnomalyRewardMultiplier,
   inheritedStructuralWorkshops,
+  instrumentBulkCost,
   instrumentCost,
   invariantGain,
   invariantProtocolCost,
   legacyWorkshopModules,
+  maxAffordableInstrumentQuantity,
   matrixWorkshopCostMultiplier,
   nextInvariantThreshold,
   protocolAnomalyMultiplier,
@@ -34,6 +36,7 @@ import { useInteractionGuards } from "./use-interaction-guards";
 
 type Sector = "vectors" | "bases" | "applications" | "matrices";
 type GameTab = "network" | "instruments" | "anomalies" | "atlas";
+type PurchaseAmount = 1 | 10 | 25 | "max";
 
 type GameState = {
   coordinates: number;
@@ -122,6 +125,7 @@ const GAME_TABS: Array<{
 const WORKSHOP_CHAPTERS = Array.from(
   new Set(INSTRUMENTS.map((instrument) => instrument.chapter)),
 );
+const PURCHASE_AMOUNTS: PurchaseAmount[] = [1, 10, 25, "max"];
 
 function randomInt(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -487,10 +491,35 @@ function clickPower(state: GameState) {
 }
 
 function workshopCost(state: GameState, index: number) {
-  return Math.ceil(
-    instrumentCost(index, state.instruments[index]) *
-      protocolWorkshopCostMultiplier(state.protocols) *
-      matrixWorkshopCostMultiplier(state.instruments),
+  return workshopBulkCost(state, index, 1);
+}
+
+function workshopCostFactor(state: GameState) {
+  return (
+    protocolWorkshopCostMultiplier(state.protocols) *
+    matrixWorkshopCostMultiplier(state.instruments)
+  );
+}
+
+function workshopBulkCost(
+  state: GameState,
+  index: number,
+  quantity: number,
+) {
+  return instrumentBulkCost(
+    index,
+    state.instruments[index],
+    quantity,
+    workshopCostFactor(state),
+  );
+}
+
+function maxAffordableWorkshopQuantity(state: GameState, index: number) {
+  return maxAffordableInstrumentQuantity(
+    index,
+    state.instruments[index],
+    state.coordinates,
+    workshopCostFactor(state),
   );
 }
 
@@ -642,6 +671,8 @@ export default function Home() {
   const [expandedWorkshop, setExpandedWorkshop] = useState<number | null>(
     null,
   );
+  const [purchaseAmount, setPurchaseAmount] =
+    useState<PurchaseAmount>(1);
   const [emitBurst, setEmitBurst] = useState(0);
   const [isEmitting, setIsEmitting] = useState(false);
   const [emittedVector, setEmittedVector] =
@@ -808,12 +839,17 @@ export default function Home() {
     });
   }
 
-  function buyInstrument(index: number) {
+  function buyInstrument(index: number, requestedAmount: PurchaseAmount) {
     setGame((previous) => {
-      const cost = workshopCost(previous, index);
+      const quantity =
+        requestedAmount === "max"
+          ? maxAffordableWorkshopQuantity(previous, index)
+          : requestedAmount;
+      const cost = workshopBulkCost(previous, index, quantity);
       const prerequisiteOwned =
         index === 0 || (previous.instruments[index - 1] ?? 0) > 0;
       if (
+        quantity < 1 ||
         previous.coordinates < cost ||
         previous.allTime < INSTRUMENTS[index].unlock ||
         !prerequisiteOwned
@@ -821,7 +857,7 @@ export default function Home() {
         return previous;
       }
       const instruments = [...previous.instruments];
-      instruments[index] += 1;
+      instruments[index] += quantity;
       return { ...previous, coordinates: previous.coordinates - cost, instruments };
     });
   }
@@ -1396,7 +1432,22 @@ export default function Home() {
               <p className="section-number">II · Instruments</p>
               <h2>Architecture productive</h2>
             </div>
-            <span className="status-dot">Actif</span>
+            <div className="purchase-amount-control">
+              <span>Quantité</span>
+              <div role="group" aria-label="Quantité d’unités à forger">
+                {PURCHASE_AMOUNTS.map((amount) => (
+                  <button
+                    type="button"
+                    className={purchaseAmount === amount ? "active" : ""}
+                    aria-pressed={purchaseAmount === amount}
+                    onClick={() => setPurchaseAmount(amount)}
+                    key={amount}
+                  >
+                    {amount === "max" ? "Max" : amount}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           <nav
@@ -1477,8 +1528,21 @@ export default function Home() {
                       const progressUnlocked = game.allTime >= instrument.unlock;
                       const unlocked = prerequisiteOwned && progressUnlocked;
                       const count = game.instruments[index] ?? 0;
-                      const cost = workshopCost(game, index);
-                      const affordable = game.coordinates >= cost;
+                      const purchaseQuantity =
+                        purchaseAmount === "max"
+                          ? maxAffordableWorkshopQuantity(game, index)
+                          : purchaseAmount;
+                      const cost =
+                        purchaseQuantity > 0
+                          ? workshopBulkCost(
+                              game,
+                              index,
+                              purchaseQuantity,
+                            )
+                          : workshopCost(game, index);
+                      const affordable =
+                        purchaseQuantity > 0 &&
+                        game.coordinates >= cost;
                       const modules =
                         game.instrumentModules[index] ??
                         WORKSHOP_MODULES.map(() => 0);
@@ -1585,14 +1649,24 @@ export default function Home() {
                               <button
                                 className={`workshop-buy ${unlocked && affordable ? "ready" : ""}`}
                                 type="button"
-                                onClick={() => buyInstrument(index)}
+                                onClick={() =>
+                                  buyInstrument(index, purchaseAmount)
+                                }
                                 disabled={!unlocked || !affordable}
-                                aria-label={`Construire ${instrument.name} pour ${formatNumber(cost)} coordonnées`}
+                                aria-label={
+                                  purchaseQuantity > 0
+                                    ? `Construire ${purchaseQuantity} unité${purchaseQuantity > 1 ? "s" : ""} de ${instrument.name} pour ${formatNumber(cost)} coordonnées`
+                                    : `Coordonnées insuffisantes pour construire une unité de ${instrument.name}`
+                                }
                               >
                                 <span className="workshop-buy-copy">
                                   <small>
                                     {unlocked
-                                      ? "Forger une unité"
+                                      ? purchaseAmount === "max"
+                                        ? purchaseQuantity > 0
+                                          ? `Forger ${purchaseQuantity} unité${purchaseQuantity > 1 ? "s" : ""}`
+                                          : "Forger au maximum"
+                                        : `Forger ${purchaseQuantity === 1 ? "une" : purchaseQuantity} unité${purchaseQuantity > 1 ? "s" : ""}`
                                       : prerequisiteOwned
                                         ? "Atelier verrouillé"
                                         : "Prérequis manquant"}
