@@ -217,7 +217,7 @@ test("keeps the network diagram consistent with its displayed dimension", async 
   assert.match(styles, /width: var\(--map-length\)/);
 });
 
-test("ships eight ordered workshop cycles through MPSI Euclidean foundations", async () => {
+test("ships seventeen ordered workshop cycles from MPSI foundations to MP reduction", async () => {
   const balance = await readFile(
     new URL("../app/game-balance.ts", import.meta.url),
     "utf8",
@@ -231,44 +231,36 @@ test("ships eight ordered workshop cycles through MPSI Euclidean foundations", a
     "utf8",
   );
 
-  assert.match(balance, /name: "Transformateur linéaire"/);
-  assert.match(balance, /name: "Chambre du noyau"/);
-  assert.match(balance, /name: "Forge de l’image"/);
-  assert.match(balance, /name: "Balance du rang"/);
-  assert.match(balance, /chapter: "Applications linéaires"/);
-  assert.match(balance, /name: "Encodeur matriciel"/);
-  assert.match(balance, /name: "Composeur matriciel"/);
-  assert.match(balance, /name: "Inverseur de Gauss"/);
-  assert.match(balance, /name: "Chambre spectrale"/);
-  assert.match(balance, /Ouvre la partie MP/);
-  assert.match(balance, /chapter: "Matrices et réduction"/);
-  assert.match(balance, /name: "Traceur caractéristique"/);
-  assert.match(balance, /name: "Extracteur propre"/);
-  assert.match(balance, /name: "Diagonaliseur"/);
-  assert.match(balance, /name: "Trigonaliseur"/);
-  assert.match(balance, /chapter: "Réduction spectrale · MP"/);
-  assert.match(balance, /name: "Évaluateur polynomial"/);
-  assert.match(balance, /name: "Extracteur minimal"/);
-  assert.match(balance, /name: "Forge de Cayley-Hamilton"/);
-  assert.match(balance, /name: "Décomposeur caractéristique"/);
-  assert.match(balance, /chapter: "Calcul polynomial · MP"/);
-  assert.match(balance, /name: "Chambre adjointe"/);
-  assert.match(balance, /name: "Symétriseur spectral"/);
-  assert.match(balance, /name: "Diagonaliseur orthogonal"/);
-  assert.match(balance, /name: "Analyseur de positivité"/);
-  assert.match(balance, /chapter: "Réduction euclidienne · MP"/);
-  assert.match(balance, /name: "Accordeur scalaire"/);
-  assert.match(balance, /name: "Orthogonalisateur de Schmidt"/);
-  assert.match(balance, /name: "Chambre orthogonale"/);
-  assert.match(balance, /name: "Projecteur métrique"/);
-  assert.match(balance, /chapter: "Fondations euclidiennes · MPSI"/);
+  assert.match(balance, /const WORKSHOP_CYCLE_SEEDS/);
+  assert.match(balance, /id: "space-construction"/);
+  assert.match(balance, /title: "Applications linéaires"/);
+  assert.match(
+    balance,
+    /workshop\("linear-transformer", "Transformateur linéaire"/,
+  );
+  assert.match(balance, /workshop\("matrix-encoder", "Encodeur matriciel"/);
+  assert.match(balance, /title: "Fondations euclidiennes · MPSI"/);
+  assert.match(balance, /title: "Sous-espaces stables et blocs · MP"/);
+  assert.match(balance, /workshop\("spectral-chamber", "Chambre spectrale"/);
+  assert.match(balance, /title: "Calcul polynomial · MP"/);
+  assert.match(balance, /title: "Réduction euclidienne · MP"/);
+  assert.match(balance, /export const WORKSHOP_CYCLES/);
   assert.match(balance, /resonanceDecayRate/);
   assert.match(balance, /correctAnomalyRewardMultiplier/);
   assert.match(page, /const WORKSHOP_CHAPTERS/);
-  assert.match(page, /game\.instruments\[8\] > 0/);
-  assert.match(page, /game\.instruments\[12\] > 0/);
+  assert.match(
+    page,
+    /instrumentLevel\(game\.instruments, "linear-transformer"\) > 0/,
+  );
+  assert.match(
+    page,
+    /instrumentLevel\(game\.instruments, "matrix-encoder"\) > 0/,
+  );
   assert.match(page, /workshop-cycle-navigation/);
-  assert.match(page, /Balayez pour parcourir les 8 cycles/);
+  assert.match(
+    page,
+    /Balayez pour parcourir les \{WORKSHOP_CYCLES\.length\} cycles/,
+  );
   assert.match(page, /activeWorkshopChapter/);
   assert.match(page, /className=\{`reduction-sequence/);
   assert.match(page, />χA<\/span>/);
@@ -283,7 +275,10 @@ test("ships eight ordered workshop cycles through MPSI Euclidean foundations", a
   assert.match(page, /className=\{`geometry-sequence/);
   assert.match(page, />⟨·,·⟩<\/span>/);
   assert.match(page, /<MathExpression text="F\^\{⊥\}" \/>/);
-  assert.match(styles, /grid-template-columns: repeat\(8/);
+  assert.match(
+    styles,
+    /grid-template-columns: repeat\(auto-fit, minmax\(140px, 1fr\)\)/,
+  );
   assert.match(styles, /\.reduction-sequence/);
   assert.match(styles, /\.polynomial-sequence/);
   assert.match(styles, /\.euclidean-sequence/);
@@ -393,6 +388,22 @@ test("turns invariants into a permanent post-basis progression", async () => {
   assert.match(balance, /Math\.log2/);
   assert.match(styles, /\.protocol-grid/);
   assert.match(styles, /\.protocol-card/);
+});
+
+test("starts the restructured curriculum from a clean versioned save", async () => {
+  const page = await readFile(
+    new URL("../app/page.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(page, /const LEGACY_SAVE_KEY = "reseau-des-espaces-v1"/);
+  assert.match(page, /const SAVE_KEY = "eigenforge-v2"/);
+  assert.match(page, /saveVersion: 2/);
+  assert.match(
+    page,
+    /instrumentIds: INSTRUMENTS\.map\(\(instrument\) => instrument\.id\)/,
+  );
+  assert.match(page, /window\.localStorage\.removeItem\(LEGACY_SAVE_KEY\)/);
 });
 
 test("keeps vertical scrolling while blocking selection and zoom gestures", async () => {

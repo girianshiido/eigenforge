@@ -7,15 +7,16 @@ linéaire des classes préparatoires MPSI et MP.
 
 - production manuelle et automatique de coordonnées ;
 - bouton d’émission animé avec impulsion, onde et réponse tactile ;
-- carte mathématique progressive : ressource brute en dimension 0, direction
-  portée par \(u\) avec l’Émetteur, puis base \(B=(u,v)\) avec la Chambre ;
+- carte mathématique progressive : ressource brute en dimension 0, puis base
+  \(B=(e_1,\ldots,e_n)\) enrichie à chaque atelier dimensionnel ;
 - animations lentes des directions, du plan et des grilles, avec un champ
   circulaire conservant ses proportions sur ordinateur et téléphone ;
 - projection distincte des quatre vecteurs de la base, avec e₄ représenté en
   pointillés pour rappeler la limite d’une projection plane ;
-- direction et longueur du vecteur u renouvelées à chaque forge, puis image
-  f(u) animée selon une nouvelle direction lorsque l’application est active ;
-- Émetteur vectoriel, Chambre des bases et Transformateur linéaire ;
+- direction et longueur du vecteur forgé renouvelées à chaque émission, puis
+  image animée selon une nouvelle direction lorsque l’application est active ;
+- soixante-huit ateliers répartis en dix-sept cycles pédagogiques de quatre
+  ateliers ;
 - cinq modules achetables aux niveaux 5, 10, 25, 50 et 100, puis maîtrises
   successives aux niveaux 200, 400, 800… et achats groupés 1, 10, 25 ou Max ;
 - résonance, maîtrise et changement de base avec aperçu des pertes, éléments
@@ -23,21 +24,13 @@ linéaire des classes préparatoires MPSI et MP.
 - six principes permanents à renforcer avec les invariants : production
   manuelle ou passive, prix des ateliers, résonance, anomalies et héritage
   d’ateliers dimensionnels entre deux cycles ;
-- quatrième cycle « Matrices et réduction » portant la forge à seize ateliers,
-  avec encodage, produit, inversibilité et spectre ;
-- cinquième cycle « Réduction spectrale · MP » portant la forge à vingt
-  ateliers : polynôme caractéristique, espaces propres, diagonalisation et
-  trigonalisation ;
-- sixième cycle « Calcul polynomial · MP » portant la forge à vingt-quatre
-  ateliers : polynômes annulateurs, polynôme minimal, théorème de
-  Cayley-Hamilton et sous-espaces caractéristiques ;
-- septième cycle « Réduction euclidienne · MP » portant la forge à vingt-huit
-  ateliers : adjoints, endomorphismes autoadjoints, théorème spectral,
-  diagonalisation orthogonale et positivité des matrices symétriques ;
-- huitième cycle « Fondations euclidiennes · MPSI » portant la forge à
-  trente-deux ateliers : produit scalaire, norme, distance, inégalité de
-  Cauchy–Schwarz, orthogonalisation de Gram–Schmidt, complément orthogonal,
-  hyperplans, projections orthogonales et meilleure approximation ;
+- onze cycles MPSI : construction de l’espace, familles et bases, sous-espaces,
+  applications linéaires, endomorphismes, formes et affine, représentations
+  matricielles, systèmes et Gauss, changements de bases, déterminants puis
+  fondations euclidiennes ;
+- six cycles MP placés après ce socle : sous-espaces stables et blocs, éléments
+  propres, réduction matricielle, calcul polynomial, matrices orthogonales et
+  isométries, puis réduction euclidienne ;
 - matrices 2×2 à 5×5 rendues comme de vraies grilles responsives dans les
   énoncés, les réponses et les corrections ;
 - notation contextuelle des vecteurs : tuples compacts pour les coordonnées,
@@ -67,10 +60,10 @@ linéaire des classes préparatoires MPSI et MP.
 - corrections avec méthode, interprétation géométrique et erreur fréquente ;
 - navigation par onglets Réseau, Instruments, Anomalies et Atlas, avec barre
   inférieure sur téléphone et tablette en portrait ;
-- sauvegarde locale et gains hors ligne plafonnés à deux heures ;
-- progression simulée sur cinq changements de base et jusqu’au huitième cycle,
-  avec une résonance logarithmique des invariants qui évite l’emballement de
-  fin de partie ;
+- sauvegarde locale versionnée et gains hors ligne plafonnés à deux heures ;
+- progression simulée jusqu’au dix-septième cycle, atteint autour de 34 heures
+  dans le modèle actif, avec une croissance de production légèrement plus
+  lente que celle des coûts pour limiter l’emballement de fin de partie ;
 - installation comme application sur Android et iOS, avec icônes dédiées et
   cache hors ligne ;
 - interface responsive pour ordinateur et téléphone.

@@ -9,7 +9,7 @@ import {
   basisChangeGain,
   correctAnomalyRewardMultiplier,
   inheritedStructuralWorkshops,
-  instrumentCost,
+  instrumentBulkCost,
   invariantProductionMultiplier,
   invariantProtocolCost,
   matrixWorkshopCostMultiplier,
@@ -89,9 +89,9 @@ function totalRate(state) {
 function actionProductionDelta(state, action) {
   const before = passiveRate(state);
   if (action.type === "instrument") {
-    state.instruments[action.index] += 1;
+    state.instruments[action.index] += action.quantity;
     const after = passiveRate(state);
-    state.instruments[action.index] -= 1;
+    state.instruments[action.index] -= action.quantity;
     return after - before;
   }
   if (action.type === "module") {
@@ -117,11 +117,26 @@ function availableActions(state) {
       prerequisiteOwned &&
       state.allTime >= INSTRUMENTS[index].unlock
     ) {
+      const currentLevel = state.instruments[index];
+      const quantity =
+        currentLevel < 5
+          ? 1
+          : currentLevel < 25
+            ? 10
+            : currentLevel < 100
+              ? 25
+              : currentLevel < 1_000
+                ? 100
+                : 1_000;
       actions.push({
         type: "instrument",
         index,
-        cost: Math.ceil(
-          instrumentCost(index, state.instruments[index]) * factor,
+        quantity,
+        cost: instrumentBulkCost(
+          index,
+          currentLevel,
+          quantity,
+          factor,
         ),
       });
     }
@@ -168,7 +183,7 @@ function applyAction(state, action, unlocks) {
   state.coordinates -= action.cost;
   if (action.type === "instrument") {
     const wasUnbuilt = state.instruments[action.index] === 0;
-    state.instruments[action.index] += 1;
+    state.instruments[action.index] += action.quantity;
     if (wasUnbuilt) {
       unlocks.push({
         instrument: action.index,
@@ -309,8 +324,22 @@ export function simulateProgression({
           left.cost / left.productionDelta -
           right.cost / right.productionDelta,
       );
-    if (affordable.length > 0) {
-      applyAction(state, affordable[0], unlocks);
+    const firstWorkshop = affordable.find(
+      (action) =>
+        action.type === "instrument" &&
+        state.instruments[action.index] === 0,
+    );
+    const bestInvestment = affordable[0];
+    const secondsToTargetAtCurrentRate =
+      Math.max(0, targetTotal - state.runTotal) / totalRate(state);
+    const paysBackDuringRun =
+      bestInvestment &&
+      bestInvestment.cost / bestInvestment.productionDelta <=
+        Math.max(60, secondsToTargetAtCurrentRate * 0.8);
+    const chosenAction =
+      firstWorkshop ?? (paysBackDuringRun ? bestInvestment : null);
+    if (chosenAction) {
+      applyAction(state, chosenAction, unlocks);
       actionCount += 1;
       continue;
     }
@@ -318,7 +347,11 @@ export function simulateProgression({
     const rate = totalRate(state);
     if (!(rate > 0) || !Number.isFinite(rate)) break;
     const nextCost = actions
-      .filter((action) => action.productionDelta > 0)
+      .filter(
+        (action) =>
+          action.productionDelta > 0 &&
+          action.cost > state.coordinates,
+      )
       .reduce(
         (minimum, action) => Math.min(minimum, action.cost),
         Number.POSITIVE_INFINITY,

@@ -43,11 +43,6 @@ export const WORKSHOP_MODULES = [
 ] as const;
 export const FIRST_MASTERY_THRESHOLD = 200;
 export const STRUCTURAL_WORKSHOP_COUNT = 4;
-export const MATRIX_WORKSHOP_START = 12;
-export const REDUCTION_WORKSHOP_START = 16;
-export const POLYNOMIAL_WORKSHOP_START = 20;
-export const EUCLIDEAN_WORKSHOP_START = 24;
-export const GEOMETRY_WORKSHOP_START = 28;
 
 export const INVARIANT_PROTOCOLS = [
   {
@@ -100,359 +95,307 @@ export const INVARIANT_PROTOCOLS = [
   },
 ] as const;
 
-export const INSTRUMENTS = [
+type WorkshopProgram = "MPSI" | "MP";
+
+type WorkshopSeed = {
+  id: string;
+  name: string;
+  mark: string;
+  description: string;
+  mission: string;
+  sector: string;
+};
+
+type WorkshopCycleSeed = {
+  id: string;
+  title: string;
+  program: WorkshopProgram;
+  workshops: WorkshopSeed[];
+};
+
+function workshop(
+  id: string,
+  name: string,
+  mark: string,
+  description: string,
+  mission: string,
+  sector: string,
+): WorkshopSeed {
+  return { id, name, mark, description, mission, sector };
+}
+
+const WORKSHOP_CYCLE_SEEDS: WorkshopCycleSeed[] = [
   {
-    name: "Générateur axial",
-    mark: "e₁",
-    description: "Forge e₁. Les unités suivantes densifient le flux de coordonnées sur cet axe.",
-    chapter: "Construction de l’espace",
-    mission: "Forger e₁",
-    baseCost: 24,
-    baseProduction: 0.5,
-    unlock: 0,
-    sector: "Dimension I",
+    id: "space-construction",
+    title: "Construction de l’espace",
+    program: "MPSI",
+    workshops: [
+      workshop("axis-generator", "Générateur axial", "e₁", "Forge e₁. Les unités suivantes densifient le flux sur cet axe.", "Forger e₁", "Dimension I"),
+      workshop("plane-deployer", "Déployeur planaire", "e₂", "Ajoute e₂, indépendante de e₁, et ouvre le plan vectoriel.", "Déployer le plan", "Dimension II"),
+      workshop("spatial-forge", "Forge spatiale", "e₃", "Ajoute e₃ à la base et déploie une projection de l’espace.", "Ouvrir la troisième dimension", "Dimension III"),
+      workshop("dimension-extension", "Extension dimensionnelle", "e₄", "Ajoute e₄ tandis que la carte conserve une projection lisible.", "Dépasser la projection", "Dimension IV"),
+    ],
   },
   {
-    name: "Déployeur planaire",
-    mark: "e₂",
-    description: "Ajoute e₂, indépendante de e₁, et ouvre le plan vectoriel.",
-    chapter: "Construction de l’espace",
-    mission: "Déployer le plan",
-    baseCost: 350,
-    baseProduction: 3.2,
-    unlock: 400,
-    sector: "Dimension II",
+    id: "families-dimension",
+    title: "Familles, bases et dimension",
+    program: "MPSI",
+    workshops: [
+      workshop("family-assembler", "Assembleur de familles", "F", "Regroupe les vecteurs en familles et amplifie les forges directionnelles.", "Assembler une famille", "Familles"),
+      workshop("freedom-tester", "Testeur de liberté", "L", "Écarte les dépendances et renforce la production des familles.", "Détecter les dépendances", "Liberté"),
+      workshop("basis-extractor", "Extracteur de bases", "B", "Extrait une base d’une famille génératrice et renforce l’émission manuelle.", "Extraire une base", "Bases"),
+      workshop("rank-compressor", "Compresseur de rang", "rg", "Condense le nombre de directions indépendantes du réseau.", "Stabiliser le rang", "Rang"),
+    ],
   },
   {
-    name: "Forge spatiale",
-    mark: "e₃",
-    description: "Ajoute e₃ à la base et déploie la première projection de l’espace.",
-    chapter: "Construction de l’espace",
-    mission: "Ouvrir la troisième dimension",
-    baseCost: 12_000,
-    baseProduction: 16,
-    unlock: 15_000,
-    sector: "Dimension III",
+    id: "subspaces-sums",
+    title: "Sous-espaces et sommes directes",
+    program: "MPSI",
+    workshops: [
+      workshop("subspace-generator", "Générateur de sous-espaces", "Vect", "Engendre le plus petit sous-espace contenant une famille donnée.", "Engendrer un sous-espace", "Sous-espaces"),
+      workshop("intersection-chamber", "Chambre d’intersection", "F∩G", "Isole les directions communes à plusieurs sous-espaces.", "Croiser deux sous-espaces", "Intersection"),
+      workshop("direct-sum-splitter", "Séparateur de somme directe", "F⊕G", "Décompose chaque vecteur en composantes indépendantes et uniques.", "Rendre la somme directe", "Somme directe"),
+      workshop("grassmann-balancer", "Balance de Grassmann", "dim", "Équilibre dimensions, intersections et sous-espaces supplémentaires.", "Équilibrer les dimensions", "Grassmann"),
+    ],
   },
   {
-    name: "Extension dimensionnelle",
-    mark: "e₄",
-    description: "Ajoute e₄. La carte conserve une projection des trois premières directions.",
-    chapter: "Construction de l’espace",
-    mission: "Dépasser la projection",
-    baseCost: 75_000,
-    baseProduction: 72,
-    unlock: 80_000,
-    sector: "Dimension IV",
+    id: "linear-maps",
+    title: "Applications linéaires",
+    program: "MPSI",
+    workshops: [
+      workshop("linear-transformer", "Transformateur linéaire", "f", "Applique f au réseau et réinjecte une part de la production des familles.", "Activer la transformation", "Application"),
+      workshop("kernel-chamber", "Chambre du noyau", "Ker", "Isole les directions écrasées et ralentit la dissipation de résonance.", "Isoler le noyau", "Noyau"),
+      workshop("image-forge", "Forge de l’image", "Im", "Canalise les directions atteintes et renforce les réponses justes.", "Forger l’image", "Image"),
+      workshop("rank-balance", "Balance du rang", "rg f", "Équilibre noyau et image selon le théorème du rang.", "Équilibrer le rang", "Théorème du rang"),
+    ],
   },
   {
-    name: "Assembleur de familles",
-    mark: "F",
-    description: "Regroupe les vecteurs en familles et amplifie de 4 % les forges directionnelles.",
-    chapter: "Familles et rang",
-    mission: "Assembler une famille",
-    baseCost: 260_000,
-    baseProduction: 180,
-    unlock: 300_000,
-    sector: "Familles",
+    id: "endomorphisms",
+    title: "Endomorphismes et décompositions",
+    program: "MPSI",
+    workshops: [
+      workshop("composition-engine", "Moteur de composition", "v∘u", "Enchaîne les applications linéaires sans supposer leur commutativité.", "Composer les applications", "Composition"),
+      workshop("isomorphism-gate", "Porte d’isomorphisme", "≃", "Relie les espaces de même dimension par une transformation bijective.", "Construire un isomorphisme", "Isomorphismes"),
+      workshop("projector-chamber", "Chambre projective", "p²=p", "Stabilise les projecteurs associés aux décompositions de l’espace.", "Reconnaître un projecteur", "Projecteurs"),
+      workshop("symmetry-reactor", "Réacteur de symétrie", "s²=id", "Inverse deux fois la transformation pour retrouver chaque vecteur.", "Reconnaître une symétrie", "Symétries"),
+    ],
   },
   {
-    name: "Testeur de liberté",
-    mark: "L",
-    description: "Écarte les dépendances et renforce de 3 % la production du secteur Familles.",
-    chapter: "Familles et rang",
-    mission: "Détecter les dépendances",
-    baseCost: 1_200_000,
-    baseProduction: 720,
-    unlock: 1_500_000,
-    sector: "Liberté",
+    id: "forms-affine",
+    title: "Formes, hyperplans et affine",
+    program: "MPSI",
+    workshops: [
+      workshop("linear-form-sensor", "Capteur de formes linéaires", "φ", "Mesure une coordonnée linéaire et révèle son noyau.", "Activer une forme linéaire", "Formes linéaires"),
+      workshop("hyperplane-cutter", "Découpeur d’hyperplans", "H", "Découpe l’espace par une équation linéaire homogène.", "Définir un hyperplan", "Hyperplans"),
+      workshop("equation-weaver", "Tisseur d’équations", "AX=0", "Convertit paramétrisations et systèmes d’équations de sous-espaces.", "Équationner un sous-espace", "Équations"),
+      workshop("affine-translator", "Translateur affine", "A+F", "Déplace un sous-espace sans perdre sa direction vectorielle.", "Translater un sous-espace", "Géométrie affine"),
+    ],
   },
   {
-    name: "Extracteur de bases",
-    mark: "B",
-    description: "Extrait une base des familles génératrices et augmente la puissance manuelle de 5 %.",
-    chapter: "Familles et rang",
-    mission: "Extraire une base",
-    baseCost: 6_000_000,
-    baseProduction: 3_200,
-    unlock: 7_500_000,
-    sector: "Bases",
+    id: "matrix-representations",
+    title: "Représentations matricielles",
+    program: "MPSI",
+    workshops: [
+      workshop("matrix-encoder", "Encodeur matriciel", "Mat", "Encode les images d’une base dans les colonnes d’une matrice.", "Encoder une application", "Matrice"),
+      workshop("matrix-composer", "Composeur matriciel", "AB", "Traduit la composition des transformations par un produit matriciel.", "Composer deux matrices", "Produit"),
+      workshop("canonical-matrix-link", "Relais canonique", "X↦AX", "Associe canoniquement une application linéaire à chaque matrice.", "Relier matrice et application", "Application canonique"),
+      workshop("matrix-kernel-imager", "Scanner matriciel", "Ker/Im", "Lit noyau, image et rang à travers lignes et colonnes.", "Scanner une matrice", "Noyau et image"),
+    ],
   },
   {
-    name: "Compresseur de rang",
-    mark: "rg",
-    description: "Condense l’information utile et multiplie toute la production de 2 %.",
-    chapter: "Familles et rang",
-    mission: "Stabiliser le rang",
-    baseCost: 30_000_000,
-    baseProduction: 14_000,
-    unlock: 40_000_000,
-    sector: "Rang",
+    id: "systems-gauss",
+    title: "Systèmes, Gauss et rang",
+    program: "MPSI",
+    workshops: [
+      workshop("system-solver", "Résolveur de systèmes", "AX=B", "Distingue compatibilité, unicité et structure affine des solutions.", "Résoudre AX=B", "Systèmes"),
+      workshop("gauss-inverter", "Inverseur de Gauss", "A⁻¹", "Automatise les opérations élémentaires et réduit le prix des ateliers.", "Inverser la transformation", "Inversibilité"),
+      workshop("matrix-rank-reducer", "Réducteur de rang", "J_r", "Réduit une matrice à sa forme canonique d’équivalence.", "Calculer le rang", "Rang matriciel"),
+      workshop("matrix-equivalence-classifier", "Classifieur d’équivalence", "PAQ", "Regroupe les matrices qui représentent la même application dans d’autres bases.", "Classer les matrices", "Équivalence"),
+    ],
   },
   {
-    name: "Transformateur linéaire",
-    mark: "f",
-    description: "Applique f au réseau et réinjecte 4 % de la production du cycle Familles.",
-    chapter: "Applications linéaires",
-    mission: "Activer la transformation",
-    baseCost: 120_000_000,
-    baseProduction: 55_000,
-    unlock: 160_000_000,
-    sector: "Application",
+    id: "basis-changes",
+    title: "Changements de bases et trace",
+    program: "MPSI",
+    workshops: [
+      workshop("passage-matrix-forge", "Forge de passage", "P", "Construit la matrice de passage entre deux bases.", "Construire P", "Matrice de passage"),
+      workshop("coordinate-transporter", "Transporteur de coordonnées", "P⁻¹X", "Transporte les coordonnées d’un vecteur d’une base à l’autre.", "Changer les coordonnées", "Changement de base"),
+      workshop("similarity-chamber", "Chambre de similitude", "P⁻¹AP", "Change la base d’un endomorphisme sans changer sa nature.", "Conjuguer une matrice", "Similitude"),
+      workshop("trace-observer", "Observatoire de la trace", "tr", "Mesure un invariant linéaire conservé par similitude.", "Observer la trace", "Trace"),
+    ],
   },
   {
-    name: "Chambre du noyau",
-    mark: "Ker",
-    description: "Isole les directions écrasées et ralentit de 4 % la dissipation de résonance.",
-    chapter: "Applications linéaires",
-    mission: "Isoler le noyau",
-    baseCost: 600_000_000,
-    baseProduction: 230_000,
-    unlock: 750_000_000,
-    sector: "Noyau",
+    id: "determinants",
+    title: "Déterminants",
+    program: "MPSI",
+    workshops: [
+      workshop("permutation-signature", "Signatureur de permutations", "ε(σ)", "Décompose les permutations et contrôle leur signature.", "Signer une permutation", "Groupe symétrique"),
+      workshop("determinant-forge", "Forge déterminantale", "det", "Mesure l’aire, le volume et l’inversibilité d’une famille.", "Forger un déterminant", "Déterminant"),
+      workshop("cofactor-expander", "Développeur de cofacteurs", "Cᵢⱼ", "Développe un déterminant suivant une ligne ou une colonne.", "Déployer les cofacteurs", "Cofacteurs"),
+      workshop("vandermonde-adjugate", "Atelier de Vandermonde", "V/Com", "Relie Vandermonde, comatrice et formule de l’inverse.", "Fermer le calcul déterminantal", "Vandermonde et comatrice"),
+    ],
   },
   {
-    name: "Forge de l’image",
-    mark: "Im",
-    description: "Canalise les directions atteintes et augmente de 3 % les récompenses des réponses justes.",
-    chapter: "Applications linéaires",
-    mission: "Forger l’image",
-    baseCost: 3_000_000_000,
-    baseProduction: 1_000_000,
-    unlock: 3_500_000_000,
-    sector: "Image",
+    id: "euclidean-foundations",
+    title: "Fondations euclidiennes · MPSI",
+    program: "MPSI",
+    workshops: [
+      workshop("inner-product-tuner", "Accordeur scalaire", "⟨·, ·⟩", "Mesure produits scalaires, normes, distances et cas d’égalité.", "Accorder le produit scalaire", "Produit scalaire"),
+      workshop("schmidt-orthogonalizer", "Orthogonalisateur de Schmidt", "ON", "Transforme les familles libres en bases orthonormées.", "Orthonormaliser une famille", "Gram–Schmidt"),
+      workshop("orthogonal-chamber", "Chambre orthogonale", "F^{⊥}", "Isole les directions orthogonales à un sous-espace.", "Déployer l’orthogonal", "Orthogonal"),
+      workshop("metric-projector", "Projecteur métrique", "p_F", "Projette sur le sous-espace le plus proche et calcule la distance.", "Projeter sur un sous-espace", "Projection et distance"),
+    ],
   },
   {
-    name: "Balance du rang",
-    mark: "rg f",
-    description: "Équilibre noyau et image selon le théorème du rang, puis amplifie toute la production de 2 %.",
-    chapter: "Applications linéaires",
-    mission: "Équilibrer le rang",
-    baseCost: 15_000_000_000,
-    baseProduction: 4_500_000,
-    unlock: 18_000_000_000,
-    sector: "Théorème du rang",
+    id: "stable-blocks",
+    title: "Sous-espaces stables et blocs · MP",
+    program: "MP",
+    workshops: [
+      workshop("finite-sum-assembler", "Assembleur de sommes finies", "⊕Eᵢ", "Étend les décompositions directes à plusieurs sous-espaces.", "Assembler une décomposition", "Sommes directes"),
+      workshop("stable-subspace-chamber", "Chambre stable", "u(F)⊂F", "Isole les sous-espaces conservés par un endomorphisme.", "Stabiliser un sous-espace", "Sous-espaces stables"),
+      workshop("commutation-coupler", "Coupleur de commutation", "uv=vu", "Fait agir ensemble les endomorphismes qui commutent.", "Coupler deux endomorphismes", "Commutation"),
+      workshop("block-matrix-engine", "Moteur matriciel par blocs", "▦", "Compose, transpose et réduit des matrices définies par blocs.", "Assembler les blocs", "Matrices par blocs"),
+    ],
   },
   {
-    name: "Encodeur matriciel",
-    mark: "Mat",
-    description: "Encode les applications dans une base et réinjecte 4 % du flux des transformateurs.",
-    chapter: "Matrices et réduction",
-    mission: "Encoder une application",
-    baseCost: 60_000_000_000,
-    baseProduction: 18_000_000,
-    unlock: 75_000_000_000,
-    sector: "Matrice",
+    id: "eigen-elements",
+    title: "Éléments propres · MP",
+    program: "MP",
+    workshops: [
+      workshop("spectral-chamber", "Chambre spectrale", "λ", "Révèle les valeurs propres et le spectre de l’endomorphisme.", "Révéler le spectre", "Spectre"),
+      workshop("eigenspace-extractor", "Extracteur propre", "E_λ", "Isole vecteurs propres et sous-espaces propres.", "Extraire les espaces propres", "Espaces propres"),
+      workshop("characteristic-tracer", "Traceur caractéristique", "χ", "Déploie χ_A et relie ses racines au spectre.", "Tracer le polynôme caractéristique", "Polynôme caractéristique"),
+      workshop("multiplicity-gauge", "Jauge de multiplicité", "m_λ", "Compare multiplicités algébriques et dimensions des espaces propres.", "Mesurer les multiplicités", "Multiplicités"),
+    ],
   },
   {
-    name: "Composeur matriciel",
-    mark: "AB",
-    description: "Compose les transformations et renforce de 3 % la production du cycle Applications.",
-    chapter: "Matrices et réduction",
-    mission: "Composer deux matrices",
-    baseCost: 280_000_000_000,
-    baseProduction: 75_000_000,
-    unlock: 350_000_000_000,
-    sector: "Produit",
+    id: "matrix-reduction",
+    title: "Réduction matricielle · MP",
+    program: "MP",
+    workshops: [
+      workshop("diagonalizer", "Diagonaliseur", "D", "Assemble une base de vecteurs propres et diagonalise l’endomorphisme.", "Former une base propre", "Diagonalisation"),
+      workshop("triangularizer", "Trigonaliseur", "T", "Stabilise les formes triangulaires lorsque le polynôme est scindé.", "Achever la réduction", "Trigonalisation"),
+      workshop("nilpotence-chamber", "Chambre nilpotente", "u^p=0", "Mesure l’indice de nilpotence et les puissances qui s’annulent.", "Annuler une puissance", "Nilpotence"),
+      workshop("spectral-invariant-balance", "Balance spectrale", "tr/det", "Relit trace et déterminant aux valeurs propres avec multiplicité.", "Équilibrer les invariants", "Trace et déterminant"),
+    ],
   },
   {
-    name: "Inverseur de Gauss",
-    mark: "A⁻¹",
-    description: "Automatise les opérations élémentaires et réduit de 1 % le prix de tous les ateliers.",
-    chapter: "Matrices et réduction",
-    mission: "Inverser la transformation",
-    baseCost: 1_300_000_000_000,
-    baseProduction: 330_000_000,
-    unlock: 1_700_000_000_000,
-    sector: "Inversibilité",
+    id: "polynomial-reduction",
+    title: "Calcul polynomial · MP",
+    program: "MP",
+    workshops: [
+      workshop("polynomial-evaluator", "Évaluateur polynomial", "P(u)", "Évalue les polynômes en u et explore l’algèbre K[u].", "Évaluer P(u)", "Polynômes d’endomorphismes"),
+      workshop("minimal-extractor", "Extracteur minimal", "π_u", "Isole le polynôme minimal et les critères de réduction.", "Extraire le polynôme minimal", "Polynôme minimal"),
+      workshop("cayley-hamilton-forge", "Forge de Cayley-Hamilton", "χ_u(u)", "Injecte χ_u(u)=0 dans le réseau et réduit les puissances.", "Annuler l’endomorphisme", "Cayley-Hamilton"),
+      workshop("characteristic-decomposer", "Décomposeur caractéristique", "N_λ", "Applique le lemme des noyaux et sépare les sous-espaces caractéristiques.", "Décomposer les noyaux", "Sous-espaces caractéristiques"),
+    ],
   },
   {
-    name: "Chambre spectrale",
-    mark: "λ",
-    description: "Ouvre la partie MP — matrices par blocs et éléments propres — et amplifie de 2 % toute la production du réseau.",
-    chapter: "Matrices et réduction",
-    mission: "Révéler le spectre",
-    baseCost: 6_000_000_000_000,
-    baseProduction: 1_500_000_000,
-    unlock: 8_000_000_000_000,
-    sector: "Spectre",
+    id: "orthogonal-isometries",
+    title: "Matrices orthogonales et isométries · MP",
+    program: "MP",
+    workshops: [
+      workshop("orthogonal-matrix-gate", "Porte orthogonale", "O(n)", "Reconnaît les matrices dont lignes et colonnes sont orthonormées.", "Ouvrir le groupe orthogonal", "Matrices orthogonales"),
+      workshop("isometry-forge", "Forge d’isométries", "u*=u⁻¹", "Conserve normes et produits scalaires dans tout l’espace.", "Forger une isométrie", "Isométries"),
+      workshop("plane-rotation-engine", "Moteur de rotations planes", "SO₂", "Classe rotations et réflexions du plan euclidien orienté.", "Orienter le plan", "Rotations et réflexions"),
+      workshop("isometry-reducer", "Réducteur d’isométries", "R_θ", "Réduit les isométries en blocs orthogonaux adaptés.", "Réduire une isométrie", "Réduction des isométries"),
+    ],
   },
   {
-    name: "Traceur caractéristique",
-    mark: "χ",
-    description: "Déploie χ_A et augmente de 4 % la production du cycle Matrices.",
-    chapter: "Réduction spectrale · MP",
-    mission: "Tracer le polynôme caractéristique",
-    baseCost: 28_000_000_000_000,
-    baseProduction: 6_800_000_000,
-    unlock: 36_000_000_000_000,
-    sector: "Polynôme caractéristique",
+    id: "euclidean-reduction",
+    title: "Réduction euclidienne · MP",
+    program: "MP",
+    workshops: [
+      workshop("adjoint-chamber", "Chambre adjointe", "u*", "Révèle l’adjoint et les règles de calcul qui le gouvernent.", "Construire l’adjoint", "Adjoint"),
+      workshop("self-adjoint-symmetrizer", "Symétriseur spectral", "S(E)", "Isole les endomorphismes autoadjoints et leurs sous-espaces stables.", "Stabiliser la symétrie", "Autoadjoint"),
+      workshop("orthogonal-diagonalizer", "Diagonaliseur orthogonal", "PDPᵀ", "Oriente une base propre orthonormée selon le théorème spectral.", "Orthonormaliser le spectre", "Théorème spectral"),
+      workshop("positivity-analyzer", "Analyseur de positivité", "S^{++}", "Sépare positivité et positivité définie par le spectre.", "Mesurer la positivité", "Positivité"),
+    ],
   },
-  {
-    name: "Extracteur propre",
-    mark: "E_λ",
-    description: "Isole les espaces propres et augmente de 2 % les récompenses des réponses justes.",
-    chapter: "Réduction spectrale · MP",
-    mission: "Extraire les espaces propres",
-    baseCost: 130_000_000_000_000,
-    baseProduction: 30_000_000_000,
-    unlock: 170_000_000_000_000,
-    sector: "Espaces propres",
-  },
-  {
-    name: "Diagonaliseur",
-    mark: "D",
-    description: "Assemble une base de vecteurs propres et amplifie toute la production de 2 %.",
-    chapter: "Réduction spectrale · MP",
-    mission: "Former une base propre",
-    baseCost: 610_000_000_000_000,
-    baseProduction: 140_000_000_000,
-    unlock: 780_000_000_000_000,
-    sector: "Diagonalisation",
-  },
-  {
-    name: "Trigonaliseur",
-    mark: "T",
-    description: "Stabilise les formes triangulaires et réduit de 1 % le prix de tous les ateliers.",
-    chapter: "Réduction spectrale · MP",
-    mission: "Achever la réduction",
-    baseCost: 2_850_000_000_000_000,
-    baseProduction: 650_000_000_000,
-    unlock: 3_600_000_000_000_000,
-    sector: "Trigonalisation",
-  },
-  {
-    name: "Évaluateur polynomial",
-    mark: "P(u)",
-    description: "Évalue les polynômes en u et augmente de 4 % la production du cycle Réduction.",
-    chapter: "Calcul polynomial · MP",
-    mission: "Évaluer P(u)",
-    baseCost: 13_500_000_000_000_000,
-    baseProduction: 3_000_000_000_000,
-    unlock: 17_000_000_000_000_000,
-    sector: "Polynômes d’endomorphismes",
-  },
-  {
-    name: "Extracteur minimal",
-    mark: "π_u",
-    description: "Isole le polynôme minimal et augmente de 2 % les récompenses des réponses justes.",
-    chapter: "Calcul polynomial · MP",
-    mission: "Extraire le polynôme minimal",
-    baseCost: 63_000_000_000_000_000,
-    baseProduction: 14_000_000_000_000,
-    unlock: 80_000_000_000_000_000,
-    sector: "Polynôme minimal",
-  },
-  {
-    name: "Forge de Cayley-Hamilton",
-    mark: "χ_u(u)",
-    description: "Injecte χ_u(u) = 0 dans le réseau et amplifie toute la production de 2 %.",
-    chapter: "Calcul polynomial · MP",
-    mission: "Annuler l’endomorphisme",
-    baseCost: 295_000_000_000_000_000,
-    baseProduction: 65_000_000_000_000,
-    unlock: 380_000_000_000_000_000,
-    sector: "Cayley-Hamilton",
-  },
-  {
-    name: "Décomposeur caractéristique",
-    mark: "N_λ",
-    description: "Sépare les sous-espaces caractéristiques et réduit de 1 % le prix de tous les ateliers.",
-    chapter: "Calcul polynomial · MP",
-    mission: "Décomposer les noyaux",
-    baseCost: 1_380_000_000_000_000_000,
-    baseProduction: 300_000_000_000_000,
-    unlock: 1_750_000_000_000_000_000,
-    sector: "Sous-espaces caractéristiques",
-  },
-  {
-    name: "Chambre adjointe",
-    mark: "u*",
-    description: "Révèle l’adjoint et augmente de 4 % la production du cycle Calcul polynomial.",
-    chapter: "Réduction euclidienne · MP",
-    mission: "Construire l’adjoint",
-    baseCost: 6_400_000_000_000_000_000,
-    baseProduction: 1_350_000_000_000_000,
-    unlock: 8_000_000_000_000_000_000,
-    sector: "Adjoint",
-  },
-  {
-    name: "Symétriseur spectral",
-    mark: "S(E)",
-    description: "Isole les endomorphismes autoadjoints et augmente de 2 % les récompenses justes.",
-    chapter: "Réduction euclidienne · MP",
-    mission: "Stabiliser la symétrie",
-    baseCost: 30_000_000_000_000_000_000,
-    baseProduction: 6_200_000_000_000_000,
-    unlock: 38_000_000_000_000_000_000,
-    sector: "Autoadjoint",
-  },
-  {
-    name: "Diagonaliseur orthogonal",
-    mark: "PDPᵀ",
-    description: "Oriente une base propre orthonormée et amplifie toute la production de 2 %.",
-    chapter: "Réduction euclidienne · MP",
-    mission: "Orthonormaliser le spectre",
-    baseCost: 140_000_000_000_000_000_000,
-    baseProduction: 29_000_000_000_000_000,
-    unlock: 180_000_000_000_000_000_000,
-    sector: "Théorème spectral",
-  },
-  {
-    name: "Analyseur de positivité",
-    mark: "S^{++}",
-    description: "Sépare positivité et positivité définie, puis réduit de 1 % le prix des ateliers.",
-    chapter: "Réduction euclidienne · MP",
-    mission: "Mesurer la positivité",
-    baseCost: 660_000_000_000_000_000_000,
-    baseProduction: 135_000_000_000_000_000,
-    unlock: 840_000_000_000_000_000_000,
-    sector: "Positivité",
-  },
-  {
-    name: "Accordeur scalaire",
-    mark: "⟨·, ·⟩",
-    description: "Mesure angles, normes et distances, puis augmente de 4 % la production du cycle Réduction euclidienne.",
-    chapter: "Fondations euclidiennes · MPSI",
-    mission: "Accorder le produit scalaire",
-    baseCost: 3.1e21,
-    baseProduction: 6.3e17,
-    unlock: 4e21,
-    sector: "Produit scalaire",
-  },
-  {
-    name: "Orthogonalisateur de Schmidt",
-    mark: "ON",
-    description: "Transforme les familles libres en bases orthonormées et amplifie toute la production de 2 %.",
-    chapter: "Fondations euclidiennes · MPSI",
-    mission: "Orthonormaliser une famille",
-    baseCost: 1.5e22,
-    baseProduction: 3.1e18,
-    unlock: 1.9e22,
-    sector: "Gram–Schmidt",
-  },
-  {
-    name: "Chambre orthogonale",
-    mark: "F^{⊥}",
-    description: "Isole les directions orthogonales à F et réduit de 1 % le prix de tous les ateliers.",
-    chapter: "Fondations euclidiennes · MPSI",
-    mission: "Déployer l’orthogonal",
-    baseCost: 7.2e22,
-    baseProduction: 1.5e19,
-    unlock: 9.2e22,
-    sector: "Orthogonal",
-  },
-  {
-    name: "Projecteur métrique",
-    mark: "p_F",
-    description: "Projette sur le sous-espace le plus proche et augmente de 2 % les récompenses des réponses justes.",
-    chapter: "Fondations euclidiennes · MPSI",
-    mission: "Projeter sur un sous-espace",
-    baseCost: 3.5e23,
-    baseProduction: 7.4e19,
-    unlock: 4.5e23,
-    sector: "Projection et distance",
-  },
+];
+
+function workshopEconomy(index: number) {
+  if (index === 0) return { baseCost: 24, baseProduction: 0.5, unlock: 0 };
+  if (index === 1) return { baseCost: 350, baseProduction: 3.2, unlock: 400 };
+  if (index === 2) return { baseCost: 12_000, baseProduction: 16, unlock: 15_000 };
+  if (index === 3) return { baseCost: 75_000, baseProduction: 72, unlock: 80_000 };
+  const costProgression = Math.pow(4.4, index - 4);
+  const productionProgression = Math.pow(4.28, index - 4);
+  const baseCost = Math.round(260_000 * costProgression);
+  return {
+    baseCost,
+    baseProduction: 180 * productionProgression,
+    unlock: Math.ceil(baseCost * 1.25),
+  };
+}
+
+export const WORKSHOP_CYCLES = WORKSHOP_CYCLE_SEEDS.map(
+  (cycle, cycleIndex) => ({
+    ...cycle,
+    number: cycleIndex + 1,
+    workshops: cycle.workshops.map((seed, workshopIndex) => ({
+      ...seed,
+      chapter: cycle.title,
+      cycleId: cycle.id,
+      program: cycle.program,
+      ...workshopEconomy(cycleIndex * 4 + workshopIndex),
+    })),
+  }),
+);
+
+export const INSTRUMENTS = WORKSHOP_CYCLES.flatMap(
+  (cycle) => cycle.workshops,
+);
+
+export const INSTRUMENT_INDEX_BY_ID = Object.fromEntries(
+  INSTRUMENTS.map((instrument, index) => [instrument.id, index]),
+) as Record<string, number>;
+
+export function instrumentIndex(id: string) {
+  return INSTRUMENT_INDEX_BY_ID[id] ?? -1;
+}
+
+export function instrumentLevel(
+  instruments: readonly number[],
+  id: string,
+) {
+  const index = instrumentIndex(id);
+  return index < 0 ? 0 : instruments[index] ?? 0;
+}
+
+export const LEGACY_INSTRUMENT_IDS = [
+  "axis-generator",
+  "plane-deployer",
+  "spatial-forge",
+  "dimension-extension",
+  "family-assembler",
+  "freedom-tester",
+  "basis-extractor",
+  "rank-compressor",
+  "linear-transformer",
+  "kernel-chamber",
+  "image-forge",
+  "rank-balance",
+  "matrix-encoder",
+  "matrix-composer",
+  "gauss-inverter",
+  "spectral-chamber",
+  "characteristic-tracer",
+  "eigenspace-extractor",
+  "diagonalizer",
+  "triangularizer",
+  "polynomial-evaluator",
+  "minimal-extractor",
+  "cayley-hamilton-forge",
+  "characteristic-decomposer",
+  "adjoint-chamber",
+  "self-adjoint-symmetrizer",
+  "orthogonal-diagonalizer",
+  "positivity-analyzer",
+  "inner-product-tuner",
+  "schmidt-orthogonalizer",
+  "orthogonal-chamber",
+  "metric-projector",
 ] as const;
 
 export function instrumentCost(index: number, owned: number) {
@@ -621,46 +564,75 @@ export function basePassiveProduction(
       instrumentMasteries[index] ?? 0,
     );
   });
-  const directionalOutput = outputs
-    .slice(0, STRUCTURAL_WORKSHOP_COUNT)
-    .reduce((sum, output) => sum + output, 0);
-  const familyOutput = outputs
-    .slice(STRUCTURAL_WORKSHOP_COUNT, 8)
-    .reduce((sum, output) => sum + output, 0);
-  const applicationOutput = outputs
-    .slice(8, MATRIX_WORKSHOP_START)
-    .reduce((sum, output) => sum + output, 0);
-  const matrixOutput = outputs
-    .slice(MATRIX_WORKSHOP_START, REDUCTION_WORKSHOP_START)
-    .reduce((sum, output) => sum + output, 0);
-  const reductionOutput = outputs
-    .slice(REDUCTION_WORKSHOP_START, POLYNOMIAL_WORKSHOP_START)
-    .reduce((sum, output) => sum + output, 0);
-  const polynomialOutput = outputs
-    .slice(POLYNOMIAL_WORKSHOP_START, EUCLIDEAN_WORKSHOP_START)
-    .reduce((sum, output) => sum + output, 0);
-  const euclideanOutput = outputs
-    .slice(EUCLIDEAN_WORKSHOP_START, GEOMETRY_WORKSHOP_START)
-    .reduce((sum, output) => sum + output, 0);
-  const geometryOutput = outputs
-    .slice(GEOMETRY_WORKSHOP_START)
-    .reduce((sum, output) => sum + output, 0);
-  const directionalMultiplier = 1 + (instruments[4] ?? 0) * 0.04;
-  const familyMultiplier = 1 + (instruments[5] ?? 0) * 0.03;
-  const rankMultiplier = 1 + (instruments[7] ?? 0) * 0.02;
-  const transformationMultiplier = 1 + (instruments[8] ?? 0) * 0.04;
-  const rankTheoremMultiplier = 1 + (instruments[11] ?? 0) * 0.02;
-  const matrixEncodingMultiplier = 1 + (instruments[12] ?? 0) * 0.04;
-  const matrixCompositionMultiplier = 1 + (instruments[13] ?? 0) * 0.03;
-  const spectralMultiplier = 1 + (instruments[15] ?? 0) * 0.02;
-  const characteristicMultiplier = 1 + (instruments[16] ?? 0) * 0.04;
-  const diagonalMultiplier = 1 + (instruments[18] ?? 0) * 0.02;
-  const polynomialMultiplier = 1 + (instruments[20] ?? 0) * 0.04;
-  const cayleyHamiltonMultiplier = 1 + (instruments[22] ?? 0) * 0.02;
-  const adjointMultiplier = 1 + (instruments[24] ?? 0) * 0.04;
-  const orthogonalDiagonalMultiplier = 1 + (instruments[26] ?? 0) * 0.02;
-  const innerProductMultiplier = 1 + (instruments[28] ?? 0) * 0.04;
-  const orthonormalMultiplier = 1 + (instruments[29] ?? 0) * 0.02;
+  const cycleOutput = (...cycleIds: string[]) =>
+    INSTRUMENTS.reduce(
+      (sum, instrument, index) =>
+        cycleIds.includes(instrument.cycleId)
+          ? sum + outputs[index]
+          : sum,
+      0,
+    );
+  const directionalOutput = cycleOutput("space-construction");
+  const familyOutput = cycleOutput("families-dimension");
+  const applicationOutput = cycleOutput("linear-maps");
+  const matrixOutput = cycleOutput(
+    "matrix-representations",
+    "systems-gauss",
+    "basis-changes",
+    "determinants",
+  );
+  const reductionOutput = cycleOutput(
+    "stable-blocks",
+    "eigen-elements",
+    "matrix-reduction",
+  );
+  const polynomialOutput = cycleOutput("polynomial-reduction");
+  const euclideanOutput = cycleOutput(
+    "euclidean-foundations",
+    "orthogonal-isometries",
+    "euclidean-reduction",
+  );
+  const remainingOutput =
+    outputs.reduce((sum, output) => sum + output, 0) -
+    directionalOutput -
+    familyOutput -
+    applicationOutput -
+    matrixOutput -
+    reductionOutput -
+    polynomialOutput -
+    euclideanOutput;
+  const directionalMultiplier =
+    1 + instrumentLevel(instruments, "family-assembler") * 0.04;
+  const familyMultiplier =
+    1 + instrumentLevel(instruments, "freedom-tester") * 0.03;
+  const rankMultiplier =
+    1 + instrumentLevel(instruments, "rank-compressor") * 0.02;
+  const transformationMultiplier =
+    1 + instrumentLevel(instruments, "linear-transformer") * 0.04;
+  const rankTheoremMultiplier =
+    1 + instrumentLevel(instruments, "rank-balance") * 0.02;
+  const matrixEncodingMultiplier =
+    1 + instrumentLevel(instruments, "matrix-encoder") * 0.04;
+  const matrixCompositionMultiplier =
+    1 + instrumentLevel(instruments, "matrix-composer") * 0.03;
+  const spectralMultiplier =
+    1 + instrumentLevel(instruments, "spectral-chamber") * 0.02;
+  const characteristicMultiplier =
+    1 + instrumentLevel(instruments, "characteristic-tracer") * 0.04;
+  const diagonalMultiplier =
+    1 + instrumentLevel(instruments, "diagonalizer") * 0.02;
+  const polynomialMultiplier =
+    1 + instrumentLevel(instruments, "polynomial-evaluator") * 0.04;
+  const cayleyHamiltonMultiplier =
+    1 + instrumentLevel(instruments, "cayley-hamilton-forge") * 0.02;
+  const adjointMultiplier =
+    1 + instrumentLevel(instruments, "adjoint-chamber") * 0.04;
+  const orthogonalDiagonalMultiplier =
+    1 + instrumentLevel(instruments, "orthogonal-diagonalizer") * 0.02;
+  const innerProductMultiplier =
+    1 + instrumentLevel(instruments, "inner-product-tuner") * 0.04;
+  const orthonormalMultiplier =
+    1 + instrumentLevel(instruments, "schmidt-orthogonalizer") * 0.02;
 
   return (
     (directionalOutput * directionalMultiplier +
@@ -670,7 +642,7 @@ export function basePassiveProduction(
       reductionOutput * polynomialMultiplier +
       polynomialOutput * adjointMultiplier +
       euclideanOutput * innerProductMultiplier +
-      geometryOutput +
+      remainingOutput +
       applicationOutput * (matrixEncodingMultiplier - 1)) *
     rankMultiplier *
     rankTheoremMultiplier *
@@ -687,16 +659,19 @@ export function matrixWorkshopCostMultiplier(
 ) {
   return Math.pow(
     0.99,
-    (instruments[14] ?? 0) +
-      (instruments[19] ?? 0) +
-      (instruments[23] ?? 0) +
-      (instruments[27] ?? 0) +
-      (instruments[30] ?? 0),
+    instrumentLevel(instruments, "gauss-inverter") +
+      instrumentLevel(instruments, "triangularizer") +
+      instrumentLevel(instruments, "characteristic-decomposer") +
+      instrumentLevel(instruments, "positivity-analyzer") +
+      instrumentLevel(instruments, "orthogonal-chamber"),
   );
 }
 
 export function resonanceDecayRate(instruments: readonly number[]) {
-  return 8 / (1 + (instruments[9] ?? 0) * 0.04);
+  return (
+    8 /
+    (1 + instrumentLevel(instruments, "kernel-chamber") * 0.04)
+  );
 }
 
 export function correctAnomalyRewardMultiplier(
@@ -704,11 +679,11 @@ export function correctAnomalyRewardMultiplier(
 ) {
   return (
     1 +
-    (instruments[10] ?? 0) * 0.03 +
-    (instruments[17] ?? 0) * 0.02 +
-    (instruments[21] ?? 0) * 0.02 +
-    (instruments[25] ?? 0) * 0.02 +
-    (instruments[31] ?? 0) * 0.02
+    instrumentLevel(instruments, "image-forge") * 0.03 +
+    instrumentLevel(instruments, "eigenspace-extractor") * 0.02 +
+    instrumentLevel(instruments, "minimal-extractor") * 0.02 +
+    instrumentLevel(instruments, "self-adjoint-symmetrizer") * 0.02 +
+    instrumentLevel(instruments, "metric-projector") * 0.02
   );
 }
 

@@ -4,12 +4,15 @@ import test from "node:test";
 import {
   INVARIANT_PROTOCOLS,
   INSTRUMENTS,
+  PRESTIGE_SCALE,
+  WORKSHOP_CYCLES,
   WORKSHOP_MODULES,
   basePassiveProduction,
   basisChangeGain,
   basisChangeGainCap,
   correctAnomalyRewardMultiplier,
   inheritedStructuralWorkshops,
+  instrumentIndex,
   instrumentBulkCost,
   instrumentCost,
   invariantGain,
@@ -36,6 +39,15 @@ import {
   DEFAULT_RUN_TARGETS,
   simulateProgression,
 } from "../scripts/simulate-progression.mjs";
+
+function levels(entries = {}) {
+  return INSTRUMENTS.map((instrument) => entries[instrument.id] ?? 0);
+}
+
+function ownedThrough(id) {
+  const lastIndex = instrumentIndex(id);
+  return INSTRUMENTS.map((_, index) => (index <= lastIndex ? 1 : 0));
+}
 
 test("grouped workshop purchases charge every forged unit exactly", () => {
   const multiplier = 0.83;
@@ -142,196 +154,112 @@ test("advanced workshops add distinct family and rank synergies", () => {
 });
 
 test("linear-map workshops transform production, resonance and anomaly rewards", () => {
-  const baseline = basePassiveProduction([
-    1, 1, 1, 1,
-    1, 1, 1, 1,
-    0, 0, 0, 0,
-  ]);
-  const transformed = basePassiveProduction([
-    1, 1, 1, 1,
-    1, 1, 1, 1,
-    1, 0, 0, 0,
-  ]);
-  const balanced = basePassiveProduction([
-    1, 1, 1, 1,
-    1, 1, 1, 1,
-    1, 1, 1, 1,
-  ]);
+  const baseline = basePassiveProduction(ownedThrough("grassmann-balancer"));
+  const transformed = basePassiveProduction(ownedThrough("linear-transformer"));
+  const balanced = basePassiveProduction(ownedThrough("rank-balance"));
 
-  assert.ok(transformed > baseline + INSTRUMENTS[8].baseProduction);
-  assert.ok(resonanceDecayRate([0, 0, 0, 0, 0, 0, 0, 0, 0, 1]) < 8);
+  assert.ok(
+    transformed >
+      baseline + INSTRUMENTS[instrumentIndex("linear-transformer")].baseProduction,
+  );
+  assert.ok(resonanceDecayRate(levels({ "kernel-chamber": 1 })) < 8);
   assert.equal(
-    correctAnomalyRewardMultiplier([
-      0, 0, 0, 0,
-      0, 0, 0, 0,
-      0, 0, 1,
-    ]),
+    correctAnomalyRewardMultiplier(levels({ "image-forge": 1 })),
     1.03,
   );
   assert.ok(
     balanced >
       transformed +
-        INSTRUMENTS[9].baseProduction +
-        INSTRUMENTS[10].baseProduction +
-        INSTRUMENTS[11].baseProduction,
+        ["kernel-chamber", "image-forge", "rank-balance"].reduce(
+          (sum, id) => sum + INSTRUMENTS[instrumentIndex(id)].baseProduction,
+          0,
+        ),
   );
 });
 
-test("matrix, reduction and Euclidean cycles extend production and workshop synergies", () => {
-  assert.equal(INSTRUMENTS.length, 32);
+test("seventeen ordered cycles cover MPSI before the MP reduction path", () => {
+  assert.equal(INSTRUMENTS.length, 68);
+  assert.equal(WORKSHOP_CYCLES.length, 17);
+  assert.equal(
+    WORKSHOP_CYCLES.every((cycle) => cycle.workshops.length === 4),
+    true,
+  );
   assert.deepEqual(
-    INSTRUMENTS.slice(12, 16).map((instrument) => instrument.name),
+    WORKSHOP_CYCLES.map((cycle) => cycle.title),
     [
-      "Encodeur matriciel",
-      "Composeur matriciel",
-      "Inverseur de Gauss",
-      "Chambre spectrale",
+      "Construction de l’espace",
+      "Familles, bases et dimension",
+      "Sous-espaces et sommes directes",
+      "Applications linéaires",
+      "Endomorphismes et décompositions",
+      "Formes, hyperplans et affine",
+      "Représentations matricielles",
+      "Systèmes, Gauss et rang",
+      "Changements de bases et trace",
+      "Déterminants",
+      "Fondations euclidiennes · MPSI",
+      "Sous-espaces stables et blocs · MP",
+      "Éléments propres · MP",
+      "Réduction matricielle · MP",
+      "Calcul polynomial · MP",
+      "Matrices orthogonales et isométries · MP",
+      "Réduction euclidienne · MP",
     ],
   );
   assert.deepEqual(
-    INSTRUMENTS.slice(16, 20).map((instrument) => instrument.name),
-    [
-      "Traceur caractéristique",
-      "Extracteur propre",
-      "Diagonaliseur",
-      "Trigonaliseur",
-    ],
+    WORKSHOP_CYCLES.map((cycle) => cycle.program),
+    [...Array(11).fill("MPSI"), ...Array(6).fill("MP")],
   );
-  assert.deepEqual(
-    INSTRUMENTS.slice(20, 24).map((instrument) => instrument.name),
-    [
-      "Évaluateur polynomial",
-      "Extracteur minimal",
-      "Forge de Cayley-Hamilton",
-      "Décomposeur caractéristique",
-    ],
+  assert.equal(
+    INSTRUMENTS[instrumentIndex("inner-product-tuner")].cycleId,
+    "euclidean-foundations",
   );
-  assert.deepEqual(
-    INSTRUMENTS.slice(24, 28).map((instrument) => instrument.name),
-    [
-      "Chambre adjointe",
-      "Symétriseur spectral",
-      "Diagonaliseur orthogonal",
-      "Analyseur de positivité",
-    ],
-  );
-  assert.deepEqual(
-    INSTRUMENTS.slice(28).map((instrument) => instrument.name),
-    [
-      "Accordeur scalaire",
-      "Orthogonalisateur de Schmidt",
-      "Chambre orthogonale",
-      "Projecteur métrique",
-    ],
+  assert.equal(
+    INSTRUMENTS[instrumentIndex("finite-sum-assembler")].cycleId,
+    "stable-blocks",
   );
 
-  const applications = basePassiveProduction([
-    1, 1, 1, 1,
-    1, 1, 1, 1,
-    1, 1, 1, 1,
-    0, 0, 0, 0,
-  ]);
-  const matrices = basePassiveProduction([
-    ...INSTRUMENTS.slice(0, 16).map(() => 1),
-    0, 0, 0, 0,
-  ]);
-  const euclideanReduction = basePassiveProduction(
-    INSTRUMENTS.map((_, index) => (index < 28 ? 1 : 0)),
+  const beforeMatrices = basePassiveProduction(
+    ownedThrough("affine-translator"),
   );
-  const euclideanFoundations = basePassiveProduction(
-    INSTRUMENTS.map(() => 1),
+  const afterMatrices = basePassiveProduction(
+    ownedThrough("matrix-kernel-imager"),
   );
+  assert.ok(afterMatrices > beforeMatrices);
   assert.ok(
-    matrices >
-      applications +
-        INSTRUMENTS.slice(12, 16).reduce(
-          (sum, instrument) => sum + instrument.baseProduction,
-          0,
-        ),
-  );
-  assert.ok(
-    euclideanReduction >
-      matrices +
-        INSTRUMENTS.slice(16, 28).reduce(
-          (sum, instrument) => sum + instrument.baseProduction,
-          0,
-        ),
-  );
-  assert.ok(
-    euclideanFoundations >
-      euclideanReduction +
-        INSTRUMENTS.slice(28).reduce(
-          (sum, instrument) => sum + instrument.baseProduction,
-          0,
-        ),
-  );
-  assert.ok(
-    matrixWorkshopCostMultiplier(
-      INSTRUMENTS.map((_, index) => (index === 23 ? 5 : 0)),
-    ) < 1,
-  );
-  assert.equal(
-    correctAnomalyRewardMultiplier(
-      INSTRUMENTS.map((_, index) => (index === 21 ? 2 : 0)),
+    INSTRUMENTS.every(
+      (instrument, index) =>
+        index === 0 ||
+        (instrument.baseCost > INSTRUMENTS[index - 1].baseCost &&
+          instrument.unlock > INSTRUMENTS[index - 1].unlock &&
+          instrument.baseProduction > INSTRUMENTS[index - 1].baseProduction),
     ),
-    1.04,
   );
-  assert.equal(
-    correctAnomalyRewardMultiplier(
-      INSTRUMENTS.map((_, index) => (index === 25 ? 2 : 0)),
-    ),
-    1.04,
-  );
-  assert.ok(
-    matrixWorkshopCostMultiplier(
-      INSTRUMENTS.map((_, index) => (index === 27 ? 5 : 0)),
-    ) < 1,
-  );
-  assert.ok(
-    matrixWorkshopCostMultiplier(
-      INSTRUMENTS.map((_, index) => (index === 30 ? 5 : 0)),
-    ) < 1,
-  );
-  assert.equal(
-    correctAnomalyRewardMultiplier(
-      INSTRUMENTS.map((_, index) => (index === 31 ? 2 : 0)),
-    ),
-    1.04,
-  );
-  assert.ok(
-    basePassiveProduction(
-      INSTRUMENTS.map((_, index) =>
-        index < 28 || index === 28 ? 1 : 0,
-      ),
-    ) >
-      euclideanReduction + INSTRUMENTS[28].baseProduction,
-  );
+});
+
+test("late workshops retain their distinct economy and anomaly synergies", () => {
   assert.equal(matrixWorkshopCostMultiplier([]), 1);
-  assert.ok(
-    matrixWorkshopCostMultiplier([
-      0, 0, 0, 0,
-      0, 0, 0, 0,
-      0, 0, 0, 0,
-      0, 0, 5,
-    ]) < 1,
-  );
-  assert.ok(
-    matrixWorkshopCostMultiplier([
-      0, 0, 0, 0,
-      0, 0, 0, 0,
-      0, 0, 0, 0,
-      0, 0, 0, 0,
-      0, 0, 0, 5,
-    ]) < 1,
+  assert.equal(
+    correctAnomalyRewardMultiplier(levels({ "minimal-extractor": 2 })),
+    1.04,
   );
   assert.equal(
-    correctAnomalyRewardMultiplier([
-      0, 0, 0, 0,
-      0, 0, 0, 0,
-      0, 0, 0, 0,
-      0, 0, 0, 0,
-      0, 2,
-    ]),
+    correctAnomalyRewardMultiplier(
+      levels({ "self-adjoint-symmetrizer": 2 }),
+    ),
+    1.04,
+  );
+  assert.ok(
+    matrixWorkshopCostMultiplier(levels({ "triangularizer": 5 })) < 1,
+  );
+  assert.ok(
+    matrixWorkshopCostMultiplier(levels({ "positivity-analyzer": 5 })) < 1,
+  );
+  assert.ok(
+    matrixWorkshopCostMultiplier(levels({ "orthogonal-chamber": 5 })) < 1,
+  );
+  assert.equal(
+    correctAnomalyRewardMultiplier(levels({ "metric-projector": 2 })),
     1.04,
   );
 });
@@ -370,7 +298,7 @@ test("five basis changes preserve deliberate one-hour runs", () => {
 
   assert.equal(report.completed, true);
   assert.equal(report.changes.length, DEFAULT_RUN_TARGETS.length);
-  assert.ok(report.elapsed >= 4.5 * 3600);
+  assert.ok(report.elapsed >= 4 * 3600);
   assert.ok(report.elapsed <= 7 * 3600);
   assert.ok(
     report.changes.every(
@@ -379,27 +307,32 @@ test("five basis changes preserve deliberate one-hour runs", () => {
         change.runDuration <= 2 * 3600,
     ),
   );
-  assert.equal(report.changes[0].highestInstrument, 2);
+  assert.ok(report.changes[0].highestInstrument >= 2);
+  assert.ok(report.changes[0].highestInstrument <= 4);
   assert.ok(report.changes.at(-1).highestInstrument >= 5);
 });
 
-test("the optimal long game reveals every cycle without late runaway", () => {
+test("the simulated midpoint reveals nine cycles without late runaway", () => {
   const report = simulateProgression({
     runTargets: Array.from(
       { length: 32 },
       (_, index) => 2 ** index,
     ),
   });
-  const eighthCycle = report.unlocks.find(
-    (unlock) => unlock.cycle === 8,
+  const ninthCycle = report.unlocks.find(
+    (unlock) => unlock.cycle === 9,
   );
 
   assert.equal(report.completed, true);
-  assert.ok(eighthCycle);
-  assert.ok(eighthCycle.seconds >= 40 * 3600);
-  assert.ok(eighthCycle.seconds <= 56 * 3600);
-  assert.ok(report.changes.at(-1).runDuration >= 45 * 60);
-  assert.ok(report.changes.at(-1).runDuration <= 2 * 3600);
+  assert.ok(ninthCycle);
+  assert.ok(ninthCycle.seconds >= 20 * 3600);
+  assert.ok(ninthCycle.seconds <= 26 * 3600);
+  assert.ok(report.changes.at(-1).runDuration >= 30 * 60);
+  assert.ok(report.changes.at(-1).runDuration <= 90 * 60);
+  assert.ok(
+    INSTRUMENTS.at(-1).unlock <
+      PRESTIGE_SCALE * Math.pow(2 ** 67, 2),
+  );
 });
 
 test("invariant protocols create permanent strategic upgrades", () => {

@@ -292,46 +292,57 @@ test("the MP exercise path unlocks one reduction topic per workshop", () => {
   );
 
   assert.equal(
-    availableExerciseFamilies(["matrices"], 14).every(
+    availableExerciseFamilies(["matrices"], 46).every(
       (family) => family.program === "MPSI",
     ),
     true,
   );
   assert.deepEqual(
-    availableExerciseFamilies(["matrices"], 15)
+    availableExerciseFamilies(["matrices"], 47)
       .filter((family) => family.program === "MP")
       .map((family) => family.id),
-    ["matrix-spectrum", "matrix-block-determinant"],
+    ["matrix-block-determinant"],
   );
-  assert.deepEqual(
-    [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27].map((highestOwnedInstrument) =>
+  const unlocks = [
+    [48, "matrix-spectrum"],
+    [49, "matrix-eigenspace"],
+    [50, "matrix-characteristic-polynomial"],
+    [52, "matrix-diagonalization"],
+    [53, "matrix-triangularization"],
+    [56, "matrix-annihilating-polynomial"],
+    [57, "matrix-minimal-polynomial"],
+    [58, "matrix-cayley-hamilton"],
+    [59, "matrix-characteristic-subspace"],
+    [64, "matrix-adjoint"],
+    [65, "matrix-self-adjoint"],
+    [66, "matrix-spectral-theorem"],
+    [67, "matrix-positivity"],
+  ];
+  for (const [highestOwnedInstrument, expectedId] of unlocks) {
+    const current = availableExerciseFamilies(
+      ["matrices"],
+      highestOwnedInstrument,
+    )
+      .filter((family) => family.program === "MP")
+      .map((family) => family.id);
+    const previous = new Set(
       availableExerciseFamilies(
         ["matrices"],
-        highestOwnedInstrument,
+        highestOwnedInstrument - 1,
       )
         .filter((family) => family.program === "MP")
-        .at(-1).id,
-    ),
-    [
-      "matrix-characteristic-polynomial",
-      "matrix-eigenspace",
-      "matrix-diagonalization",
-      "matrix-triangularization",
-      "matrix-annihilating-polynomial",
-      "matrix-minimal-polynomial",
-      "matrix-cayley-hamilton",
-      "matrix-characteristic-subspace",
-      "matrix-adjoint",
-      "matrix-self-adjoint",
-      "matrix-spectral-theorem",
-      "matrix-positivity",
-    ],
-  );
+        .map((family) => family.id),
+    );
+    assert.deepEqual(
+      current.filter((id) => !previous.has(id)),
+      [expectedId],
+    );
+  }
 });
 
 test("the MPSI Euclidean path unlocks one validated topic per workshop", () => {
   assert.deepEqual(
-    [28, 29, 30, 31].map((highestOwnedInstrument) =>
+    [40, 41, 42, 43].map((highestOwnedInstrument) =>
       availableExerciseFamilies(
         ["vectors", "bases", "applications"],
         highestOwnedInstrument,

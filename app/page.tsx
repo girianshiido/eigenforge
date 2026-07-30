@@ -4,12 +4,16 @@ import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import {
   INSTRUMENTS,
   INVARIANT_PROTOCOLS,
+  LEGACY_INSTRUMENT_IDS,
+  WORKSHOP_CYCLES,
   WORKSHOP_MODULES,
   basePassiveProduction,
   basisChangeGain,
   basisChangeGainCap,
   correctAnomalyRewardMultiplier,
   inheritedStructuralWorkshops,
+  instrumentIndex,
+  instrumentLevel,
   instrumentBulkCost,
   instrumentCost,
   invariantGain,
@@ -42,10 +46,12 @@ type GameTab = "network" | "instruments" | "anomalies" | "atlas";
 type PurchaseAmount = 1 | 10 | 25 | "max";
 
 type GameState = {
+  saveVersion: number;
   coordinates: number;
   runTotal: number;
   allTime: number;
   instruments: number[];
+  instrumentIds: string[];
   instrumentModules: number[][];
   instrumentMasteries: number[];
   mastery: Record<Sector, number>;
@@ -84,13 +90,16 @@ type EmittedVectorVisual = {
   mappedLength: number;
 };
 
-const SAVE_KEY = "reseau-des-espaces-v1";
+const LEGACY_SAVE_KEY = "reseau-des-espaces-v1";
+const SAVE_KEY = "eigenforge-v2";
 
 const INITIAL_STATE: GameState = {
+  saveVersion: 2,
   coordinates: 0,
   runTotal: 0,
   allTime: 0,
   instruments: INSTRUMENTS.map(() => 0),
+  instrumentIds: INSTRUMENTS.map((instrument) => instrument.id),
   instrumentModules: INSTRUMENTS.map(() =>
     WORKSHOP_MODULES.map(() => 0),
   ),
@@ -125,9 +134,7 @@ const GAME_TABS: Array<{
   { id: "atlas", label: "Atlas", shortLabel: "Atlas", mark: "✦" },
 ];
 
-const WORKSHOP_CHAPTERS = Array.from(
-  new Set(INSTRUMENTS.map((instrument) => instrument.chapter)),
-);
+const WORKSHOP_CHAPTERS = WORKSHOP_CYCLES.map((cycle) => cycle.title);
 const PURCHASE_AMOUNTS: PurchaseAmount[] = [1, 10, 25, "max"];
 
 function randomInt(min: number, max: number) {
@@ -483,8 +490,10 @@ function production(state: GameState) {
 }
 
 function clickPower(state: GameState) {
-  const emitterBonus = 1 + state.instruments[0] * 0.1;
-  const basisExtractionBonus = 1 + (state.instruments[6] ?? 0) * 0.05;
+  const emitterBonus =
+    1 + instrumentLevel(state.instruments, "axis-generator") * 0.1;
+  const basisExtractionBonus =
+    1 + instrumentLevel(state.instruments, "basis-extractor") * 0.05;
   const resonanceBonus = 1 + Math.floor(state.resonance / 25) * 0.5;
   return (
     emitterBonus *
@@ -560,7 +569,10 @@ function protocolEffect(index: number, level: number) {
 }
 
 function anomalyDelay(allTime: number) {
-  const [minimum, maximum] = allTime < INSTRUMENTS[2].unlock ? [45, 60] : [65, 90];
+  const spatialUnlock =
+    INSTRUMENTS[instrumentIndex("spatial-forge")].unlock;
+  const [minimum, maximum] =
+    allTime < spatialUnlock ? [45, 60] : [65, 90];
   return randomInt(minimum, maximum) * 1000;
 }
 
@@ -571,6 +583,13 @@ function formatNumber(value: number) {
     return value < 100 ? value.toFixed(value < 10 ? 1 : 0) : Math.floor(value).toString();
   }
   const units = [
+    { value: 1e45, suffix: " QaDc" },
+    { value: 1e42, suffix: " TDc" },
+    { value: 1e39, suffix: " DDc" },
+    { value: 1e36, suffix: " UDc" },
+    { value: 1e33, suffix: " Dc" },
+    { value: 1e30, suffix: " No" },
+    { value: 1e27, suffix: " Oc" },
     { value: 1e24, suffix: " Sp" },
     { value: 1e21, suffix: " Sx" },
     { value: 1e18, suffix: " Qi" },
@@ -595,8 +614,21 @@ function restoreState(raw: string | null): GameState {
   if (!raw) return { ...INITIAL_STATE, lastTick: Date.now(), nextAnomalyAt: Date.now() + 8000 };
   try {
     const saved = JSON.parse(raw) as Partial<GameState>;
-    const instruments = INSTRUMENTS.map((_, index) =>
-      Math.max(0, Number(saved.instruments?.[index]) || 0),
+    const savedInstrumentIds =
+      Array.isArray(saved.instrumentIds) &&
+      saved.instrumentIds.length === saved.instruments?.length
+        ? saved.instrumentIds
+        : [...LEGACY_INSTRUMENT_IDS];
+    const savedIndexById = new Map(
+      savedInstrumentIds.map((id, index) => [id, index]),
+    );
+    const instruments = INSTRUMENTS.map((instrument) =>
+      Math.max(
+        0,
+        Number(
+          saved.instruments?.[savedIndexById.get(instrument.id) ?? -1],
+        ) || 0,
+      ),
     );
     // Les anciennes versions autorisaient parfois un atelier avancé sans son
     // prédécesseur. La migration rétablit une chaîne structurelle cohérente.
@@ -606,10 +638,11 @@ function restoreState(raw: string | null): GameState {
       }
     }
     const hasSavedModules = Array.isArray(saved.instrumentModules);
-    const instrumentModules = INSTRUMENTS.map((_, instrumentIndex) =>
+    const instrumentModules = INSTRUMENTS.map((instrument, currentIndex) =>
       WORKSHOP_MODULES.map((__, moduleIndex) => {
+        const savedIndex = savedIndexById.get(instrument.id) ?? -1;
         if (hasSavedModules) {
-          return (saved.instrumentModules?.[instrumentIndex]?.[moduleIndex] ?? 0) >
+          return (saved.instrumentModules?.[savedIndex]?.[moduleIndex] ?? 0) >
             0
             ? 1
             : 0;
@@ -617,13 +650,14 @@ function restoreState(raw: string | null): GameState {
         // Les anciens paliers automatiques donnaient ×2 aux niveaux 10, 25 et
         // 50. Cette migration conserve exactement ces bonus dans les parties
         // existantes, sans offrir automatiquement les nouveaux modules ensuite.
-        return legacyWorkshopModules(instruments[instrumentIndex])[moduleIndex];
+        return legacyWorkshopModules(instruments[currentIndex])[moduleIndex];
       }),
     );
-    const instrumentMasteries = INSTRUMENTS.map((_, index) => {
+    const instrumentMasteries = INSTRUMENTS.map((instrument, index) => {
+      const savedIndex = savedIndexById.get(instrument.id) ?? -1;
       const savedRank = Math.max(
         0,
-        Math.floor(Number(saved.instrumentMasteries?.[index]) || 0),
+        Math.floor(Number(saved.instrumentMasteries?.[savedIndex]) || 0),
       );
       let supportedRank = 0;
       while (
@@ -637,7 +671,9 @@ function restoreState(raw: string | null): GameState {
     return {
       ...INITIAL_STATE,
       ...saved,
+      saveVersion: 2,
       instruments,
+      instrumentIds: INSTRUMENTS.map((instrument) => instrument.id),
       instrumentModules,
       instrumentMasteries,
       protocols: INVARIANT_PROTOCOLS.map((protocol, index) =>
@@ -693,13 +729,13 @@ export default function Home() {
   // Le premier exemplaire de chaque atelier structurel ajoute un vecteur à la
   // base. Les exemplaires suivants renforcent la production sans changer dim(E).
   const spaceDimension =
-    game.instruments[3] > 0
+    instrumentLevel(game.instruments, "dimension-extension") > 0
       ? 4
-      : game.instruments[2] > 0
+      : instrumentLevel(game.instruments, "spatial-forge") > 0
         ? 3
-        : game.instruments[1] > 0
+        : instrumentLevel(game.instruments, "plane-deployer") > 0
           ? 2
-          : game.instruments[0] > 0
+          : instrumentLevel(game.instruments, "axis-generator") > 0
             ? 1
             : 0;
   const basisVectors = ["e₁", "e₂", "e₃", "e₄"].slice(
@@ -709,6 +745,7 @@ export default function Home() {
   const spaceGeneratorList = basisVectors.join(", ");
 
   useEffect(() => {
+    window.localStorage.removeItem(LEGACY_SAVE_KEY);
     const restored = restoreState(window.localStorage.getItem(SAVE_KEY));
     const now = Date.now();
     const elapsed = Math.min(Math.max(0, now - restored.lastTick), 2 * 60 * 60 * 1000);
@@ -943,11 +980,13 @@ export default function Home() {
   function openAnomaly() {
     if (game.anomalies <= 0) return;
     const sectors: Sector[] = ["vectors"];
-    if (game.instruments[1] > 0) sectors.push("bases");
-    if (game.instruments[8] > 0) {
+    if (instrumentLevel(game.instruments, "plane-deployer") > 0) {
+      sectors.push("bases");
+    }
+    if (instrumentLevel(game.instruments, "linear-transformer") > 0) {
       sectors.push("applications");
     }
-    if (game.instruments[12] > 0) {
+    if (instrumentLevel(game.instruments, "matrix-encoder") > 0) {
       sectors.push("matrices");
     }
     const weakest = [...sectors].sort(
@@ -1063,9 +1102,9 @@ export default function Home() {
   const instrumentCount = game.instruments.reduce((sum, count) => sum + count, 0);
   const unlockedSectorCount =
     1 +
-    (game.instruments[1] > 0 ? 1 : 0) +
-    (game.instruments[8] > 0 ? 1 : 0) +
-    (game.instruments[12] > 0 ? 1 : 0);
+    (instrumentLevel(game.instruments, "plane-deployer") > 0 ? 1 : 0) +
+    (instrumentLevel(game.instruments, "linear-transformer") > 0 ? 1 : 0) +
+    (instrumentLevel(game.instruments, "matrix-encoder") > 0 ? 1 : 0);
   const nextWorkshopIndex = game.instruments.findIndex((count) => count === 0);
   const nextWorkshop =
     nextWorkshopIndex >= 0 ? INSTRUMENTS[nextWorkshopIndex] : null;
@@ -1201,21 +1240,21 @@ export default function Home() {
               className={[
                 "network-stage",
                 `dimension-${spaceDimension}`,
-                game.instruments[8] > 0 ? "has-transform" : "",
-                game.instruments[9] > 0 ? "has-kernel" : "",
-                game.instruments[10] > 0 ? "has-image" : "",
-                game.instruments[11] > 0 ? "rank-balanced" : "",
-                game.instruments[12] > 0 ? "has-matrix" : "",
-                game.instruments[15] > 0 ? "has-spectrum" : "",
-                game.instruments[16] > 0 ? "has-characteristic" : "",
-                game.instruments[18] > 0 ? "is-diagonalized" : "",
-                game.instruments[19] > 0 ? "is-triangularized" : "",
-                game.instruments[20] > 0 ? "has-polynomial" : "",
-                game.instruments[22] > 0 ? "has-cayley-hamilton" : "",
-                game.instruments[24] > 0 ? "has-adjoint" : "",
-                game.instruments[26] > 0 ? "is-orthogonally-diagonalized" : "",
-                game.instruments[28] > 0 ? "has-inner-product" : "",
-                game.instruments[31] > 0 ? "has-projection" : "",
+                instrumentLevel(game.instruments, "linear-transformer") > 0 ? "has-transform" : "",
+                instrumentLevel(game.instruments, "kernel-chamber") > 0 ? "has-kernel" : "",
+                instrumentLevel(game.instruments, "image-forge") > 0 ? "has-image" : "",
+                instrumentLevel(game.instruments, "rank-balance") > 0 ? "rank-balanced" : "",
+                instrumentLevel(game.instruments, "matrix-encoder") > 0 ? "has-matrix" : "",
+                instrumentLevel(game.instruments, "spectral-chamber") > 0 ? "has-spectrum" : "",
+                instrumentLevel(game.instruments, "characteristic-tracer") > 0 ? "has-characteristic" : "",
+                instrumentLevel(game.instruments, "diagonalizer") > 0 ? "is-diagonalized" : "",
+                instrumentLevel(game.instruments, "triangularizer") > 0 ? "is-triangularized" : "",
+                instrumentLevel(game.instruments, "polynomial-evaluator") > 0 ? "has-polynomial" : "",
+                instrumentLevel(game.instruments, "cayley-hamilton-forge") > 0 ? "has-cayley-hamilton" : "",
+                instrumentLevel(game.instruments, "adjoint-chamber") > 0 ? "has-adjoint" : "",
+                instrumentLevel(game.instruments, "orthogonal-diagonalizer") > 0 ? "is-orthogonally-diagonalized" : "",
+                instrumentLevel(game.instruments, "inner-product-tuner") > 0 ? "has-inner-product" : "",
+                instrumentLevel(game.instruments, "metric-projector") > 0 ? "has-projection" : "",
               ]
                 .filter(Boolean)
                 .join(" ")}
@@ -1236,23 +1275,23 @@ export default function Home() {
                 aria-hidden="true"
               />
               <div
-                className={`transform-grid ${game.instruments[8] > 0 ? "visible" : ""}`}
+                className={`transform-grid ${instrumentLevel(game.instruments, "linear-transformer") > 0 ? "visible" : ""}`}
                 aria-hidden="true"
               />
               <div
-                className={`kernel-space ${game.instruments[9] > 0 ? "visible" : ""}`}
+                className={`kernel-space ${instrumentLevel(game.instruments, "kernel-chamber") > 0 ? "visible" : ""}`}
                 aria-hidden="true"
               >
                 <span>Ker(f)</span>
               </div>
               <div
-                className={`image-space ${game.instruments[10] > 0 ? "visible" : ""}`}
+                className={`image-space ${instrumentLevel(game.instruments, "image-forge") > 0 ? "visible" : ""}`}
                 aria-hidden="true"
               >
                 <span>Im(f)</span>
               </div>
               <div
-                className={`matrix-operator ${game.instruments[12] > 0 ? "visible" : ""}`}
+                className={`matrix-operator ${instrumentLevel(game.instruments, "matrix-encoder") > 0 ? "visible" : ""}`}
                 aria-label="Matrice de l’application f dans la base de l’espace"
               >
                 <span>Mat(f)</span>
@@ -1264,53 +1303,53 @@ export default function Home() {
                 </div>
               </div>
               <div
-                className={`spectral-marker ${game.instruments[15] > 0 ? "visible" : ""}`}
+                className={`spectral-marker ${instrumentLevel(game.instruments, "spectral-chamber") > 0 ? "visible" : ""}`}
                 aria-hidden="true"
               >
                 <span>λ₁</span>
                 <span>λ₂</span>
               </div>
               <div
-                className={`reduction-sequence ${game.instruments[16] > 0 ? "visible" : ""}`}
+                className={`reduction-sequence ${instrumentLevel(game.instruments, "characteristic-tracer") > 0 ? "visible" : ""}`}
                 aria-label="Progression de la réduction spectrale"
               >
-                <span className={game.instruments[16] > 0 ? "active" : ""}>χA</span>
-                <span className={game.instruments[17] > 0 ? "active" : ""}>
+                <span className={instrumentLevel(game.instruments, "characteristic-tracer") > 0 ? "active" : ""}>χA</span>
+                <span className={instrumentLevel(game.instruments, "eigenspace-extractor") > 0 ? "active" : ""}>
                   <MathExpression text="E_λ" />
                 </span>
-                <span className={game.instruments[18] > 0 ? "active" : ""}>D</span>
-                <span className={game.instruments[19] > 0 ? "active" : ""}>T</span>
+                <span className={instrumentLevel(game.instruments, "diagonalizer") > 0 ? "active" : ""}>D</span>
+                <span className={instrumentLevel(game.instruments, "triangularizer") > 0 ? "active" : ""}>T</span>
               </div>
               <div
-                className={`polynomial-sequence ${game.instruments[20] > 0 ? "visible" : ""}`}
+                className={`polynomial-sequence ${instrumentLevel(game.instruments, "polynomial-evaluator") > 0 ? "visible" : ""}`}
                 aria-label="Progression du calcul polynomial"
               >
-                <span className={game.instruments[20] > 0 ? "active" : ""}>P(u)</span>
-                <span className={game.instruments[21] > 0 ? "active" : ""}>πu</span>
-                <span className={game.instruments[22] > 0 ? "active" : ""}>χ(u)</span>
-                <span className={game.instruments[23] > 0 ? "active" : ""}>Nλ</span>
+                <span className={instrumentLevel(game.instruments, "polynomial-evaluator") > 0 ? "active" : ""}>P(u)</span>
+                <span className={instrumentLevel(game.instruments, "minimal-extractor") > 0 ? "active" : ""}>πu</span>
+                <span className={instrumentLevel(game.instruments, "cayley-hamilton-forge") > 0 ? "active" : ""}>χ(u)</span>
+                <span className={instrumentLevel(game.instruments, "characteristic-decomposer") > 0 ? "active" : ""}>Nλ</span>
               </div>
               <div
-                className={`euclidean-sequence ${game.instruments[24] > 0 ? "visible" : ""}`}
+                className={`euclidean-sequence ${instrumentLevel(game.instruments, "adjoint-chamber") > 0 ? "visible" : ""}`}
                 aria-label="Progression de la réduction euclidienne"
               >
-                <span className={game.instruments[24] > 0 ? "active" : ""}>u*</span>
-                <span className={game.instruments[25] > 0 ? "active" : ""}>S</span>
-                <span className={game.instruments[26] > 0 ? "active" : ""}>PDPᵀ</span>
-                <span className={game.instruments[27] > 0 ? "active" : ""}>
+                <span className={instrumentLevel(game.instruments, "adjoint-chamber") > 0 ? "active" : ""}>u*</span>
+                <span className={instrumentLevel(game.instruments, "self-adjoint-symmetrizer") > 0 ? "active" : ""}>S</span>
+                <span className={instrumentLevel(game.instruments, "orthogonal-diagonalizer") > 0 ? "active" : ""}>PDPᵀ</span>
+                <span className={instrumentLevel(game.instruments, "positivity-analyzer") > 0 ? "active" : ""}>
                   <MathExpression text="S^{++}" />
                 </span>
               </div>
               <div
-                className={`geometry-sequence ${game.instruments[28] > 0 ? "visible" : ""}`}
+                className={`geometry-sequence ${instrumentLevel(game.instruments, "inner-product-tuner") > 0 ? "visible" : ""}`}
                 aria-label="Progression des fondations euclidiennes"
               >
-                <span className={game.instruments[28] > 0 ? "active" : ""}>⟨·,·⟩</span>
-                <span className={game.instruments[29] > 0 ? "active" : ""}>ON</span>
-                <span className={game.instruments[30] > 0 ? "active" : ""}>
+                <span className={instrumentLevel(game.instruments, "inner-product-tuner") > 0 ? "active" : ""}>⟨·,·⟩</span>
+                <span className={instrumentLevel(game.instruments, "schmidt-orthogonalizer") > 0 ? "active" : ""}>ON</span>
+                <span className={instrumentLevel(game.instruments, "orthogonal-chamber") > 0 ? "active" : ""}>
                   <MathExpression text="F^{⊥}" />
                 </span>
-                <span className={game.instruments[31] > 0 ? "active" : ""}>pF</span>
+                <span className={instrumentLevel(game.instruments, "metric-projector") > 0 ? "active" : ""}>pF</span>
               </div>
               <div
                 className={`vector-line vector-one ${game.instruments[0] > 0 ? "visible" : ""}`}
@@ -1356,7 +1395,7 @@ export default function Home() {
                   <span>u</span>
                 </div>
               )}
-              {isEmitting && game.instruments[8] > 0 && (
+              {isEmitting && instrumentLevel(game.instruments, "linear-transformer") > 0 && (
                 <div
                   className="mapped-vector"
                   key={`mapped-${emitBurst}`}
@@ -1515,7 +1554,7 @@ export default function Home() {
                   <strong>{chapter}</strong>
                   <small>
                     {accessible
-                      ? `${builtWorkshops}/4 actifs · ${formatNumber(chapterRate)}/s`
+                      ? `${builtWorkshops}/${chapterIndices.length} actifs · ${formatNumber(chapterRate)}/s`
                       : "Aperçu verrouillé"}
                   </small>
                 </button>
@@ -1523,7 +1562,7 @@ export default function Home() {
             })}
           </nav>
           <p className="cycle-scroll-hint" aria-hidden="true">
-            Balayez pour parcourir les 8 cycles <span>→</span>
+            Balayez pour parcourir les {WORKSHOP_CYCLES.length} cycles <span>→</span>
           </p>
 
           <div className="instrument-list">
@@ -1535,7 +1574,7 @@ export default function Home() {
                   key={chapter}
                 >
                   <div className="workshop-sector-heading">
-                    <span>Cycle 0{chapterIndex + 1}</span>
+                    <span>Cycle {String(chapterIndex + 1).padStart(2, "0")}</span>
                     <h3>{chapter}</h3>
                   </div>
                   <div className="workshop-grid">
@@ -1615,7 +1654,7 @@ export default function Home() {
                           ]
                             .filter(Boolean)
                             .join(" ")}
-                          key={instrument.name}
+                          key={instrument.id}
                         >
                           <div className="instrument-mark" aria-hidden="true">
                             <MathExpression text={instrument.mark} />
@@ -1918,10 +1957,10 @@ export default function Home() {
                 <span className={game.instruments[1] === 0 ? "locked" : ""}>
                   Bases
                 </span>
-                <span className={game.instruments[8] === 0 ? "locked" : ""}>
+                <span className={instrumentLevel(game.instruments, "linear-transformer") === 0 ? "locked" : ""}>
                   Applications
                 </span>
-                <span className={game.instruments[12] === 0 ? "locked" : ""}>
+                <span className={instrumentLevel(game.instruments, "matrix-encoder") === 0 ? "locked" : ""}>
                   Matrices
                 </span>
               </div>
@@ -1956,9 +1995,9 @@ export default function Home() {
                 sector === "bases"
                   ? game.instruments[1] === 0
                   : sector === "applications"
-                    ? game.instruments[8] === 0
+                    ? instrumentLevel(game.instruments, "linear-transformer") === 0
                     : sector === "matrices"
-                      ? game.instruments[12] === 0
+                      ? instrumentLevel(game.instruments, "matrix-encoder") === 0
                     : false;
               return (
                 <div className={`mastery-row ${locked ? "locked" : ""}`} key={sector}>
