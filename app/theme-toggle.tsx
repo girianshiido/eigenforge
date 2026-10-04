@@ -19,12 +19,16 @@ function applyTheme(theme: Theme) {
 }
 
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>("light");
+  const [theme, setTheme] = useState<Theme>("dark");
 
   useEffect(() => {
-    const storedTheme = window.localStorage.getItem(THEME_KEY);
-    const initialTheme: Theme =
-      storedTheme === "dark" ? "dark" : "light";
+    let initialTheme: Theme = "dark";
+    try {
+      const storedTheme = window.localStorage.getItem(THEME_KEY);
+      initialTheme = storedTheme === "light" ? "light" : "dark";
+    } catch {
+      // Keep the default when browser storage is unavailable.
+    }
     setTheme(initialTheme);
     applyTheme(initialTheme);
   }, []);

@@ -25,7 +25,11 @@ export const foundations: WorkshopTasks = {
   "dimension-extension": [
     task("canonical-dimension", "Lire une dimension ambiante", () => { const n = int(4, 8); return number("Combien de vecteurs contient une base de E ?", `E = ${R(n)}`, n, `La dimension de ${R(n)} est ${n}.`); }),
     task("high-combination", "Calculer dans une dimension supérieure", () => { const u = vec(4), v = vec(4); return vector("Calculer u − v dans ℝ⁴.", `u = ${V(u)}, v = ${V(v)}`, add(u, scale(-1, v)), "On soustrait les quatre coordonnées correspondantes."); }),
-    task("coordinate-subspace", "Compter les coordonnées libres", () => { const n = int(4, 8), k = int(1, 3); return number("Quelle est la dimension de F ?", `F = {x ∈ ${R(n)} | x₁ = ⋯ = x_{${k}} = 0}`, n - k, `Les ${k} premières coordonnées sont imposées ; les ${n - k} autres sont libres.`); }),
+    task("coordinate-subspace", "Compter les coordonnées libres", () => {
+      const n = int(4, 8), k = int(1, 3);
+      const constraints = Array.from({ length: k }, (_, i) => `x_{${i + 1}}`).join(" = ") + " = 0";
+      return number("Quelle est la dimension de F ?", `F = {x ∈ ${R(n)} | ${constraints}}`, n - k, `${k === 1 ? "La première coordonnée est imposée" : `Les ${k} premières coordonnées sont imposées`} ; les ${n - k} autres sont libres.`);
+    }),
     task("too-many-vectors", "Comparer cardinal et dimension", () => { const n = int(4, 8); return choice("Que peut-on affirmer de cette famille ?", `F contient ${n + 1} vecteurs de ${R(n)}.`, "Elle est nécessairement liée.", ["Elle est nécessairement libre.", "Elle est nécessairement génératrice.", "Elle est nécessairement une base."], "Une famille de cardinal strictement supérieur à la dimension est liée."); }),
     task("polynomial-dimension", "Reconnaître un espace de dimension supérieure", () => { const n = int(3, 7); return number("Quelle est la dimension de ℝ_n[X] ?", `n = ${n} ; ℝ_n[X] désigne les polynômes de degré au plus n.`, n + 1, `La base (1, X, …, X^{${n}}) contient ${n + 1} vecteurs.`); }),
   ],

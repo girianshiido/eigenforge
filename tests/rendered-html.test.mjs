@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 
 async function render(path = "/") {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
@@ -450,7 +451,7 @@ test("keeps vertical scrolling while blocking selection and zoom gestures", asyn
   assert.match(laboratory, /useInteractionGuards\(\)/);
 });
 
-test("defaults to a persistent light theme and keeps mobile resources visible", async () => {
+test("defaults to a persistent dark theme and keeps mobile resources visible", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   const html = await response.text();
@@ -485,15 +486,16 @@ test("defaults to a persistent light theme and keeps mobile resources visible", 
     ),
   );
 
-  assert.match(html, /data-theme="light"/);
-  assert.match(html, /Activer le thème sombre/);
+  assert.match(html, /data-theme="dark"/);
+  assert.match(html, /Activer le thème clair/);
   assert.match(page, /<ThemeToggle \/>/);
   assert.match(laboratory, /<ThemeToggle \/>/);
-  assert.match(layout, /themeColor: "#edf2ee"/);
-  assert.match(layout, /data-theme="light"/);
+  assert.match(layout, /themeColor: "#09141c"/);
+  assert.match(layout, /data-theme="dark"/);
   assert.match(layout, /themeBootstrap/);
   assert.match(toggle, /const THEME_KEY = "eigenforge-theme"/);
-  assert.match(toggle, /useState<Theme>\("light"\)/);
+  assert.match(toggle, /useState<Theme>\("dark"\)/);
+  assert.match(toggle, /storedTheme === "light" \? "light" : "dark"/);
   assert.match(toggle, /document\.documentElement\.dataset\.theme = theme/);
   assert.match(toggle, /window\.localStorage\.setItem\(THEME_KEY, nextTheme\)/);
   assert.match(styles, /:root\[data-theme="light"\]/);
@@ -523,10 +525,30 @@ test("defaults to a persistent light theme and keeps mobile resources visible", 
     styles.slice(mobileResourcesStart, mobileResourcesEnd),
     /display: grid/,
   );
-  assert.match(sourceHtml, /<html lang="fr" data-theme="light">/);
+  assert.match(sourceHtml, /<html lang="fr" data-theme="dark">/);
   assert.match(sourceHtml, /localStorage\.getItem\("eigenforge-theme"\)/);
-  assert.equal(manifest.background_color, "#edf2ee");
-  assert.equal(manifest.theme_color, "#edf2ee");
+  assert.equal(manifest.background_color, "#09141c");
+  assert.equal(manifest.theme_color, "#09141c");
+});
+
+test("theme bootstraps default to dark but preserve an existing light preference", async () => {
+  const layout = await readFile(new URL("../app/layout.tsx", import.meta.url), "utf8");
+  const sources = [layout.match(/const themeBootstrap = `([\s\S]*?)`;/)[1]];
+  for (const path of ["../index.html", "../exercises/index.html"]) {
+    const html = await readFile(new URL(path, import.meta.url), "utf8");
+    assert.match(html, /data-theme="dark"/);
+    sources.push(html.match(/<script>([\s\S]*?)<\/script>/)[1]);
+  }
+  for (const source of sources) {
+    for (const saved of [null, "dark", "light", "invalid", "unavailable"]) {
+      const document = { documentElement: { dataset: { theme: "dark" }, style: { colorScheme: "dark" } } };
+      const localStorage = { getItem: () => { if (saved === "unavailable") throw new Error("Storage blocked"); return saved; } };
+      runInNewContext(source, { document, localStorage });
+      const expected = saved === "light" ? "light" : "dark";
+      assert.equal(document.documentElement.dataset.theme, expected);
+      assert.equal(document.documentElement.style.colorScheme, expected);
+    }
+  }
 });
 
 test("exports a GitHub Pages build under the repository path", async () => {

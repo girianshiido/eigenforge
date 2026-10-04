@@ -7,8 +7,8 @@
   "scope": "/eigenforge/",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#edf2ee",
-  "theme_color": "#edf2ee",
+  "background_color": "#09141c",
+  "theme_color": "#09141c",
   "icons": [
     {
       "src": "/eigenforge/icon-192.png",

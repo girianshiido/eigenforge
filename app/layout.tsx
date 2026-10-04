@@ -3,7 +3,7 @@ import "./globals.css";
 
 const themeBootstrap = `
   try {
-    const theme = localStorage.getItem("eigenforge-theme") === "dark" ? "dark" : "light";
+    const theme = localStorage.getItem("eigenforge-theme") === "light" ? "light" : "dark";
     document.documentElement.dataset.theme = theme;
     document.documentElement.style.colorScheme = theme;
   } catch (_) {}
@@ -25,7 +25,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#edf2ee",
+  themeColor: "#09141c",
 };
 
 export default function RootLayout({
@@ -34,7 +34,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" data-theme="light" suppressHydrationWarning>
+    <html lang="fr" data-theme="dark" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
       </head>

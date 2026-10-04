@@ -11,6 +11,26 @@ function seeded(callback) {
   Math.random = () => { state = (Math.imul(1664525, state) + 1013904223) >>> 0; return state / 4294967296; };
   try { return callback(); } finally { Math.random = previous; }
 }
+
+test("coordinate subspaces list only the constrained coordinates without ellipses", () => seeded(() => {
+  const family = WORKSHOP_EXERCISE_FAMILIES.find(f => f.workshopId === "dimension-extension");
+  const cases = new Set();
+  for (let draw = 0; draw < 200; draw++) {
+    const q = family.generateTask("coordinate-subspace");
+    const coordinates = [...q.formula.matchAll(/x_\{(\d+)\}/g)].map(m => Number(m[1]));
+    const k = coordinates.length;
+    cases.add(k);
+    assert.deepEqual(coordinates, Array.from({ length: k }, (_, i) => i + 1));
+    assert.doesNotMatch(q.formula, /⋯|…/);
+    if (k === 1) {
+      assert.match(q.formula, /\| x_\{1\} = 0\}/);
+      assert.match(q.explanation, /La première coordonnée est imposée/);
+    }
+    const free = Number(q.explanation.match(/les (\d+) autres sont libres/)[1]);
+    assert.equal(Number(q.choices.find(c => c.correct).text), free);
+  }
+  assert.deepEqual([...cases].sort(), [1, 2, 3]);
+}));
 function parseNumber(s) {
   const fraction = s.match(/^⟬(-?\d+)¦(\d+)⟭$/);
   return fraction ? Number(fraction[1]) / Number(fraction[2]) : Number(s.replaceAll("−", "-"));
