@@ -1,7 +1,16 @@
+import { recallWeight, type PracticeHistory } from "./question-review.ts";
+import { WORKSHOP_EXERCISE_FAMILIES } from "./workshop-exercises/index.ts";
+import type { Audit } from "./workshop-exercises/core.ts";
+export { WORKSHOP_EXERCISE_FAMILIES, WORKSHOP_TASKS, WORKSHOP_TASK_COUNT } from "./workshop-exercises/index.ts";
+
 export type Sector = "vectors" | "bases" | "applications" | "matrices";
 
 export type Question = {
   id: string;
+  workshopId?: string;
+  audit?: Audit;
+  taskKind?: string;
+  recallKey?: string;
   sector: Sector;
   eyebrow: string;
   prompt: string;
@@ -14,12 +23,16 @@ export type Question = {
 
 export type ExerciseFamily = {
   id: string;
+  workshopId?: string;
+  cycleId?: string;
+  tasks?: readonly { id: string; label: string }[];
+  generateTask?: (taskId: string) => Question;
   sector: Sector;
   program: "MPSI" | "MP";
   minInstrument: number;
   label: string;
   description: string;
-  generate: (spaceDimension: number) => Question;
+  generate: (spaceDimension: number, history?: PracticeHistory) => Question;
 };
 
 function randomInt(min: number, max: number) {
@@ -28,6 +41,15 @@ function randomInt(min: number, max: number) {
 
 function pick<T>(items: readonly T[]) {
   return items[randomInt(0, items.length - 1)];
+}
+
+function weightedIndex(weights: readonly number[]) {
+  let target = Math.random() * weights.reduce((sum, weight) => sum + weight, 0);
+  for (let index = 0; index < weights.length; index += 1) {
+    target -= weights[index];
+    if (target < 0) return index;
+  }
+  return weights.findLastIndex((weight) => weight > 0);
 }
 
 function nonZero() {
@@ -753,7 +775,7 @@ export function basisQuestion(
         answer,
         distractors.map((candidate) => vector(candidate)),
       ),
-      explanation: `On cherche x = λe₁ + μe₂. La seconde coordonnée donne μ = ${beta}, puis ${coordinateEquation} = ${canonicalX}, donc λ = ${alpha}. Ainsi [x]ᴮ = ${answer}.`,
+      explanation: `On cherche x = λe₁ + μe₂. La seconde coordonnée donne μ = ${beta}, puis ${coordinateEquation} = ${canonicalX}, donc λ = ${alpha}. Ainsi [x]_B = ${answer}.`,
       geometry:
         "Changer de base ne déplace pas le vecteur : seules les coordonnées utilisées pour le décrire changent.",
       trap:
@@ -1925,10 +1947,10 @@ export function adjointMatrixQuestion(): Question {
     id: `M-ADJOINT-O${order}-${Date.now()}-${randomInt(100, 999)}`,
     sector: "matrices",
     eyebrow: "MP · Adjoint",
-    prompt: "Quelle est la matrice de l’adjoint u* dans cette base ?",
+    prompt: "Quelle est la matrice de l’adjoint u^{*} dans cette base ?",
     formula: `Mat(u) = ${matrix(value)},   la base est orthonormée`,
     choices: choices(matrix(transposed), distractors.map(matrix)),
-    explanation: `Dans une base orthonormée d’un espace euclidien, Mat(u*) = Mat(u)ᵀ. On transpose donc lignes et colonnes : ${matrix(transposed)}.`,
+    explanation: `Dans une base orthonormée d’un espace euclidien, Mat(u^{*}) = Mat(u)ᵀ. On transpose donc lignes et colonnes : ${matrix(transposed)}.`,
     geometry:
       "L’adjoint échange le rôle des deux arguments dans le produit scalaire.",
     trap:
@@ -1970,10 +1992,11 @@ export function selfAdjointQuestion(): Question {
   };
 }
 
-export function spectralTheoremQuestion(): Question {
-  if (Math.random() < 0.5) {
+export function spectralTheoremQuestion(history?: PracticeHistory): Question {
+  if (weightedIndex([recallWeight("spectral-theorem", history), 1]) === 0) {
     return {
       id: `M-SPECTRAL-THEOREM-${Date.now()}-${randomInt(100, 999)}`,
+      recallKey: "spectral-theorem",
       sector: "matrices",
       eyebrow: "MP · Théorème spectral",
       prompt: "Quelle conclusion fournit le théorème spectral réel ?",
@@ -2027,7 +2050,7 @@ export function spectralTheoremQuestion(): Question {
         [0, secondEigenvalue],
       ]),
     ]),
-    explanation: `u(v₁) = ${firstEigenvalue}v₁ et u(v₂) = ${secondEigenvalue}v₂. Dans l’ordre de B, la matrice de u est donc ${answer}.`,
+    explanation: `u(v₁) = ${formatLinearExpression([[firstEigenvalue, "v₁"]])} et u(v₂) = ${formatLinearExpression([[secondEigenvalue, "v₂"]])}. Dans l’ordre de B, la matrice de u est donc ${answer}.`,
     geometry:
       "Les deux diagonales du plan deviennent les axes orthogonaux propres de la transformation.",
     trap:
@@ -2323,7 +2346,7 @@ export function innerProductQuestion(spaceDimension = 2): Question {
   }
 
   if (template === 1) {
-    const specimen = pick(PYTHAGOREAN_VECTORS[dimension]);
+    const specimen = pick(PYTHAGOREAN_VECTORS[dimension] as readonly { vector: readonly number[]; norm: number }[]);
     const normVector = signedVector(specimen.vector);
     return {
       id: `E-INNER-NORM-${dimension}-${Date.now()}-${randomInt(100, 999)}`,
@@ -2345,7 +2368,7 @@ export function innerProductQuestion(spaceDimension = 2): Question {
   }
 
   if (template === 2) {
-    const specimen = pick(PYTHAGOREAN_VECTORS[dimension]);
+    const specimen = pick(PYTHAGOREAN_VECTORS[dimension] as readonly { vector: readonly number[]; norm: number }[]);
     const difference = signedVector(specimen.vector);
     const first = Array.from(
       { length: dimension },
@@ -2373,7 +2396,10 @@ export function innerProductQuestion(spaceDimension = 2): Question {
     };
   }
 
-  const first = randomVector(dimension);
+  let first = randomVector(dimension);
+  while (first.filter((coordinate) => coordinate !== 0).length < 2) {
+    first = randomVector(dimension);
+  }
   const scalar = pick([-3, -2, 2, 3]);
   const second = scaleVector(scalar, first);
   const wrongSeconds = [0, 1, 2].map((variant) => {
@@ -2451,7 +2477,7 @@ export function orthonormalizationQuestion(): Question {
           (candidate) => `u = ${vector(first)}, v = ${vector(candidate)}`,
         ),
       ),
-      explanation: `On obtient ⟨u, v⟩ = ${first[0]} × ${correctSecond[0]} + ${first[1]} × ${correctSecond[1]} = 0.`,
+      explanation: `On obtient ⟨u, v⟩ = ${factor(first[0])} × ${factor(correctSecond[0])} + ${factor(first[1])} × ${factor(correctSecond[1])} = 0.`,
       geometry:
         "Dans le plan, une famille de deux vecteurs non nuls orthogonaux dessine deux axes perpendiculaires.",
       trap:
@@ -2479,13 +2505,13 @@ export function orthonormalizationQuestion(): Question {
     sector: "bases",
     eyebrow: "MPSI · Procédé de Gram–Schmidt",
     prompt: "Quel vecteur obtient-on après la première étape d’orthogonalisation de v par rapport à u ?",
-    formula: `u = ${vector([1, 1])}, v = ${vector(source)} et v^{⊥} = v − ${fraction("⟨v, u⟩", "⟨u, u⟩")}u`,
+    formula: `u = ${vector([1, 1])}, v = ${vector(source)} et w = v − ${fraction("⟨v, u⟩", "⟨u, u⟩")}u`,
     choices: choices(vector(result), [
       vector(source),
       vector([source[0] - 2 * coefficient, source[1] - 2 * coefficient]),
       vector([result[1], result[0]]),
     ]),
-    explanation: `Le coefficient de projection vaut ${fraction(firstCoordinate + secondCoordinate, 2)} = ${coefficient}. Ainsi v^{⊥} = ${vector(result)}, et ⟨v^{⊥}, u⟩ = 0.`,
+    explanation: `Le coefficient de projection vaut ${fraction(firstCoordinate + secondCoordinate, 2)} = ${coefficient}. Ainsi w = ${vector(result)}, et ⟨w, u⟩ = 0.`,
     geometry:
       "Gram–Schmidt retire à v sa composante parallèle à u.",
     trap:
@@ -2607,9 +2633,9 @@ export function orthogonalComplementQuestion(spaceDimension = 2): Question {
   };
 }
 
-export function projectionDistanceQuestion(spaceDimension = 2): Question {
+export function projectionDistanceQuestion(spaceDimension = 2, history?: PracticeHistory): Question {
   const dimension = ambientDimension(spaceDimension);
-  const template = randomInt(0, 3);
+  const template = weightedIndex([1, 1, recallWeight("projection-characterization", history), 1]);
 
   if (template === 0) {
     const direction = pick([
@@ -2669,14 +2695,14 @@ export function projectionDistanceQuestion(spaceDimension = 2): Question {
       id: `E-PROJ-DISTANCE-${Date.now()}-${randomInt(100, 999)}`,
       sector: "applications",
       eyebrow: "MPSI · Distance à un sous-espace",
-      prompt: "Quelle est la distance du vecteur x à la droite F ?",
-      formula: `F = {(x ; y) ∈ ℝ² | ${equation} = 0} et x = ${vector(point)}`,
+      prompt: "Quelle est la distance du vecteur u à la droite F ?",
+      formula: `F = {(x ; y) ∈ ℝ² | ${equation} = 0} et u = ${vector(point)}`,
       choices: choices(`${distance}`, [
         `${distance * 5}`,
         `${Math.abs(normalCoefficient)}`,
         `${distance + 1}`,
       ]),
-      explanation: `Un vecteur normal à F est n = ${vector(signs)}, de norme 5. La distance vaut ${fraction(`|⟨x, n⟩|`, "‖n‖")} = ${distance}.`,
+      explanation: `Un vecteur normal à F est n = ${vector(signs)}, de norme 5. La distance vaut ${fraction(`|⟨u, n⟩|`, "‖n‖")} = ${distance}.`,
       geometry:
         "La distance à F est la longueur de la composante orthogonale à F.",
       trap:
@@ -2687,6 +2713,7 @@ export function projectionDistanceQuestion(spaceDimension = 2): Question {
   if (template === 2) {
     return {
       id: `E-PROJ-NEAREST-${Date.now()}-${randomInt(100, 999)}`,
+      recallKey: "projection-characterization",
       sector: "applications",
       eyebrow: "MPSI · Meilleure approximation",
       prompt: "Quelle propriété caractérise p_F(x), la projection orthogonale de x sur F ?",
@@ -2770,14 +2797,14 @@ export function matrixQuestion(
   return positivityQuestion();
 }
 
-export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
+const BASE_EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
   {
     id: "vector-combination",
     sector: "vectors",
     program: "MPSI",
     minInstrument: -1,
     label: "Combinaisons linéaires",
-    description: "Calculer les coordonnées de αu + βv.",
+    description: "Calculer une combinaison, une coordonnée ou retrouver un coefficient.",
     generate: (spaceDimension) => vectorQuestion(spaceDimension, 0),
   },
   {
@@ -2786,7 +2813,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     program: "MPSI",
     minInstrument: -1,
     label: "Appartenance à Vect",
-    description: "Reconnaître les vecteurs d’une droite ou d’un plan engendré.",
+    description: "Tester l’appartenance, la dimension et une équation d’un espace engendré.",
     generate: (spaceDimension) => vectorQuestion(spaceDimension, 1),
   },
   {
@@ -2795,7 +2822,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     program: "MPSI",
     minInstrument: -1,
     label: "Sous-espaces vectoriels",
-    description: "Distinguer sous-espaces et ensembles non stables.",
+    description: "Reconnaître un sous-espace, ses propriétés et sa dimension.",
     generate: (spaceDimension) => vectorQuestion(spaceDimension, 2),
   },
   {
@@ -2804,7 +2831,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     program: "MPSI",
     minInstrument: 1,
     label: "Déterminant d’une famille",
-    description: "Calculer un déterminant et reconnaître une base de ℝ².",
+    description: "Calculer un déterminant, reconnaître une base et trouver une aire.",
     generate: (spaceDimension) => basisQuestion(spaceDimension, 0),
   },
   {
@@ -2813,7 +2840,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     program: "MPSI",
     minInstrument: 1,
     label: "Coordonnées dans une base",
-    description: "Exprimer un vecteur dans une base non canonique.",
+    description: "Changer les coordonnées dans les deux sens et construire la matrice de passage.",
     generate: (spaceDimension) => basisQuestion(spaceDimension, 1),
   },
   {
@@ -2822,7 +2849,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     program: "MPSI",
     minInstrument: 4,
     label: "Rang d’une famille",
-    description: "Déterminer le nombre de directions indépendantes.",
+    description: "Étudier rang, génération et relations de dépendance.",
     generate: (spaceDimension) => basisQuestion(spaceDimension, 2),
   },
   {
@@ -2831,7 +2858,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     program: "MPSI",
     minInstrument: 13,
     label: "Noyau",
-    description: "Identifier un vecteur envoyé sur le vecteur nul.",
+    description: "Reconnaître un vecteur du noyau, une base du noyau et sa dimension.",
     generate: (spaceDimension) => applicationQuestion(spaceDimension, 0),
   },
   {
@@ -2849,7 +2876,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     program: "MPSI",
     minInstrument: 12,
     label: "Rang d’une application",
-    description: "Lire le rang d’une application donnée explicitement.",
+    description: "Étudier rang, bijectivité et équation du noyau.",
     generate: (spaceDimension) => applicationQuestion(spaceDimension, 2),
   },
   {
@@ -2858,7 +2885,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     program: "MPSI",
     minInstrument: 14,
     label: "Image d’une application",
-    description: "Déterminer le sous-espace atteint par une application.",
+    description: "Déterminer l’image, sa dimension et l’appartenance d’un vecteur.",
     generate: (spaceDimension) => applicationQuestion(spaceDimension, 3),
   },
   {
@@ -2867,7 +2894,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     program: "MPSI",
     minInstrument: 12,
     label: "Linéarité",
-    description: "Reconnaître les applications qui conservent les combinaisons linéaires.",
+    description: "Reconnaître, paramétrer et appliquer une application linéaire.",
     generate: (spaceDimension) => applicationQuestion(spaceDimension, 4),
   },
   {
@@ -2876,7 +2903,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     program: "MPSI",
     minInstrument: 24,
     label: "Produit matrice-vecteur",
-    description: "Appliquer une matrice à un vecteur colonne.",
+    description: "Calculer Au, résoudre Ax = b et trouver un vecteur du noyau.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 0),
   },
   {
@@ -2885,7 +2912,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     program: "MPSI",
     minInstrument: 24,
     label: "Matrice d’une application",
-    description: "Encoder les images des vecteurs de base dans les colonnes.",
+    description: "Construire la matrice, appliquer f et lire son rang dans les colonnes.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 1),
   },
   {
@@ -2894,7 +2921,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     program: "MPSI",
     minInstrument: 29,
     label: "Inversibilité",
-    description: "Reconnaître une matrice de déterminant non nul.",
+    description: "Reconnaître l’inversibilité, calculer une inverse et trouver un paramètre singulier.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 2),
   },
   {
@@ -2903,7 +2930,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     program: "MP",
     minInstrument: 48,
     label: "Valeurs propres",
-    description: "Lire le spectre d’une matrice triangulaire.",
+    description: "Lire une valeur propre, le spectre entier et la somme avec multiplicité.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 3),
   },
   {
@@ -2912,7 +2939,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     program: "MPSI",
     minInstrument: 37,
     label: "Déterminant 2×2",
-    description: "Calculer ad − bc avec des coefficients entiers.",
+    description: "Calculer un déterminant 2×2, une valeur singulière et l’orientation.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 5),
   },
   {
@@ -2921,7 +2948,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     program: "MPSI",
     minInstrument: 38,
     label: "Déterminant 3×3",
-    description: "Calculer mentalement un déterminant triangulaire ou creux.",
+    description: "Calculer un déterminant 3×3, étudier sa nullité et l’inversibilité.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 4),
   },
   {
@@ -2929,8 +2956,8 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     sector: "matrices",
     program: "MPSI",
     minInstrument: 25,
-    label: "Produit de matrices 2×2",
-    description: "Multiplier les lignes de A par les colonnes de B.",
+    label: "Produit de matrices",
+    description: "Calculer AB, déterminer la taille d’un produit et étudier un commutateur.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 6),
   },
   {
@@ -2939,7 +2966,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     program: "MP",
     minInstrument: 47,
     label: "Déterminant par blocs",
-    description: "Exploiter des blocs triangulaires aux ordres 4 et 5.",
+    description: "Calculer un déterminant par blocs ou repérer la singularité.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 7),
   },
   {
@@ -2948,7 +2975,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     program: "MP",
     minInstrument: 50,
     label: "Polynôme caractéristique",
-    description: "Calculer det(XI − A) et retrouver les valeurs propres.",
+    description: "Calculer χ, lire la dimension, la trace et le déterminant, les multiplicités et un décalage.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 8),
   },
   {
@@ -2957,7 +2984,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     program: "MP",
     minInstrument: 49,
     label: "Espaces propres",
-    description: "Reconnaître un vecteur propre associé à une valeur propre.",
+    description: "Trouver un vecteur propre, un espace propre et sa dimension.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 9),
   },
   {
@@ -2984,7 +3011,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     program: "MP",
     minInstrument: 56,
     label: "Polynômes annulateurs",
-    description: "Reconnaître un polynôme P tel que P(A) = 0.",
+    description: "Reconnaître un annulateur, exclure des valeurs propres et réduire les puissances.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 12),
   },
   {
@@ -2993,7 +3020,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     program: "MP",
     minInstrument: 57,
     label: "Polynôme minimal",
-    description: "Déterminer le générateur unitaire de l’idéal annulateur.",
+    description: "Déterminer le polynôme minimal, reconnaître ses multiples annulateurs et conclure sur la réduction.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 13),
   },
   {
@@ -3011,7 +3038,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     program: "MP",
     minInstrument: 59,
     label: "Sous-espaces caractéristiques",
-    description: "Lire les noyaux généralisés associés aux valeurs propres.",
+    description: "Comparer dimensions propres, multiplicité et noyaux généralisés.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 15),
   },
   {
@@ -3020,7 +3047,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     program: "MP",
     minInstrument: 64,
     label: "Adjoint",
-    description: "Transposer une matrice dans une base orthonormée.",
+    description: "Calculer l’adjoint, utiliser sa définition et composer des adjoints.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 16),
   },
   {
@@ -3029,7 +3056,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     program: "MP",
     minInstrument: 65,
     label: "Endomorphismes autoadjoints",
-    description: "Reconnaître la symétrie matricielle en base orthonormée.",
+    description: "Reconnaître la symétrie, compléter une matrice et lire ses valeurs propres.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 17),
   },
   {
@@ -3038,8 +3065,8 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     program: "MP",
     minInstrument: 66,
     label: "Théorème spectral",
-    description: "Construire une diagonalisation orthogonale.",
-    generate: (spaceDimension) => matrixQuestion(spaceDimension, 18),
+    description: "Énoncer le théorème spectral, lire une valeur propre et construire une base orthonormée.",
+    generate: (_spaceDimension, history) => spectralTheoremQuestion(history),
   },
   {
     id: "matrix-positivity",
@@ -3047,7 +3074,7 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     program: "MP",
     minInstrument: 67,
     label: "Positivité",
-    description: "Lire la positivité d’une matrice symétrique sur son spectre.",
+    description: "Étudier le signe, appliquer Sylvester et évaluer une forme quadratique.",
     generate: (spaceDimension) => matrixQuestion(spaceDimension, 19),
   },
   {
@@ -3084,9 +3111,630 @@ export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
     minInstrument: 43,
     label: "Projection et distance",
     description: "Projeter orthogonalement et calculer la distance à un sous-espace.",
-    generate: (spaceDimension) => projectionDistanceQuestion(spaceDimension),
+    generate: (spaceDimension, history) => projectionDistanceQuestion(spaceDimension, history),
   },
 ] as const;
+
+const RECALL_TASKS: Record<string, Record<number, string>> = {
+  "vector-subspace": { 1: "subspace-zero-vector" },
+  "matrix-adjoint": { 1: "adjoint-definition", 2: "adjoint-composition" },
+  "matrix-self-adjoint": { 2: "self-adjoint-real-spectrum" },
+  "matrix-positivity": { 1: "positive-definite-criterion-2" },
+};
+
+function variation(
+  familyId: string,
+  mode: number,
+  prompt: string,
+  formula: string,
+  answer: string,
+  distractors: string[],
+  explanation: string,
+  geometry?: string,
+  trap?: string,
+): Question {
+  const family = BASE_EXERCISE_FAMILIES.find((item) => item.id === familyId);
+  if (!family) throw new Error("Famille inconnue : " + familyId);
+  const reference = family.generate(3);
+  return {
+    id: familyId + "-TASK-" + mode + "-" + Date.now() + "-" + randomInt(100, 999),
+    taskKind: "task-" + mode,
+    recallKey: RECALL_TASKS[familyId]?.[mode],
+    sector: family.sector,
+    eyebrow: family.program + " · " + family.label,
+    prompt,
+    formula,
+    choices: choices(answer, distractors),
+    explanation,
+    geometry: geometry ?? reference.geometry,
+    trap: trap ?? reference.trap,
+  };
+}
+
+function numericVariation(
+  familyId: string,
+  mode: number,
+  prompt: string,
+  formula: string,
+  answer: number,
+  explanation: string,
+) {
+  return variation(
+    familyId, mode, prompt, formula, String(answer),
+    [String(answer + 1), String(answer - 1), String(answer + 2)],
+    explanation,
+  );
+}
+
+function supplementalQuestion(familyId: string, mode: number, spaceDimension: number): Question {
+  const dimension = ambientDimension(spaceDimension);
+  if (familyId === "vector-combination") {
+    if (mode === 1) {
+      const u = randomVector(dimension);
+      const v = randomVector(dimension);
+      const w = combineVectors(1, u, 2, v);
+      return variation(familyId, mode,
+        "Quel est le vecteur v qui vérifie u + 2v = w ?",
+        "u = " + vector(u) + " et w = " + vector(w),
+        vector(v), balancedCoordinateDistractors(v, [u, w]).map(vector),
+        "On isole v : v = " + fraction("w − u", 2) + " = " + vector(v) + ".");
+    }
+    const alpha = nonZero();
+    const beta = nonZero();
+    const u = [1, 1];
+    const v = [1, -1];
+    const w = combineVectors(alpha, u, beta, v);
+    return numericVariation(familyId, mode,
+      "Quel est le coefficient β dans w = αu + βv ?",
+      "u = " + vector(u) + ", v = " + vector(v) + " et w = " + vector(w),
+      beta, "En soustrayant la seconde coordonnée de la première, on obtient 2β = " + (2 * beta) + ".");
+  }
+  if (familyId === "vector-span") {
+    if (mode === 1) {
+      const independent = Math.random() < 0.5;
+      const u = dimension === 3 ? [1, 0, 0] : [1, 0];
+      const v = independent ? (dimension === 3 ? [0, 1, 0] : [0, 1]) : scaleVector(2, u);
+      const answer = independent ? 2 : 1;
+      return numericVariation(familyId, mode,
+        "Quelle est la dimension de Vect(u, v) ?",
+        "u = " + vector(u) + " et v = " + vector(v),
+        answer, independent ? "Les deux vecteurs sont indépendants : ils engendrent un plan." : "v est un multiple de u : ils engendrent une droite.");
+    }
+    const k = pick([2, 3]);
+    return variation(familyId, mode,
+      "Quelle équation décrit la droite Vect(u) dans ℝ² ?",
+      "u = " + vector([1, k]),
+      "y − " + k + "x = 0",
+      ["y + " + k + "x = 0", "x − " + k + "y = 0", "x + " + k + "y = 0"],
+      "Tout multiple de " + vector([1, k]) + " vérifie y = " + k + "x.");
+  }
+  if (familyId === "vector-subspace") {
+    if (mode === 1) {
+      return variation(familyId, mode,
+        "Quelle propriété doit vérifier tout sous-espace vectoriel F de E ?",
+        "F ⊂ E",
+        "Le vecteur nul appartient à F.",
+        ["F contient nécessairement tout E.", "F ne contient aucun vecteur non nul.", "F est toujours de dimension 1."],
+        "Tout sous-espace contient le vecteur nul et est stable par combinaison linéaire.");
+    }
+    const type = randomInt(0, 2);
+    const formula = type === 0 ? "H = {(x ; y) ∈ ℝ² | x = 0}" :
+      type === 1 ? "H = {(x ; y) ∈ ℝ² | x = y = 0}" : "H = ℝ²";
+    const answer = type === 0 ? 1 : type === 1 ? 0 : 2;
+    return numericVariation(familyId, mode,
+      "Quelle est la dimension du sous-espace H ?", formula, answer,
+      "H possède exactement " + answer + " direction" + (answer > 1 ? "s" : "") + " indépendante" + (answer > 1 ? "s" : "") + ".");
+  }
+  if (familyId === "basis-determinant") {
+    if (mode === 1) {
+      const p = nonZero();
+      return variation(familyId, mode,
+        "Lequel de ces couples est une base de ℝ² ?",
+        "Les vecteurs sont donnés dans la base canonique.",
+        "(" + vector([1, 0]) + ", " + vector([p, 1]) + ")",
+        ["(" + vector([1, 0]) + ", " + vector([p, 0]) + ")",
+         "(" + vector([0, 1]) + ", " + vector([0, p]) + ")",
+         "(" + vector([1, 1]) + ", " + vector([p, p]) + ")"],
+        "Le couple (" + vector([1, 0]) + ", " + vector([p, 1]) + ") a pour déterminant 1 ; les trois autres couples sont liés.");
+    }
+    const a = nonZero();
+    const b = nonZero();
+    const area = Math.abs(a * b);
+    return numericVariation(familyId, mode,
+      "Quelle est l’aire du parallélogramme construit sur u et v ?",
+      "u = " + vector([a, 0]) + " et v = " + vector([0, b]),
+      area, "L’aire est la valeur absolue du déterminant : |" + (a * b) + "| = " + area + ".");
+  }
+  if (familyId === "basis-coordinates") {
+    const p = pick([-3, -2, 2, 3]);
+    const alpha = nonZero();
+    const beta = nonZero();
+    const x = [alpha + p * beta, beta];
+    if (mode === 1) {
+      return variation(familyId, mode,
+        "Quelles sont les coordonnées canoniques de x ?",
+        "B = (e₁, e₂), e₁ = " + vector([1, 0]) + ", e₂ = " + vector([p, 1]) + " et [x]_B = " + vector([alpha, beta]),
+        vector(x), [vector([alpha, beta]), vector([alpha + beta, p * beta]), vector([alpha, alpha + p * beta])],
+        "x = " + formatLinearExpression([[alpha, "e₁"], [beta, "e₂"]]) + " = " + vector(x) + ".");
+    }
+    return variation(familyId, mode,
+      "Quelle matrice P vérifie [x]_{can} = P[x]_B pour tout vecteur x ?",
+      "B = (e₁, e₂), e₁ = " + vector([1, 0]) + " et e₂ = " + vector([p, 1]),
+      matrix([[1, p], [0, 1]]),
+      [matrix([[1, 0], [p, 1]]), matrix([[1, -p], [0, 1]]), matrix([[p, 1], [1, 0]])],
+      "Les colonnes de P sont les coordonnées canoniques de e₁ puis de e₂, dans cet ordre.");
+  }
+  if (familyId === "basis-rank") {
+    if (mode === 1) {
+      const generating = Math.random() < 0.5;
+      const third = generating ? [0, 1] : [3, 0];
+      return variation(familyId, mode,
+        "Quelle affirmation décrit cette famille de trois vecteurs de ℝ² ?",
+        "F = (" + vector([1, 0]) + ", " + vector([2, 0]) + ", " + vector(third) + ")",
+        generating ? "F est liée et génératrice de ℝ²." : "F est liée et ne génère pas ℝ².",
+        [generating ? "F est liée et ne génère pas ℝ²." : "F est liée et génératrice de ℝ².",
+         "F est libre et génératrice de ℝ².", "F est libre et ne génère pas ℝ²."],
+        "Les deux premiers vecteurs sont liés ; le troisième " + (generating ? "apporte une direction indépendante." : "reste sur la même droite.") );
+    }
+    const a = nonZero();
+    let b = nonZero();
+    while (a === b) b = nonZero();
+    const answer = "w = " + formatLinearExpression([[a, "u"], [b, "v"]]);
+    return variation(familyId, mode,
+      "Quelle relation de dépendance vérifie la famille (u, v, w) ?",
+      "u = " + vector([1, 0]) + ", v = " + vector([0, 1]) + " et w = " + vector([a, b]),
+      answer,
+      ["w = " + formatLinearExpression([[b, "u"], [a, "v"]]),
+       "w = " + formatLinearExpression([[-a, "u"], [b, "v"]]),
+       "w = " + formatLinearExpression([[a, "u"], [-b, "v"]])],
+      "Dans la base canonique, les coefficients devant u et v sont précisément les deux coordonnées de w.");
+  }
+  if (familyId === "application-kernel") {
+    const a = nonZero();
+    if (mode === 1) {
+      return variation(familyId, mode,
+        "Quelle droite est le noyau de f ?",
+        "f(x, y) = (" + formatLinearExpression([[1, "x"], [a, "y"]]) + " ; 0)",
+        "Vect(" + vector([-a, 1]) + ")",
+        ["Vect(" + vector([1, a]) + ")", "Vect(" + vector([0, 1]) + ")", "Vect(" + vector([1, 0]) + ")"],
+        "f(x, y) = 0 équivaut à " + formatLinearExpression([[1, "x"], [a, "y"]]) + " = 0, donc (x ; y) est multiple de " + vector([-a, 1]) + ".");
+    }
+    const rank = Math.random() < 0.5 ? 1 : 2;
+    return numericVariation(familyId, mode,
+      "Quelle est la dimension du noyau de f ?",
+      rank === 1 ? "f : ℝ³ → ℝ², f(x, y, z) = (x + y ; 0)" : "f : ℝ³ → ℝ², f(x, y, z) = (x ; y)",
+      3 - rank, "Le rang vaut " + rank + " ; le théorème du rang donne dim(Ker(f)) = 3 − " + rank + ".");
+  }
+  if (familyId === "application-explicit-rank") {
+    if (mode === 1) {
+      const invertible = Math.random() < 0.5;
+      return variation(familyId, mode,
+        "Quelles propriétés possède f : ℝ² → ℝ² ?",
+        invertible ? "f(x, y) = (x + y ; y)" : "f(x, y) = (x + y ; 0)",
+        invertible ? "f est injective et surjective." : "f n’est ni injective ni surjective.",
+        [invertible ? "f n’est ni injective ni surjective." : "f est injective et surjective.",
+         "f est injective mais non surjective.", "f est surjective mais non injective."],
+        "En dimension finie égale au départ et à l’arrivée, injectivité et surjectivité sont équivalentes ; ici le rang vaut " + (invertible ? 2 : 1) + ".");
+    }
+    const a = nonZero();
+    return variation(familyId, mode,
+      "Quelle équation caractérise le noyau de f ?",
+      "f(x, y) = (" + formatLinearExpression([[1, "x"], [a, "y"]]) + " ; 0)",
+      formatLinearExpression([[1, "x"], [a, "y"]]) + " = 0",
+      [formatLinearExpression([[1, "x"], [-a, "y"]]) + " = 0", "y = 0", "x = 0"],
+      "Le noyau contient exactement les couples annulant la première coordonnée de f.");
+  }
+  if (familyId === "application-image") {
+    const a = pick([2, 3, -2, -3]);
+    if (mode === 1) {
+      return numericVariation(familyId, mode,
+        "Quelle est la dimension de Im(f) ?",
+        "f : ℝ² → ℝ², f(x, y) = (x + y ; " + a + "(x + y))",
+        1, "Toutes les images sont multiples de " + vector([1, a]) + " : Im(f) est une droite.");
+    }
+    return variation(familyId, mode,
+      "Quel vecteur appartient à Im(f) ?",
+      "f : ℝ² → ℝ², f(x, y) = (x + y ; " + a + "(x + y))",
+      vector([1, a]),
+      [vector([1, a + 1]), vector([1, a - 1]), vector([0, 1])],
+      "Im(f) = Vect(" + vector([1, a]) + ") : les coordonnées de tout vecteur image sont proportionnelles.");
+  }
+  if (familyId === "application-linearity") {
+    if (mode === 1) {
+      const a = nonZero();
+      return numericVariation(familyId, mode,
+        "Quelle valeur de c rend f linéaire ?",
+        "f(x, y) = (" + formatLinearExpression([[a, "x"]]) + " + c ; y)",
+        0, "Une application linéaire vérifie f(0, 0) = (0 ; 0), ce qui impose c = 0.");
+    }
+    const a = nonZero();
+    const b = nonZero();
+    const u = randomVector(2);
+    const v = randomVector(2);
+    const sum = combineVectors(1, u, 1, v);
+    const result = [a * sum[0] + b * sum[1], sum[1]];
+    return variation(familyId, mode,
+      "Quel vecteur vaut f(u + v) ?",
+      "f(x, y) = (" + formatLinearExpression([[a, "x"], [b, "y"]]) + " ; y), u = " + vector(u) + " et v = " + vector(v),
+      vector(result),
+      balancedCoordinateDistractors(result, [u, v, sum]).map(vector),
+      "On additionne d’abord u et v, puis on applique f ; la linéarité donne aussi f(u + v) = f(u) + f(v).");
+  }
+  return supplementalMatrixQuestion(familyId, mode);
+}
+
+function supplementalMatrixQuestion(familyId: string, mode: number): Question {
+  if (familyId === "matrix-vector-product") {
+    const a = pick([-3, -2, 2, 3]);
+    const b = pick([-3, -2, 2, 3]);
+    if (mode === 1) {
+      const x = randomVector(2);
+      const image = [a * x[0], b * x[1]];
+      return variation(familyId, mode,
+        "Quel vecteur x vérifie Ax = b ?",
+        "A = " + matrix([[a, 0], [0, b]]) + " et b = " + columnVector(image),
+        columnVector(x),
+        balancedCoordinateDistractors(x, [[image[0], image[1]], [x[1], x[0]]]).map(columnVector),
+        "La matrice est diagonale : on divise la première coordonnée par " + a + " et la seconde par " + b + ".");
+    }
+    const k = pick([-3, -2, 2, 3]);
+    return variation(familyId, mode,
+      "Quel vecteur non nul appartient au noyau de A ?",
+      "A = " + matrix([[1, k], [0, 0]]),
+      columnVector([-k, 1]),
+      [columnVector([k, 1]), columnVector([-k + 1, 1]), columnVector([1, 0])],
+      "Le produit Au est nul exactement lorsque la première coordonnée de u vaut " + (-k) + " fois la seconde.");
+  }
+  if (familyId === "matrix-representation") {
+    const u = randomVector(2);
+    let v = randomVector(2);
+    const independent = Math.random() < 0.5;
+    if (independent) {
+      while (determinant2(u, v) === 0) v = randomVector(2);
+    } else {
+      v = scaleVector(2, u);
+    }
+    if (mode === 1) {
+      const image = combineVectors(1, u, 1, v);
+      return variation(familyId, mode,
+        "Quelle est l’image du vecteur e₁ + e₂ par f ?",
+        "f(e₁) = " + columnVector(u) + " et f(e₂) = " + columnVector(v),
+        columnVector(image),
+        balancedCoordinateDistractors(image, [u, v]).map(columnVector),
+        "Par linéarité, f(e₁ + e₂) = f(e₁) + f(e₂) = " + columnVector(image) + ".");
+    }
+    return numericVariation(familyId, mode,
+      "Quel est le rang de la matrice de f dans la base canonique ?",
+      "f(e₁) = " + columnVector(u) + " et f(e₂) = " + columnVector(v),
+      independent ? 2 : 1,
+      independent ? "Les deux colonnes sont indépendantes : le rang vaut 2." : "La seconde colonne est le double de la première : le rang vaut 1.");
+  }
+  if (familyId === "matrix-invertibility") {
+    const k = pick([-3, -2, 2, 3]);
+    if (mode === 1) {
+      return variation(familyId, mode,
+        "Quelle est la matrice inverse de A ?",
+        "A = " + matrix([[1, k], [0, 1]]),
+        matrix([[1, -k], [0, 1]]),
+        [matrix([[1, k], [0, 1]]), matrix([[1, 0], [-k, 1]]), matrix([[1, -k], [1, 1]])],
+        "Le produit des deux matrices triangulaires vaut I₂ : les coefficients hors diagonale se compensent.");
+    }
+    return numericVariation(familyId, mode,
+      "Quelle valeur de t rend A non inversible ?",
+      "A = ⟦t," + k + ";1,1⟧",
+      k, "Le déterminant vaut t − " + k + " ; il s’annule pour t = " + k + ".",
+    );
+  }
+  if (familyId === "matrix-spectrum") {
+    const a = pick([-3, -2, 1, 2]);
+    let b = a + pick([2, 3]);
+    if (b === 0) b += 1;
+    const A = matrix([[a, 1], [0, b]]);
+    if (mode === 1) {
+      return variation(familyId, mode,
+        "Quel est le spectre de A ?",
+        "A = " + A,
+        "{" + a + " ; " + b + "}",
+        ["{" + (a + 1) + " ; " + b + "}", "{" + a + " ; " + (b + 1) + "}", "{0 ; " + b + "}"],
+        "A est triangulaire ; son spectre est l’ensemble des coefficients diagonaux.");
+    }
+    return numericVariation(familyId, mode,
+      "Quelle est la somme des valeurs propres de A, avec multiplicité ?",
+      "A = " + A, a + b,
+      "Cette somme est la trace de A : " + a + " + " + b + " = " + (a + b) + ".");
+  }
+  if (familyId === "matrix-determinant-2") {
+    const k = pick([-3, -2, 2, 3]);
+    if (mode === 1) {
+      return numericVariation(familyId, mode,
+        "Quelle valeur de t annule le déterminant de A ?",
+        "A = ⟦t," + k + ";1,1⟧",
+        k, "Le déterminant est t − " + k + ", donc il s’annule pour t = " + k + ".");
+    }
+    const positive = Math.random() < 0.5;
+    const A = matrix([[positive ? 2 : -2, k], [0, 1]]);
+    return variation(familyId, mode,
+      "Quel est l’effet de A sur l’orientation du plan ?",
+      "A = " + A,
+      positive ? "A préserve l’orientation." : "A renverse l’orientation.",
+      [positive ? "A renverse l’orientation." : "A préserve l’orientation.",
+       "A écrase le plan sur une droite.", "A n’est pas une application linéaire."],
+      "Le signe du déterminant, " + (positive ? "positif" : "négatif") + ", détermine l’orientation.");
+  }
+  if (familyId === "matrix-determinant-3") {
+    const a = pick([-3, -2, 2, 3]);
+    if (mode === 1) {
+      return numericVariation(familyId, mode,
+        "Quelle valeur de t rend cette matrice singulière ?",
+        "A = ⟦1," + a + ",0;0,1,2;0,0,t⟧",
+        0, "A est triangulaire : son déterminant vaut le produit 1 × 1 × t = t.");
+    }
+    const invertible = Math.random() < 0.5;
+    return variation(familyId, mode,
+      "Quelle propriété de A peut-on déduire de son déterminant ?",
+      "A = " + matrix([[1, 2, 0], [0, invertible ? a : 0, 1], [0, 0, 1]]),
+      invertible ? "A est inversible." : "A n’est pas inversible.",
+      [invertible ? "A n’est pas inversible." : "A est inversible.",
+       "A n’est pas carrée.", "A est nécessairement diagonale."],
+      "Le déterminant est " + (invertible ? String(a) + ", non nul." : "nul.") );
+  }
+  if (familyId === "matrix-product") {
+    const a = pick([-3, -2, -1, 1, 3]);
+    let b = nonZero();
+    while (b === a) b = nonZero();
+    if (mode === 1) {
+      const [rows, shared, columns] = sample([2, 3, 4], 3);
+      return variation(familyId, mode,
+        "Quelles sont les dimensions du produit AB ?",
+        "A possède " + rows + " lignes et " + shared + " colonnes ; B possède " + shared + " lignes et " + columns + " colonnes.",
+        rows + " lignes et " + columns + " colonnes",
+        [rows + " lignes et " + shared + " colonnes", shared + " lignes et " + columns + " colonnes", columns + " lignes et " + rows + " colonnes"],
+        "Les dimensions intérieures coïncident ; AB conserve les lignes de A et les colonnes de B.");
+    }
+    const A = [[a, 0], [0, b]];
+    const B = [[0, 1], [1, 0]];
+    const AB = multiplyMatrices(A, B);
+    const BA = multiplyMatrices(B, A);
+    const entry = AB[0][1] - BA[0][1];
+    return numericVariation(familyId, mode,
+      "Quelle est l’entrée en première ligne, seconde colonne de AB − BA ?",
+      "A = " + matrix(A) + " et B = " + matrix(B),
+      entry, "Dans AB, cette entrée vaut " + a + " ; dans BA, elle vaut " + b + ". La différence vaut " + entry + ".");
+  }
+  if (familyId === "matrix-block-determinant") {
+    const a = pick([-3, -2, 2, 3]);
+    if (mode === 1) {
+      return numericVariation(familyId, mode,
+        "Quelle valeur de t rend cette matrice triangulaire par blocs singulière ?",
+        "A = ⟦1," + a + ",0,0;0,1,0,0;0,0,t," + a + ";0,0,0,1⟧",
+        0, "Le premier bloc a pour déterminant 1, le second a pour déterminant t. Le produit est nul si t = 0.");
+    }
+    const detB = nonZero();
+    const detC = nonZero();
+    return numericVariation(familyId, mode,
+      "Quel est le déterminant de la matrice par blocs A ?",
+      "A = ⟦B,C;0,D⟧, B et D sont carrées, det(B) = " + detB + " et det(D) = " + detC,
+      detB * detC, "Une matrice triangulaire par blocs a pour déterminant le produit des déterminants de ses blocs diagonaux.");
+  }
+  if (familyId === "matrix-characteristic-polynomial") {
+    const a = pick([-3, -2, 1, 2, 3]);
+    const b = pick([-3, -2, 1, 2, 3]);
+    if (mode === 1) {
+      const [first, second] = sample([-3, -2, -1, 1, 2, 3], 2);
+      const firstMultiplicity = randomInt(1, 3);
+      const secondMultiplicity = randomInt(1, 3);
+      return numericVariation(familyId, mode,
+        "Quelle est la dimension de E ?",
+        "u est un endomorphisme de E et χ_u(X) = " + polynomialRootFactor(first) + "^{" + firstMultiplicity + "}" + polynomialRootFactor(second) + "^{" + secondMultiplicity + "}",
+        firstMultiplicity + secondMultiplicity,
+        "La dimension de E est le degré de χ_u : " + firstMultiplicity + " + " + secondMultiplicity + " = " + (firstMultiplicity + secondMultiplicity) + ".");
+    }
+    if (mode === 2) {
+      const polynomial = characteristicPolynomial2(a + b, a * b);
+      return variation(familyId, mode,
+        "Quel couple (tr(A), det(A)) lit-on dans χ_A ?",
+        "χ_A(X) = " + polynomial,
+        vector([a + b, a * b]),
+        [vector([a + b + 1, a * b]), vector([a + b, a * b + 1]), vector([a + b + 1, a * b + 1])],
+        "Le coefficient de X est −tr(A), tandis que le terme constant vaut det(A).");
+    }
+    if (mode === 3) {
+      const other = a + 4;
+      const multiplicity = randomInt(2, 4);
+      const otherMultiplicity = randomInt(1, 2);
+      return numericVariation(familyId, mode,
+        "Quelle est la multiplicité algébrique de la valeur propre " + a + " ?",
+        "χ_A(X) = " + polynomialRootFactor(a) + "^{" + multiplicity + "}" + polynomialRootFactor(other) + "^{" + otherMultiplicity + "}",
+        multiplicity,
+        "La multiplicité algébrique est l’ordre de la racine " + a + " dans χ_A, ici " + multiplicity + ". Elle ne donne pas, en général, la dimension de l’espace propre.");
+    }
+    const shift = pick([-2, -1, 1, 2]);
+    const oldEigenvalues = [a, b];
+    const newPolynomial = characteristicPolynomial2(a + b + 2 * shift, (a + shift) * (b + shift));
+    return variation(familyId, mode,
+      "Quel est le polynôme caractéristique de " + shiftedMatrix(-shift) + " ?",
+      "A est diagonale d’ordre 2, de diagonale " + vector(oldEigenvalues) + ".",
+      newPolynomial,
+      [characteristicPolynomial2(a + b, a * b), characteristicPolynomial2(a + b - 2 * shift, (a - shift) * (b - shift)), characteristicPolynomial2(a + b + shift, (a + shift) * (b + shift))],
+      "Passer de A à " + shiftedMatrix(-shift) + " décale chaque valeur propre de " + shift + " ; les nouvelles racines sont " + (a + shift) + " et " + (b + shift) + ".");
+  }
+  return supplementalReductionQuestion(familyId, mode);
+}
+
+function supplementalReductionQuestion(familyId: string, mode: number): Question {
+  if (familyId === "matrix-eigenspace") {
+    const eigenvalue = pick([-3, -2, 1, 2, 3]);
+    const other = eigenvalue + 4;
+    if (mode === 1) {
+      return variation(familyId, mode,
+        "Quel est l’espace propre de A associé à λ = " + eigenvalue + " ?",
+        "A = " + matrix([[eigenvalue, 0], [0, other]]),
+        "Vect(" + columnVector([1, 0]) + ")",
+        ["Vect(" + columnVector([0, 1]) + ")", "ℝ²", "{0}"],
+        "Résoudre (A − λI)x = 0 impose seulement la seconde coordonnée nulle.");
+    }
+    const coupled = Math.random() < 0.5;
+    return numericVariation(familyId, mode,
+      "Quelle est la dimension de l’espace propre E_" + eigenvalue + " ?",
+      "A = " + matrix([[eigenvalue, coupled ? 1 : 0, 0], [0, eigenvalue, 0], [0, 0, other]]),
+      coupled ? 1 : 2,
+      coupled ? "Le bloc non diagonal réduit la dimension de Ker(A − λI) à 1." : "Les deux premières directions canoniques sont propres pour λ.");
+  }
+  if (familyId === "matrix-annihilating-polynomial") {
+    if (mode === 1) {
+      const roots = sample([-3, -2, -1, 1, 2, 3], 3);
+      return variation(familyId, mode,
+        "Quel nombre ne peut pas être une valeur propre de A ?",
+        "P(A) = 0 avec P(X) = " + roots.map(polynomialRootFactor).join(""),
+        "4", roots.map(String),
+        "Toute valeur propre de A est une racine de P ; 4 n’est pas une racine de ce polynôme.");
+    }
+    const k = pick([-3, -2, 3]);
+    return variation(familyId, mode,
+      "Que vaut A⁴ si A² = " + k + "I ?",
+      "A est une matrice carrée.",
+      (k * k) + "I",
+      [k + "I", (k * k) + "A", (2 * k) + "I"],
+      "A⁴ = (A²)² = (" + k + "I)² = " + (k * k) + "I.");
+  }
+  if (familyId === "matrix-minimal-polynomial") {
+    const a = pick([-3, -2, 1, 2, 3]);
+    if (mode === 1) {
+      const other = a + 4;
+      const root = polynomialRootFactor(a);
+      const otherRoot = polynomialRootFactor(other);
+      return variation(familyId, mode,
+        "Lequel de ces polynômes annule nécessairement A ?",
+        "Le polynôme minimal de A est μ_A(X) = " + root + "².",
+        root + "²" + otherRoot,
+        [root, otherRoot + "²", root + otherRoot],
+        "Les polynômes annulateurs sont exactement les multiples du polynôme minimal ; seul " + root + "²" + otherRoot + " est divisible par μ_A.");
+    }
+    const b = a + 4;
+    return variation(familyId, mode,
+      "Quelle conclusion découle du polynôme minimal de u ?",
+      "μ_u(X) = " + polynomialRootFactor(a) + polynomialRootFactor(b) + ", sur un espace vectoriel réel de dimension finie.",
+      "u est diagonalisable sur ℝ.",
+      ["u n’est pas diagonalisable sur ℝ.", "u est nilpotent.", "u possède une seule valeur propre."],
+      "Le polynôme minimal est scindé à racines simples : c’est le critère de diagonalisation.");
+  }
+  if (familyId === "matrix-characteristic-subspace") {
+    const a = pick([-3, -2, 1, 2]);
+    const b = a + 4;
+    if (mode === 1) {
+      return numericVariation(familyId, mode,
+        "Quelle est la dimension du sous-espace caractéristique N_" + a + " ?",
+        "χ_A(X) = " + polynomialRootFactor(a) + polynomialRootFactor(a) + polynomialRootFactor(b),
+        2, "La dimension de N_" + a + " est la multiplicité algébrique de " + a + ", ici 2.");
+    }
+    return variation(familyId, mode,
+      "Quel couple (dim E_" + a + ", dim N_" + a + ") correspond à A ?",
+      "A = " + matrix([[a, 1, 0], [0, a, 0], [0, 0, b]]),
+      vector([1, 2]), [vector([2, 1]), vector([2, 2]), vector([1, 1])],
+      "Le bloc non diagonal donne un seul vecteur propre indépendant, mais deux vecteurs dans le sous-espace caractéristique.");
+  }
+  if (familyId === "matrix-adjoint") {
+    if (mode === 1) {
+      return variation(familyId, mode,
+        "Quelle identité définit l’adjoint u^{*} dans un espace euclidien ?",
+        "u est un endomorphisme de E. L’identité doit être vraie pour tous les vecteurs x et y de E.",
+        "⟨u(x), y⟩ = ⟨x, u^{*}(y)⟩",
+        ["⟨u(x), y⟩ = ⟨u^{*}(x), y⟩", "⟨u(x), y⟩ = ⟨x, u(y)⟩", "⟨u(x), y⟩ = −⟨x, u^{*}(y)⟩"],
+        "L’adjoint transfère l’endomorphisme du premier argument vers le second dans le produit scalaire.");
+    }
+    return variation(familyId, mode,
+      "Quel est l’adjoint d’une composée u ∘ v ?",
+      "u et v sont deux endomorphismes d’un espace euclidien.",
+      "(u ∘ v)^{*} = v^{*} ∘ u^{*}",
+      ["(u ∘ v)^{*} = u^{*} ∘ v^{*}", "(u ∘ v)^{*} = u ∘ v", "(u ∘ v)^{*} = −v^{*} ∘ u^{*}"],
+      "La prise de l’adjoint renverse l’ordre de composition.");
+  }
+  if (familyId === "matrix-self-adjoint") {
+    const k = pick([-3, -2, 1, 2, 3]);
+    if (mode === 1) {
+      return numericVariation(familyId, mode,
+        "Quelle valeur de t rend A symétrique ?",
+        "A = ⟦1,t;" + k + ",2⟧",
+        k, "La symétrie impose l’égalité des deux coefficients hors diagonale : t = " + k + ".");
+    }
+    return variation(familyId, mode,
+      "Quelle propriété possède tout endomorphisme autoadjoint réel ?",
+      "E est un espace euclidien de dimension finie.",
+      "Toutes ses valeurs propres sont réelles.",
+      ["Toutes ses valeurs propres sont positives.", "Sa matrice est diagonale dans toute base.", "Il est nécessairement inversible."],
+      "Le théorème spectral fournit une base orthonormée de vecteurs propres et des valeurs propres réelles.");
+  }
+  if (familyId === "matrix-spectral-theorem") {
+    const a = pick([-3, -2, 1, 2]);
+    const b = pick([-3, -2, 1, 2]);
+    const A = matrix([[a, b], [b, a]]);
+    if (mode === 1) {
+      return numericVariation(familyId, mode,
+        "Quelle valeur propre de A est associée à v = " + columnVector([1, 1]) + " ?",
+        "A = " + A,
+        a + b, "A" + columnVector([1, 1]) + " = " + formatLinearExpression([[a + b, columnVector([1, 1])]]) + ".");
+    }
+    const normalized = fraction(1, squareRoot(2));
+    return variation(familyId, mode,
+      "Quelle matrice orthogonale P diagonalise A ?",
+      "A = " + A,
+      normalized + matrix([[1, 1], [1, -1]]),
+      [matrix([[1, 1], [1, -1]]), matrix([[1, 1], [0, 1]]), normalized + matrix([[1, 1], [1, 1]])],
+      "Les colonnes " + normalized + columnVector([1, 1]) + " et " + normalized + columnVector([1, -1]) + " sont orthonormées et propres pour A.");
+  }
+  if (familyId === "matrix-positivity") {
+    if (mode === 1) {
+      return variation(familyId, mode,
+        "Quel critère caractérise la positivité stricte d’une matrice symétrique A d’ordre 2 ?",
+        "A = ⟦a,b;b,c⟧",
+        "a > 0 et ac − b² > 0",
+        ["a > 0 et ac − b² < 0", "a < 0 et ac − b² > 0", "a + c > 0 seulement"],
+        "Le critère de Sylvester exige que les deux mineurs principaux dominants soient strictement positifs.");
+    }
+    const a = pick([1, 2, 3]);
+    const b = pick([1, 2, 3]);
+    const x = randomVector(2);
+    const value = a * x[0] * x[0] + b * x[1] * x[1];
+    return numericVariation(familyId, mode,
+      "Quelle est la valeur de la forme quadratique xᵀAx ?",
+      "A = " + matrix([[a, 0], [0, b]]) + " et x = " + columnVector(x),
+      value, "xᵀAx = " + a + " × " + factor(x[0]) + "² + " + b + " × " + factor(x[1]) + "² = " + value + ".");
+  }
+  throw new Error("Aucune tâche complémentaire pour " + familyId + " (" + mode + ")");
+}
+
+const VARIANT_FAMILY_IDS = new Set([
+  "vector-combination", "vector-span", "vector-subspace",
+  "basis-determinant", "basis-coordinates", "basis-rank",
+  "application-kernel", "application-explicit-rank", "application-image",
+  "application-linearity", "matrix-vector-product", "matrix-representation",
+  "matrix-invertibility", "matrix-spectrum", "matrix-determinant-2",
+  "matrix-determinant-3", "matrix-product", "matrix-block-determinant",
+  "matrix-characteristic-polynomial", "matrix-eigenspace",
+  "matrix-annihilating-polynomial", "matrix-minimal-polynomial",
+  "matrix-characteristic-subspace", "matrix-adjoint",
+  "matrix-self-adjoint", "matrix-spectral-theorem", "matrix-positivity",
+]);
+
+export const LEGACY_EXERCISE_FAMILIES: readonly ExerciseFamily[] =
+  BASE_EXERCISE_FAMILIES.map((family) => ({
+    ...family,
+    generate: (spaceDimension, history) => {
+      if (!VARIANT_FAMILY_IDS.has(family.id)) return family.generate(spaceDimension, history);
+      const variantCount = family.id === "matrix-characteristic-polynomial" ? 5 : 3;
+      const mode = weightedIndex(Array.from({ length: variantCount }, (_, index) => {
+        const key = RECALL_TASKS[family.id]?.[index];
+        return key ? recallWeight(key, history) : 1;
+      }));
+      if (mode === 0) return { ...family.generate(spaceDimension, history), taskKind: "core" };
+      return supplementalQuestion(family.id, mode, spaceDimension);
+    },
+  }));
+
+export const EXERCISE_FAMILIES: readonly ExerciseFamily[] = [
+  ...WORKSHOP_EXERCISE_FAMILIES,
+  ...LEGACY_EXERCISE_FAMILIES,
+];
 
 export function availableExerciseFamilies(
   sectors: Sector[],
@@ -3103,6 +3751,7 @@ export function generateQuestion(
   sectors: Sector[],
   spaceDimension: number,
   highestOwnedInstrument = 14,
+  history?: PracticeHistory,
 ) {
   const unlockedFamilies = EXERCISE_FAMILIES.filter(
     (family) => family.minInstrument <= highestOwnedInstrument,
@@ -3115,5 +3764,5 @@ export function generateQuestion(
     availableFamilies.length > 0
       ? availableFamilies
       : unlockedFamilies,
-  ).generate(spaceDimension);
+  ).generate(spaceDimension, history);
 }

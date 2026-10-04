@@ -151,7 +151,7 @@ test("formats generated expressions and previews basis changes", async () => {
   assert.match(questions, /function formatLinearExpression/);
   assert.match(
     page,
-    /generateExercise\(pool, spaceDimension, highestOwnedInstrument\)/,
+    /generateExercise\(pool, spaceDimension, highestOwnedInstrument, game\.questionHistory\)/,
   );
   assert.match(page, /Remis à zéro/);
   assert.match(page, /Multiplicateur actuel/);
@@ -312,7 +312,7 @@ test("renders matrices as responsive grids instead of flattened text", async () 
   assert.match(renderer, /className="math-matrix-grid"/);
   assert.match(renderer, /className="math-column-vector"/);
   assert.match(renderer, /className="math-subscript"/);
-  assert.match(renderer, /className="math-superscript"/);
+  assert.match(renderer, /className=\{`math-superscript/);
   assert.match(renderer, /className="math-atomic"/);
   assert.match(renderer, /className="math-fraction"/);
   assert.match(renderer, /className="math-square-root"/);
@@ -330,7 +330,7 @@ test("renders matrices as responsive grids instead of flattened text", async () 
   assert.doesNotMatch(questions, /F⊥|\)⊥|v⊥/);
   assert.match(renderer, /rawSubscript\.replace\("-", "−"\)/);
   assert.match(renderer, /Vecteur colonne/);
-  assert.match(renderer, /<ScriptedText source=\{coordinate\} \/>/);
+  assert.match(renderer, /<MathLine text=\{coordinate\} \/>/);
   assert.match(renderer, /--matrix-columns/);
   assert.match(questions, /Déterminant d’ordre 3/);
   assert.match(questions, /⟦\$\{rows/);
@@ -339,6 +339,9 @@ test("renders matrices as responsive grids instead of flattened text", async () 
   assert.match(styles, /\.math-matrix::before/);
   assert.match(styles, /\.math-column-vector::before/);
   assert.match(styles, /\.math-subscript/);
+  assert.match(styles, /\.instrument-mark > \.math-expression\s*\{\s*white-space: nowrap;/);
+  assert.match(styles, /\.instrument-mark-equation > \.math-expression\s*\{\s*font-size: 0\.7em;/);
+  assert.match(page, /instrument\.id === "isometry-forge" \? " instrument-mark-equation"/);
   assert.match(styles, /\.math-superscript/);
   assert.match(styles, /\.math-atomic/);
   assert.match(styles, /\.math-fraction-numerator/);

@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   EXERCISE_FAMILIES,
+  WORKSHOP_EXERCISE_FAMILIES,
+  WORKSHOP_TASK_COUNT,
   generateQuestion,
   type Question,
   type Sector,
@@ -10,6 +12,8 @@ import {
 import MathExpression from "./math-expression";
 import ThemeToggle from "./theme-toggle";
 import { useInteractionGuards } from "./use-interaction-guards";
+import { emptyPracticeHistory, recordQuestionShown, recordQuestionAnswer, type PracticeHistory } from "./question-review";
+import { WORKSHOP_CYCLES } from "./game-balance";
 
 type SectorFilter = Sector | "all";
 
@@ -38,11 +42,16 @@ function makeQuestion(
   sector: SectorFilter,
   familyId: string,
   dimension: 2 | 3,
+  history?: PracticeHistory,
+  taskId = "all",
 ) {
   const selectedFamily = EXERCISE_FAMILIES.find(
     (family) => family.id === familyId,
   );
-  if (selectedFamily) return selectedFamily.generate(dimension);
+  if (selectedFamily) {
+    if (taskId !== "all" && selectedFamily.generateTask) return selectedFamily.generateTask(taskId);
+    return selectedFamily.generate(dimension, history);
+  }
 
   const sectors =
     sector === "all"
@@ -52,6 +61,7 @@ function makeQuestion(
     sectors,
     dimension,
     Number.POSITIVE_INFINITY,
+    history,
   );
 }
 
@@ -59,11 +69,15 @@ export default function ExerciseLab() {
   useInteractionGuards();
   const [sector, setSector] = useState<SectorFilter>("all");
   const [familyId, setFamilyId] = useState("all");
+  const [taskId, setTaskId] = useState("all");
   const [dimension, setDimension] = useState<2 | 3>(3);
   const [question, setQuestion] = useState<Question>(() =>
     makeQuestion("all", "all", 3),
   );
   const [answerIndex, setAnswerIndex] = useState<number | null>(null);
+  const [practiceHistory, setPracticeHistory] = useState(() =>
+    recordQuestionShown(emptyPracticeHistory(), question),
+  );
   const [attempts, setAttempts] = useState(0);
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [streak, setStreak] = useState(0);
@@ -77,6 +91,7 @@ export default function ExerciseLab() {
   );
 
   const answered = answerIndex !== null;
+  const selectedFamily = EXERCISE_FAMILIES.find(family => family.id === familyId);
   const isCorrect =
     answerIndex !== null && question.choices[answerIndex].correct;
   const successRate =
@@ -103,20 +118,31 @@ export default function ExerciseLab() {
     nextSector = sector,
     nextFamilyId = familyId,
     nextDimension = dimension,
+    history = practiceHistory,
+    nextTaskId = taskId,
   ) {
-    setQuestion(makeQuestion(nextSector, nextFamilyId, nextDimension));
+    const next = makeQuestion(nextSector, nextFamilyId, nextDimension, history, nextTaskId);
+    setQuestion(next);
+    setPracticeHistory(recordQuestionShown(history, next));
     setAnswerIndex(null);
   }
 
   function selectSector(nextSector: SectorFilter) {
     setSector(nextSector);
     setFamilyId("all");
-    nextQuestion(nextSector, "all", dimension);
+    setTaskId("all");
+    nextQuestion(nextSector, "all", dimension, practiceHistory, "all");
   }
 
   function selectFamily(nextFamilyId: string) {
     setFamilyId(nextFamilyId);
-    nextQuestion(sector, nextFamilyId, dimension);
+    setTaskId("all");
+    nextQuestion(sector, nextFamilyId, dimension, practiceHistory, "all");
+  }
+
+  function selectTask(nextTaskId: string) {
+    setTaskId(nextTaskId);
+    nextQuestion(sector, familyId, dimension, practiceHistory, nextTaskId);
   }
 
   function selectDimension(nextDimension: 2 | 3) {
@@ -127,6 +153,7 @@ export default function ExerciseLab() {
   function chooseAnswer(index: number) {
     if (answered) return;
     const correct = question.choices[index].correct;
+    setPracticeHistory((history) => recordQuestionAnswer(history, question, correct));
     setAnswerIndex(index);
     setAttempts((value) => value + 1);
     if (correct) {
@@ -141,7 +168,7 @@ export default function ExerciseLab() {
     setAttempts(0);
     setCorrectAnswers(0);
     setStreak(0);
-    nextQuestion();
+    nextQuestion(sector, familyId, dimension, emptyPracticeHistory());
   }
 
   return (
@@ -172,9 +199,9 @@ export default function ExerciseLab() {
             d’exercices apparaîtra ici automatiquement.
           </span>
         </div>
-        <div className="lab-catalog-count" aria-label={`${EXERCISE_FAMILIES.length} familles d’exercices`}>
-          <strong>{EXERCISE_FAMILIES.length}</strong>
-          <span>familles reliées<br />au générateur</span>
+        <div className="lab-catalog-count" aria-label={`${WORKSHOP_EXERCISE_FAMILIES.length} ateliers et ${WORKSHOP_TASK_COUNT} types de questions`}>
+          <strong>{WORKSHOP_EXERCISE_FAMILIES.length}</strong>
+          <span>ateliers · {WORKSHOP_TASK_COUNT} tâches<br />+ entraînements transversaux</span>
         </div>
       </section>
 
@@ -204,7 +231,7 @@ export default function ExerciseLab() {
           <section>
             <div className="lab-section-heading">
               <span>02</span>
-              <h2>Famille</h2>
+              <h2>Atelier ou thème</h2>
             </div>
             <label className="lab-family-select">
               <span>Type d’exercice</span>
@@ -213,13 +240,31 @@ export default function ExerciseLab() {
                 onChange={(event) => selectFamily(event.target.value)}
               >
                 <option value="all">Mélange automatique</option>
-                {visibleFamilies.map((family) => (
+                {WORKSHOP_CYCLES.map(cycle => (
+                  <optgroup label={`Cycle ${cycle.number} · ${cycle.title}`} key={cycle.id}>
+                    {visibleFamilies.filter(family => family.cycleId === cycle.id).map(family => (
+                      <option value={family.id} key={family.id}>{family.label} · {family.tasks?.length} tâches</option>
+                    ))}
+                  </optgroup>
+                ))}
+                <optgroup label="Entraînements transversaux">
+                {visibleFamilies.filter(family => !family.workshopId).map((family) => (
                   <option value={family.id} key={family.id}>
                     {family.program} · {family.label}
                   </option>
                 ))}
+                </optgroup>
               </select>
             </label>
+            {selectedFamily?.tasks && (
+              <label className="lab-family-select">
+                <span>Tâche de l’atelier</span>
+                <select value={taskId} onChange={event => selectTask(event.target.value)}>
+                  <option value="all">Mélanger les {selectedFamily.tasks.length} tâches</option>
+                  {selectedFamily.tasks.map(task => <option key={task.id} value={task.id}>{task.label}</option>)}
+                </select>
+              </label>
+            )}
             {familyId !== "all" && (
               <p className="lab-family-description">
                 <MathExpression
@@ -254,7 +299,7 @@ export default function ExerciseLab() {
               ))}
             </div>
             <p className="lab-control-note">
-              <MathExpression text="Certains thèmes restent naturellement en ℝ², même lorsque ℝ³ est disponible." />
+              <MathExpression text="Ce réglage concerne les entraînements transversaux. Les tâches des ateliers précisent la dimension adaptée à leur notion." />
             </p>
           </section>
         </aside>
@@ -320,16 +365,16 @@ export default function ExerciseLab() {
                   <span>Correction</span>
                   <p><MathExpression text={question.explanation} /></p>
                 </div>
-                <div className="lab-correction-notes">
-                  <div>
+                {(question.geometry || question.trap) && <div className="lab-correction-notes">
+                  {question.geometry && <div>
                     <span>Lecture géométrique</span>
                     <p><MathExpression text={question.geometry} /></p>
-                  </div>
-                  <div>
+                  </div>}
+                  {question.trap && <div>
                     <span>Piège à éviter</span>
                     <p><MathExpression text={question.trap} /></p>
-                  </div>
-                </div>
+                  </div>}
+                </div>}
               </section>
             )}
 

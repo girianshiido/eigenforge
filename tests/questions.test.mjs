@@ -3,6 +3,8 @@ import test from "node:test";
 
 import {
   EXERCISE_FAMILIES,
+  LEGACY_EXERCISE_FAMILIES,
+  WORKSHOP_EXERCISE_FAMILIES,
   adjointMatrixQuestion,
   annihilatingPolynomialQuestion,
   availableExerciseFamilies,
@@ -107,7 +109,8 @@ function multiply(first, second) {
 }
 
 test("the shared catalogue exposes every exercise family to the game and laboratory", () => {
-  assert.equal(EXERCISE_FAMILIES.length, 35);
+  assert.equal(EXERCISE_FAMILIES.length, LEGACY_EXERCISE_FAMILIES.length + WORKSHOP_EXERCISE_FAMILIES.length);
+  assert.equal(WORKSHOP_EXERCISE_FAMILIES.length, 68);
   assert.deepEqual(
     new Set(EXERCISE_FAMILIES.map((family) => family.sector)),
     new Set(["vectors", "bases", "applications", "matrices"]),
@@ -145,7 +148,7 @@ test("matrix questions use structured notation and mental 3 by 3 determinants", 
   const matrixFamilies = EXERCISE_FAMILIES.filter(
     (family) => family.sector === "matrices",
   );
-  assert.equal(matrixFamilies.length, 20);
+  assert.equal(matrixFamilies.length, 57);
 
   for (const family of matrixFamilies) {
     for (let index = 0; index < 150; index += 1) {
@@ -158,7 +161,7 @@ test("matrix questions use structured notation and mental 3 by 3 determinants", 
       if (question.formula.includes("⟦")) {
         assert.match(question.formula, /⟦[^⟧]+⟧/);
       }
-      if (family.id === "matrix-vector-product") {
+      if (family.id === "matrix-vector-product" && question.taskKind === "core") {
         assertNoSingleCoordinateRevealsAnswer(question);
         assert.match(question.formula, /u = ⟪-?\d+,-?\d+⟫/);
         assert.match(question.explanation, /Au = ⟪-?\d+,-?\d+⟫/);
@@ -168,7 +171,7 @@ test("matrix questions use structured notation and mental 3 by 3 determinants", 
           ),
         );
       }
-      if (family.id === "matrix-representation") {
+      if (family.id === "matrix-representation" && question.taskKind === "core") {
         assert.equal(
           [...question.explanation.matchAll(/⟪[^⟫]+⟫/g)].length,
           2,
@@ -270,7 +273,7 @@ test("matrix generators cover products and determinants from order two to five",
 
 test("the MP exercise path unlocks one reduction topic per workshop", () => {
   assert.deepEqual(
-    EXERCISE_FAMILIES.filter((family) => family.program === "MP").map(
+    LEGACY_EXERCISE_FAMILIES.filter((family) => family.program === "MP").map(
       (family) => family.id,
     ),
     [
@@ -301,7 +304,7 @@ test("the MP exercise path unlocks one reduction topic per workshop", () => {
     availableExerciseFamilies(["matrices"], 47)
       .filter((family) => family.program === "MP")
       .map((family) => family.id),
-    ["matrix-block-determinant"],
+    ["workshop-block-matrix-engine", "matrix-block-determinant"],
   );
   const unlocks = [
     [48, "matrix-spectrum"],
@@ -335,7 +338,7 @@ test("the MP exercise path unlocks one reduction topic per workshop", () => {
     );
     assert.deepEqual(
       current.filter((id) => !previous.has(id)),
-      [expectedId],
+      [...WORKSHOP_EXERCISE_FAMILIES.filter(family => family.minInstrument === highestOwnedInstrument && family.sector === "matrices").map(family => family.id), expectedId],
     );
   }
 });
@@ -662,17 +665,19 @@ test("MP reduction questions validate characteristic and eigenvector calculation
   for (let index = 0; index < 400; index += 1) {
     const spectrumQuestion = spectrumFamily.generate(3);
     assertWellFormed(spectrumQuestion);
-    const spectrumMatrix = parseMatrix(spectrumQuestion.formula);
-    const eigenvalues = new Set([
-      spectrumMatrix[0][0],
-      spectrumMatrix[1][1],
-    ]);
-    assert.equal(
-      spectrumQuestion.choices.filter((choice) =>
-        eigenvalues.has(Number(choice.text)),
-      ).length,
-      1,
-    );
+    if (spectrumQuestion.taskKind === "core") {
+      const spectrumMatrix = parseMatrix(spectrumQuestion.formula);
+      const eigenvalues = new Set([
+        spectrumMatrix[0][0],
+        spectrumMatrix[1][1],
+      ]);
+      assert.equal(
+        spectrumQuestion.choices.filter((choice) =>
+          eigenvalues.has(Number(choice.text)),
+        ).length,
+        1,
+      );
+    }
 
     const characteristic = characteristicPolynomialQuestion();
     assertWellFormed(characteristic);

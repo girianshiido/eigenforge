@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
+import { protectMathSpacing } from "./math-spacing";
 
 type MathExpressionProps = {
   text: string;
@@ -10,7 +11,7 @@ const STRUCTURED_MATH_PATTERN =
 const SQUARE_ROOT_PATTERN =
   /√(\{[^}]+\}|\([^)]*\)|[A-Za-z0-9]+(?:_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ]))?)/g;
 const INLINE_SCRIPT_PATTERN =
-  /_(\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])|([₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎]+)|([⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ᵀ]+)|\^(\{[^}]+\}|[A-Za-z0-9⊥λμ])/g;
+  /_(\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])|([₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎]+)|([⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ᵀ]+)|\^(\{[^}]+\}|[A-Za-z0-9⊥λμ*])/g;
 const ATOMIC_MATH_PATTERN =
   /(?:[A-Zℬ]\s*=\s*\((?:[^()]|\([^()]*\))*\)|N_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])\s*=\s*Ker\((?:[^()]|\([^()]*\))*\)|(?:Vect|Ker|Im|det|dim|Sp)\((?:[^()]|\([^()]*\))*\)(?:\^\{[^}]+\})?|[χπ]_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])(?:\([^)]*\))?|N_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ]))(?:\s*[?!.:,;])?/g;
 const SUBSCRIPT_CHARACTERS: Record<string, string> = {
@@ -75,10 +76,10 @@ function ScriptedText({ source }: { source: string }) {
           : normalizeScript(match[3], SUPERSCRIPT_CHARACTERS);
       parts.push(
         <sup
-          className="math-superscript"
+          className={`math-superscript${superscript === "*" ? " is-star" : ""}`}
           key={`superscript-${start}-${superscript}`}
         >
-          {superscript}
+          {superscript === "*" ? "∗" : superscript}
         </sup>,
       );
     } else {
@@ -243,7 +244,7 @@ function Matrix({ source }: { source: string }) {
         {rows.flatMap((row, rowIndex) =>
           Array.from({ length: columnCount }, (_, columnIndex) => (
             <span key={`${rowIndex}-${columnIndex}`}>
-              {row[columnIndex] ?? ""}
+              <MathLine text={row[columnIndex] ?? ""} />
             </span>
           )),
         )}
@@ -264,7 +265,7 @@ function ColumnVector({ source }: { source: string }) {
       <span className="math-column-vector-grid" aria-hidden="true">
         {coordinates.map((coordinate, index) => (
           <span key={`${index}-${coordinate}`}>
-            <ScriptedText source={coordinate} />
+            <MathLine text={coordinate} />
           </span>
         ))}
       </span>
@@ -272,7 +273,7 @@ function ColumnVector({ source }: { source: string }) {
   );
 }
 
-function MathLine({ text }: { text: string }) {
+function StructuredMathLine({ text }: { text: string }) {
   const parts: ReactNode[] = [];
   let previousEnd = 0;
 
@@ -317,11 +318,37 @@ function MathLine({ text }: { text: string }) {
   return <>{parts}</>;
 }
 
+function MathLine({ text }: { text: string }) {
+  const parts: ReactNode[] = [];
+  let previousEnd = 0;
+
+  // Protect the entire expression before splitting out matrices or fractions.
+  // Otherwise Vect(column) could wrap between its opening and closing brackets.
+  for (const match of text.matchAll(ATOMIC_MATH_PATTERN)) {
+    const start = match.index ?? 0;
+    if (start > previousEnd) {
+      parts.push(
+        <StructuredMathLine text={text.slice(previousEnd, start)} key={`before-${start}`} />,
+      );
+    }
+    parts.push(
+      <span className="math-atomic" key={`expression-${start}`}>
+        <StructuredMathLine text={match[0]} />
+      </span>,
+    );
+    previousEnd = start + match[0].length;
+  }
+  if (previousEnd < text.length) {
+    parts.push(<StructuredMathLine text={text.slice(previousEnd)} key="remaining" />);
+  }
+  return <>{parts}</>;
+}
+
 export default function MathExpression({
   text,
   className = "",
 }: MathExpressionProps) {
-  const lines = text.split("\n");
+  const lines = text.split("\n").map(protectMathSpacing);
 
   return (
     <span

@@ -64,6 +64,24 @@ button:focus-visible {
   white-space: pre-wrap;
 }
 
+.lab-question-copy h2,
+.question-modal > h2,
+.lab-answer-grid button > strong,
+.answer-grid button > strong,
+.lab-correction-main p,
+.lab-correction-notes p,
+.correction-block p,
+.correction-columns p {
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.lab-question-copy h2,
+.question-modal > h2 {
+  padding-top: 0.18em;
+}
+
 .math-expression.has-lines {
   display: inline-flex;
   align-items: center;
@@ -79,7 +97,7 @@ button:focus-visible {
 }
 
 .math-atomic {
-  display: inline-block;
+  display: inline;
   white-space: nowrap;
 }
 
@@ -134,10 +152,10 @@ button:focus-visible {
 
 .math-subscript,
 .math-superscript {
-  display: inline-block;
+  display: inline;
   margin-left: 0.025em;
   font-size: 0.64em;
-  line-height: 0;
+  line-height: 1;
   white-space: nowrap;
 }
 
@@ -147,6 +165,12 @@ button:focus-visible {
 
 .math-superscript {
   vertical-align: 0.58em;
+}
+
+.math-superscript.is-star {
+  margin-left: 0.035em;
+  font-size: 0.78em;
+  vertical-align: 0.38em;
 }
 
 .math-matrix,
@@ -777,10 +801,9 @@ button:focus-visible {
   scrollbar-width: thin;
 }
 
-.lab-formula .math-expression {
-  display: inline-block;
-  min-width: max-content;
-  white-space: nowrap;
+.lab-formula .math-expression:not(.has-lines) {
+  display: inline;
+  white-space: pre-wrap;
 }
 
 .lab-answer-grid {
@@ -1643,6 +1666,18 @@ html[data-theme="light"] .basis-modal-actions button.confirm {
   color: var(--copper-bright);
   font-family: Georgia, serif;
   font-size: 18px;
+}
+
+.instrument-mark > .math-expression {
+  white-space: nowrap;
+}
+
+.instrument-mark-equation > .math-expression {
+  font-size: 0.7em;
+}
+
+.instrument-mark-compact > .math-expression {
+  font-size: 0.75em;
 }
 
 .instrument-copy {
@@ -3565,10 +3600,9 @@ footer {
   scrollbar-width: thin;
 }
 
-.formula-card .math-expression {
-  display: inline-block;
-  min-width: max-content;
-  white-space: nowrap;
+.formula-card .math-expression:not(.has-lines) {
+  display: inline;
+  white-space: pre-wrap;
 }
 
 .answer-grid {

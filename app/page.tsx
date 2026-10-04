@@ -40,6 +40,7 @@ import { generateQuestion as generateExercise } from "./question-generator";
 import MathExpression from "./math-expression";
 import ThemeToggle from "./theme-toggle";
 import { useInteractionGuards } from "./use-interaction-guards";
+import { emptyPracticeHistory, restorePracticeHistory, recordQuestionShown, recordQuestionAnswer, type PracticeHistory } from "./question-review";
 
 type Sector = "vectors" | "bases" | "applications" | "matrices";
 type GameTab = "network" | "instruments" | "anomalies" | "atlas";
@@ -55,6 +56,7 @@ type GameState = {
   instrumentModules: number[][];
   instrumentMasteries: number[];
   mastery: Record<Sector, number>;
+  questionHistory: PracticeHistory;
   correctAnswers: number;
   anomalies: number;
   nextAnomalyAt: number;
@@ -67,6 +69,7 @@ type GameState = {
 
 type Question = {
   id: string;
+  recallKey?: string;
   sector: Sector;
   eyebrow: string;
   prompt: string;
@@ -105,6 +108,7 @@ const INITIAL_STATE: GameState = {
   ),
   instrumentMasteries: INSTRUMENTS.map(() => 0),
   mastery: { vectors: 0, bases: 0, applications: 0, matrices: 0 },
+  questionHistory: emptyPracticeHistory(),
   correctAnswers: 0,
   anomalies: 0,
   nextAnomalyAt: 0,
@@ -688,6 +692,7 @@ function restoreState(raw: string | null): GameState {
         applications: Number(saved.mastery?.applications) || 0,
         matrices: Number(saved.mastery?.matrices) || 0,
       },
+      questionHistory: restorePracticeHistory(saved.questionHistory),
       lastTick: Number(saved.lastTick) || Date.now(),
       nextAnomalyAt: Number(saved.nextAnomalyAt) || Date.now() + 8000,
     };
@@ -997,9 +1002,9 @@ export default function Home() {
       (highest, count, index) => (count > 0 ? index : highest),
       -1,
     );
-    setQuestion(
-      generateExercise(pool, spaceDimension, highestOwnedInstrument),
-    );
+    const next = generateExercise(pool, spaceDimension, highestOwnedInstrument, game.questionHistory);
+    setQuestion(next);
+    setGame((previous) => ({ ...previous, questionHistory: recordQuestionShown(previous.questionHistory, next) }));
     setAnswer(null);
   }
 
@@ -1025,6 +1030,7 @@ export default function Home() {
           ? previous.nextAnomalyAt
           : Math.min(previous.nextAnomalyAt, now + 30000),
         correctAnswers: previous.correctAnswers + (isCorrect ? 1 : 0),
+        questionHistory: recordQuestionAnswer(previous.questionHistory, question, isCorrect),
         mastery: isCorrect
           ? {
               ...previous.mastery,
@@ -1058,6 +1064,7 @@ export default function Home() {
         instruments,
         protocols: previous.protocols,
         mastery: previous.mastery,
+        questionHistory: previous.questionHistory,
         correctAnswers: previous.correctAnswers,
         allTime: previous.allTime,
         invariants: previous.invariants + gained,
@@ -1656,7 +1663,7 @@ export default function Home() {
                             .join(" ")}
                           key={instrument.id}
                         >
-                          <div className="instrument-mark" aria-hidden="true">
+                          <div className={`instrument-mark${instrument.id === "isometry-forge" ? " instrument-mark-equation" : ""}${["stable-subspace-chamber", "commutation-coupler"].includes(instrument.id) ? " instrument-mark-compact" : ""}`} aria-hidden="true">
                             <MathExpression text={instrument.mark} />
                           </div>
                           <div className="instrument-copy">
@@ -2200,16 +2207,16 @@ export default function Home() {
                   <span>Méthode</span>
                   <p><MathExpression text={question.explanation} /></p>
                 </div>
-                <div className="correction-columns">
-                  <div>
+                {(question.geometry || question.trap) && <div className="correction-columns">
+                  {question.geometry && <div>
                     <span>Lecture géométrique</span>
                     <p><MathExpression text={question.geometry} /></p>
-                  </div>
-                  <div>
+                  </div>}
+                  {question.trap && <div>
                     <span>Point de vigilance</span>
                     <p><MathExpression text={question.trap} /></p>
-                  </div>
-                </div>
+                  </div>}
+                </div>}
                 <button type="button" onClick={closeQuestion}>
                   Revenir au réseau
                 </button>

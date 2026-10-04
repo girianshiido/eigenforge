@@ -296,9 +296,9 @@ const WORKSHOP_CYCLE_SEEDS: WorkshopCycleSeed[] = [
     program: "MP",
     workshops: [
       workshop("orthogonal-matrix-gate", "Porte orthogonale", "O(n)", "Reconnaît les matrices dont lignes et colonnes sont orthonormées.", "Ouvrir le groupe orthogonal", "Matrices orthogonales"),
-      workshop("isometry-forge", "Forge d’isométries", "u*=u⁻¹", "Conserve normes et produits scalaires dans tout l’espace.", "Forger une isométrie", "Isométries"),
+      workshop("isometry-forge", "Forge d’isométries", "u^{*}=u^{−1}", "Conserve normes et produits scalaires dans tout l’espace.", "Forger une isométrie", "Isométries"),
       workshop("plane-rotation-engine", "Moteur de rotations planes", "SO₂", "Classe rotations et réflexions du plan euclidien orienté.", "Orienter le plan", "Rotations et réflexions"),
-      workshop("isometry-reducer", "Réducteur d’isométries", "R_θ", "Réduit les isométries en blocs orthogonaux adaptés.", "Réduire une isométrie", "Réduction des isométries"),
+      workshop("isometry-reducer", "Réducteur d’isométries", "R_{θ}", "Réduit les isométries en blocs orthogonaux adaptés.", "Réduire une isométrie", "Réduction des isométries"),
     ],
   },
   {
