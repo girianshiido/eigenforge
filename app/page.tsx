@@ -10,12 +10,11 @@ import {
   basePassiveProduction,
   basisChangeGain,
   basisChangeGainCap,
+  basisChangePreview,
   correctAnomalyRewardMultiplier,
-  inheritedStructuralWorkshops,
   instrumentIndex,
   instrumentLevel,
   instrumentBulkCost,
-  instrumentCost,
   invariantGain,
   invariantProductionMultiplier,
   invariantProtocolCost,
@@ -39,6 +38,7 @@ import {
 import { generateQuestion as generateExercise } from "./question-generator";
 import MathExpression from "./math-expression";
 import ThemeToggle from "./theme-toggle";
+import { formatNumber, formatCount, formatDecimal } from "./format-number";
 import { useInteractionGuards } from "./use-interaction-guards";
 import { emptyPracticeHistory, restorePracticeHistory, recordQuestionShown, recordQuestionAnswer, type PracticeHistory } from "./question-review";
 
@@ -340,7 +340,7 @@ function basisQuestion(): Question {
         vector(beta, alpha),
         vector(alpha + p, beta),
       ]),
-      explanation: `On cherche x = λe₁ + μe₂. La seconde coordonnée donne μ = ${beta}, puis ${coordinateEquation} = ${x}, donc λ = ${alpha}. Ainsi [x]ᴮ = ${answer}.`,
+      explanation: `On cherche x = λe₁ + μe₂. La seconde coordonnée donne μ = ${beta}, puis ${coordinateEquation} = ${x}, donc λ = ${alpha}. Ainsi [x]_B = ${answer}.`,
       geometry:
         "Changer de base ne déplace pas le vecteur : seules les coordonnées utilisées pour le décrire changent.",
       trap: "Les coordonnées canoniques de x ne sont pas automatiquement ses coordonnées dans B.",
@@ -529,6 +529,7 @@ function workshopBulkCost(
     state.instruments[index],
     quantity,
     workshopCostFactor(state),
+    state.protocols[6] ?? 0,
   );
 }
 
@@ -538,6 +539,7 @@ function maxAffordableWorkshopQuantity(state: GameState, index: number) {
     state.instruments[index],
     state.coordinates,
     workshopCostFactor(state),
+    state.protocols[6] ?? 0,
   );
 }
 
@@ -569,6 +571,7 @@ function protocolEffect(index: number, level: number) {
   }
   if (index === 3) return `Stabilité de résonance : +${level * 12} %`;
   if (index === 4) return `Réponses justes : +${level * 15} %`;
+  if (index === 6) return `Dix premières unités des huit premiers ateliers : −${level * 12} %`;
   return `${level} atelier${level > 1 ? "s" : ""} dimensionnel${level > 1 ? "s" : ""} conservé${level > 1 ? "s" : ""}`;
 }
 
@@ -578,33 +581,6 @@ function anomalyDelay(allTime: number) {
   const [minimum, maximum] =
     allTime < spatialUnlock ? [45, 60] : [65, 90];
   return randomInt(minimum, maximum) * 1000;
-}
-
-function formatNumber(value: number) {
-  if (Number.isNaN(value)) return "0";
-  if (!Number.isFinite(value)) return "∞";
-  if (value < 1000) {
-    return value < 100 ? value.toFixed(value < 10 ? 1 : 0) : Math.floor(value).toString();
-  }
-  const units = [
-    { value: 1e45, suffix: " QaDc" },
-    { value: 1e42, suffix: " TDc" },
-    { value: 1e39, suffix: " DDc" },
-    { value: 1e36, suffix: " UDc" },
-    { value: 1e33, suffix: " Dc" },
-    { value: 1e30, suffix: " No" },
-    { value: 1e27, suffix: " Oc" },
-    { value: 1e24, suffix: " Sp" },
-    { value: 1e21, suffix: " Sx" },
-    { value: 1e18, suffix: " Qi" },
-    { value: 1e15, suffix: " Qa" },
-    { value: 1e12, suffix: " B" },
-    { value: 1e9, suffix: " Md" },
-    { value: 1e6, suffix: " M" },
-    { value: 1e3, suffix: " k" },
-  ];
-  const unit = units.find((item) => value >= item.value) ?? units[units.length - 1];
-  return `${(value / unit.value).toFixed(value / unit.value < 10 ? 1 : 0)}${unit.suffix}`;
 }
 
 function formatMultiplier(value: number) {
@@ -1047,28 +1023,19 @@ export default function Home() {
   }
 
   function changeBasis() {
-    const gained = basisChangeGain(
-      game.runTotal,
-      game.totalInvariants,
-    );
-    if (gained < 1) return;
     setGame((previous) => {
-      const inheritedCount = inheritedStructuralWorkshops(
-        previous.protocols,
-      );
-      const instruments = INSTRUMENTS.map((_, index) =>
-        index < inheritedCount ? 1 : 0,
-      );
+      const preview = basisChangePreview(previous.runTotal, previous.totalInvariants, previous.protocols);
+      if (preview.gained < 1) return previous;
       return {
         ...INITIAL_STATE,
-        instruments,
+        instruments: preview.instruments,
         protocols: previous.protocols,
         mastery: previous.mastery,
         questionHistory: previous.questionHistory,
         correctAnswers: previous.correctAnswers,
         allTime: previous.allTime,
-        invariants: previous.invariants + gained,
-        totalInvariants: previous.totalInvariants + gained,
+        invariants: previous.invariants + preview.gained,
+        totalInvariants: previous.totalInvariants + preview.gained,
         lastTick: Date.now(),
         nextAnomalyAt: Date.now() + 8000,
       };
@@ -1076,7 +1043,7 @@ export default function Home() {
     setConfirmBasisChange(false);
     setActiveTab("network");
     setExpandedWorkshop(null);
-    setNotice(`${gained} invariant${gained > 1 ? "s" : ""} conservé${gained > 1 ? "s" : ""}. Le réseau adopte une nouvelle base.`);
+    setNotice(`Nouvelle base : +${formatDecimal(restartPreview.productionIncrease, 1)} % de puissance, ${restartPreview.retainedCount} atelier${restartPreview.retainedCount > 1 ? "s" : ""} au démarrage. Vos invariants sont disponibles dans l’Atlas.`);
   }
 
   function resetGame() {
@@ -1100,13 +1067,15 @@ export default function Home() {
   const invariantGainSaturated =
     rawInvariantGain >= invariantGainCap;
   const followingInvariantThreshold = nextInvariantThreshold(pendingInvariantGain);
-  const currentInvariantMultiplier = invariantProductionMultiplier(
-    game.totalInvariants,
-  );
-  const futureInvariantMultiplier = invariantProductionMultiplier(
-    game.totalInvariants + pendingInvariantGain,
-  );
-  const instrumentCount = game.instruments.reduce((sum, count) => sum + count, 0);
+  const restartPreview = basisChangePreview(game.runTotal, game.totalInvariants, game.protocols);
+  const currentInvariantMultiplier = restartPreview.currentMultiplier;
+  const futureInvariantMultiplier = restartPreview.futureMultiplier;
+  const retainedWorkshops = INSTRUMENTS.slice(0, restartPreview.retainedCount);
+  const extraInvariantPreview = invariantProductionMultiplier(game.totalInvariants + pendingInvariantGain + 1);
+  const upcomingProtocols = [5, 6].filter(index => {
+    const level = game.protocols[index] ?? 0;
+    return level < INVARIANT_PROTOCOLS[index].maxLevel && invariantProtocolCost(index, level) <= game.invariants + pendingInvariantGain;
+  });
   const unlockedSectorCount =
     1 +
     (instrumentLevel(game.instruments, "plane-deployer") > 0 ? 1 : 0) +
@@ -1147,18 +1116,13 @@ export default function Home() {
               text: `Construisez ${nextWorkshop.name}. ${nextWorkshop.description}`,
               progress: Math.min(
                 100,
-                (game.coordinates /
-                  Math.ceil(
-                    instrumentCost(nextWorkshopIndex, 0) *
-                      protocolWorkshopCostMultiplier(game.protocols) *
-                      matrixWorkshopCostMultiplier(game.instruments),
-                  )) *
+                (game.coordinates / workshopCost(game, nextWorkshopIndex)) *
                   100,
               ),
             }
           : {
               title: "Préparer un changement de base",
-              text: "Renforcez les douze ateliers et stabilisez les anomalies.",
+              text: "Renforcez les ateliers et stabilisez les anomalies.",
               progress: Math.min(
                 100,
                 (game.runTotal / nextInvariantThreshold(0)) * 100,
@@ -1193,7 +1157,7 @@ export default function Home() {
             </div>
             <div className="resource invariant-resource">
               <span>Invariants</span>
-              <strong>{game.invariants}</strong>
+              <strong>{formatCount(game.invariants)}</strong>
             </div>
           </div>
         </div>
@@ -1461,7 +1425,7 @@ export default function Home() {
                 <div className="resonance-track">
                   <span style={{ width: `${game.resonance}%` }} />
                 </div>
-                <strong>×{(1 + Math.floor(game.resonance / 25) * 0.5).toFixed(1)}</strong>
+                <strong>×{formatDecimal(1 + Math.floor(game.resonance / 25) * 0.5, 1)}</strong>
               </div>
             </div>
 
@@ -2037,12 +2001,17 @@ export default function Home() {
                 <p>Changement de base</p>
                 <strong>
                   {pendingInvariantGain > 0
-                    ? `+${pendingInvariantGain} invariant${pendingInvariantGain > 1 ? "s" : ""}`
+                    ? `+${formatCount(pendingInvariantGain)} invariant${pendingInvariantGain > 1 ? "s" : ""}`
                     : "Structure insuffisante"}
                 </strong>
                 <span className="basis-detail">
-                  Bonus permanent actuel : ×{currentInvariantMultiplier.toFixed(2)}
+                  Bonus permanent actuel : ×{formatDecimal(currentInvariantMultiplier, 2)}
                 </span>
+                {pendingInvariantGain > 0 && (
+                  <span className="basis-detail">
+                    Au redémarrage : +{formatDecimal(restartPreview.productionIncrease, 1)} % de puissance · {restartPreview.retainedCount} atelier{restartPreview.retainedCount > 1 ? "s" : ""} hérité{restartPreview.retainedCount > 1 ? "s" : ""}
+                  </span>
+                )}
                 <span className="basis-detail">
                   {invariantGainSaturated
                     ? "Résonance saturée · changez de base"
@@ -2050,6 +2019,7 @@ export default function Home() {
                         Math.max(0, followingInvariantThreshold - game.runTotal),
                       )} coordonnées`}
                 </span>
+                <span className="basis-detail">Plafond du prochain changement : +{formatCount(invariantGainCap)} invariant{invariantGainCap > 1 ? "s" : ""}</span>
               </div>
             </div>
             <button
@@ -2065,14 +2035,14 @@ export default function Home() {
             <div className="protocol-heading">
               <div>
                 <p>Principes permanents</p>
-                <h3>Orienter les prochains cycles</h3>
+                <h3>Préparer les prochains changements de base</h3>
                 <span>
                   Dépenser un invariant ne réduit jamais le bonus permanent déjà
                   gagné avec les changements de base.
                 </span>
               </div>
               <div className="protocol-balance">
-                <strong>{game.invariants}</strong>
+                <strong>{formatCount(game.invariants)}</strong>
                 <span>invariant{game.invariants > 1 ? "s" : ""} disponible{game.invariants > 1 ? "s" : ""}</span>
               </div>
             </div>
@@ -2239,12 +2209,11 @@ export default function Home() {
                 <p>Changement de base</p>
                 <h2 id="basis-title">Recomposer le réseau ?</h2>
                 <span>
-                  La structure repartira du vecteur nul, mais ses propriétés
-                  essentielles demeureront.
+                  Repartez avec vos ateliers hérités et une production renforcée.
                 </span>
               </div>
               <div className="basis-gain-seal" aria-label={`${pendingInvariantGain} invariants gagnés`}>
-                <strong>+{pendingInvariantGain}</strong>
+                <strong>+{formatCount(pendingInvariantGain)}</strong>
                 <span>invariant{pendingInvariantGain > 1 ? "s" : ""}</span>
               </div>
             </div>
@@ -2252,13 +2221,21 @@ export default function Home() {
             <div className="multiplier-preview">
               <div>
                 <span>Multiplicateur actuel</span>
-                <strong>×{currentInvariantMultiplier.toFixed(2)}</strong>
+                <strong>×{formatDecimal(currentInvariantMultiplier, 2)}</strong>
               </div>
               <span className="multiplier-arrow" aria-hidden="true">→</span>
               <div>
                 <span>Après le changement</span>
-                <strong>×{futureInvariantMultiplier.toFixed(2)}</strong>
+                <strong>×{formatDecimal(futureInvariantMultiplier, 2)}</strong>
               </div>
+            </div>
+
+            <div className="basis-restart-summary">
+              <strong>+{formatDecimal(restartPreview.productionIncrease, 1)} % de production et d’émission, à ateliers identiques</strong>
+              <span>Au démarrage : une unité de {retainedWorkshops.map(workshop => workshop.name).join(", ")}.</span>
+              {restartPreview.reconstructionDiscount > 0 && (
+                <span>Premiers achats : −{restartPreview.reconstructionDiscount} % sur les dix premières unités de chacun des huit premiers ateliers.</span>
+              )}
             </div>
 
             <div className="basis-impact-grid">
@@ -2266,7 +2243,7 @@ export default function Home() {
                 <p>Remis à zéro</p>
                 <ul>
                   <li><strong>{formatNumber(game.coordinates)}</strong> coordonnées disponibles</li>
-                  <li><strong>{instrumentCount}</strong> instruments construits</li>
+                  <li>Les niveaux et améliorations des ateliers, sauf les unités héritées</li>
                   <li><strong>{game.anomalies}</strong> anomalie{game.anomalies > 1 ? "s" : ""} en attente</li>
                   <li>La résonance actuelle</li>
                 </ul>
@@ -2286,27 +2263,50 @@ export default function Home() {
               <section className="impact-card gained">
                 <p>Gagné</p>
                 <ul>
-                  <li><strong>+{pendingInvariantGain}</strong> invariant{pendingInvariantGain > 1 ? "s" : ""}</li>
-                  <li>Production passive ×{futureInvariantMultiplier.toFixed(2)}</li>
-                  <li>Émission manuelle ×{futureInvariantMultiplier.toFixed(2)}</li>
-                  <li>Un nouveau cycle plus rapide</li>
+              <li><strong>+{formatCount(pendingInvariantGain)}</strong> invariant{pendingInvariantGain > 1 ? "s" : ""}</li>
+                  <li>Production passive ×{formatDecimal(futureInvariantMultiplier, 2)}</li>
+                  <li>Émission manuelle ×{formatDecimal(futureInvariantMultiplier, 2)}</li>
+                  <li><strong>{restartPreview.retainedCount}</strong> atelier{restartPreview.retainedCount > 1 ? "s" : ""} prêt{restartPreview.retainedCount > 1 ? "s" : ""} à produire au redémarrage</li>
                 </ul>
               </section>
             </div>
 
+            {upcomingProtocols.length > 0 && (
+              <div className="basis-restart-options">
+                <strong>À acheter dans l’Atlas avec vos {formatCount(game.invariants + pendingInvariantGain)} invariants après le changement</strong>
+                {upcomingProtocols.map(index => (
+                  <p key={index}>
+                    {INVARIANT_PROTOCOLS[index].name} · {invariantProtocolCost(index, game.protocols[index] ?? 0)} invariant{invariantProtocolCost(index, game.protocols[index] ?? 0) > 1 ? "s" : ""} : {index === 5 ? `${Math.min(4, restartPreview.retainedCount + 1)} ateliers hérités au changement suivant` : `−${((game.protocols[6] ?? 0) + 1) * 12} % sur les premiers achats`}.
+                  </p>
+                ))}
+                {upcomingProtocols.length > 1 && <small>Ces achats sont indépendants : vérifiez le solde disponible pour les combiner.</small>}
+              </div>
+            )}
+
+            {!invariantGainSaturated && (
+              <p className="basis-wait-option">
+                En produisant encore {formatNumber(Math.max(0, followingInvariantThreshold - game.runTotal))} coordonnées avant de changer de base : +{formatCount(pendingInvariantGain + 1)} invariants, puis ×{formatDecimal(extraInvariantPreview, 2)} de puissance permanente (+{formatDecimal(100 * (extraInvariantPreview / currentInvariantMultiplier - 1), 1)} %).
+              </p>
+            )}
+            {invariantGainSaturated && (
+              <p className="basis-wait-option">Plafond atteint : +{formatCount(invariantGainCap)} invariant{invariantGainCap > 1 ? "s" : ""}. Attendre avant de changer de base ne rapporte plus d’invariants supplémentaires.</p>
+            )}
+
             <p className="basis-modal-note">
-              Chaque cycle peut rapporter au plus un invariant de plus que le
-              total déjà découvert. Une fois la résonance saturée, il faut
-              changer de base pour ouvrir le palier suivant.{" "}
-              Les sept premiers invariants ajoutent chacun 15 % à la
-              production et à l’émission. Ensuite, les paliers cumulés 15, 31,
-              63… ajoutent chacun 20 % supplémentaires. Ce bonus permanent
+              Chaque changement de base peut rapporter au plus un invariant de plus que le
+              total déjà découvert. Le plafond d’invariants augmente au prochain
+              changement de base. Les 17 cycles d’ateliers peuvent se débloquer
+              pendant la même partie, sans changement de base obligatoire.{" "}
+              Les quinze premiers invariants ajoutent chacun 0,25 au multiplicateur
+              de production et d’émission. Ensuite, la progression ralentit graduellement.
+              Le générateur axial est offert au redémarrage ; Base héritée conserve des ateliers supplémentaires.
+              Ce bonus permanent
               demeure même lorsqu’un invariant est dépensé dans un principe.
             </p>
 
             <div className="basis-modal-actions">
               <button type="button" onClick={() => setConfirmBasisChange(false)}>
-                Continuer ce cycle
+                Continuer cette partie
               </button>
               <button type="button" className="confirm" onClick={changeBasis}>
                 Confirmer le changement

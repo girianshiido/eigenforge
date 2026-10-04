@@ -32,6 +32,25 @@ test("renders all workshop tasks and nested mathematical notation without raw ma
     assert.match(render(forgeMark), /u<sup class="math-superscript is-star">∗<\/sup>=u<sup class="math-superscript">−1<\/sup>/);
     assert.match(render(reducerMark), /R<sub class="math-subscript">θ<\/sub>/);
     assert.doesNotMatch(render(reducerMark), /R_|\{θ\}/);
+    // A following tuple must not be mistaken for a separate "B = (...)" atom,
+    // which would split the subscript marker away from its base label.
+    const coordinates = render("B = (e₁, e₂), e₁ = (1 ; 0), e₂ = (3 ; 1) et [x]_B = (-3 ; -3)");
+    assert.match(coordinates, /class="math-atomic">\[x\]<sub class="math-subscript">B<\/sub><\/span>/);
+    assert.doesNotMatch(visibleMarkup(coordinates), /\[x\]_/);
+    for (const base of ["B", "C", "D", "ℬ", "{B}", "can", "{can}"]) {
+      const html = render(`[x]_${base} = (2 ; -1)`);
+      assert.match(html, new RegExp(`\\[x\\]<sub class="math-subscript">${base.replace(/[{}]/g, "")}<\\/sub>`));
+      assert.doesNotMatch(visibleMarkup(html), /\[x\]_|_\{/);
+    }
+    assert.match(render("[f(x)]_B = P[x]_can"), /\[f\(x\)\]<sub class="math-subscript">B<\/sub>/);
+    assert.match(render("x = -1.25 et y = 0.5."), /-1,25 et y.*0,5\./);
+    const decimalMatrix = render("A = ⟦1.5,-2.25;0.5,3⟧");
+    assert.match(decimalMatrix, /--matrix-columns:2/);
+    assert.match(decimalMatrix, />1,5</);
+    assert.match(decimalMatrix, />-2,25</);
+    assert.match(decimalMatrix, />0,5</);
+    assert.match(render("⟪1.5,-0.25⟫"), />-0,25</);
+    assert.match(render("⟬1.5¦√2.5⟭"), /math-radicand[^>]*>2,5</);
     for (const family of WORKSHOP_EXERCISE_FAMILIES) {
       for (const task of family.tasks) {
         for (let draw = 0; draw < 3; draw++) {

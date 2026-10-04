@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import { protectMathSpacing } from "./math-spacing";
+import { localizeDecimalText } from "./format-number";
 
 type MathExpressionProps = {
   text: string;
@@ -9,11 +10,11 @@ type MathExpressionProps = {
 const STRUCTURED_MATH_PATTERN =
   /⟦([^⟧]+)⟧|⟪([^⟫]+)⟫|⟬([^¦⟭]+)¦([^⟭]+)⟭/g;
 const SQUARE_ROOT_PATTERN =
-  /√(\{[^}]+\}|\([^)]*\)|[A-Za-z0-9]+(?:_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ]))?)/g;
+  /√(\{[^}]+\}|\([^)]*\)|[A-Za-z0-9]+(?:\.\d+)?(?:_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ]))?)/g;
 const INLINE_SCRIPT_PATTERN =
-  /_(\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])|([₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎]+)|([⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ᵀ]+)|\^(\{[^}]+\}|[A-Za-z0-9⊥λμ*])/g;
+  /_(\{[^}]+\}|[−-]?\d+|can|[A-Za-zℬλμ])|([₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎]+)|([⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ᵀ]+)|\^(\{[^}]+\}|[A-Za-z0-9⊥λμ*])/g;
 const ATOMIC_MATH_PATTERN =
-  /(?:[A-Zℬ]\s*=\s*\((?:[^()]|\([^()]*\))*\)|N_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])\s*=\s*Ker\((?:[^()]|\([^()]*\))*\)|(?:Vect|Ker|Im|det|dim|Sp)\((?:[^()]|\([^()]*\))*\)(?:\^\{[^}]+\})?|[χπ]_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])(?:\([^)]*\))?|N_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ]))(?:\s*[?!.:,;])?/g;
+  /(?:\[[^\[\]]+\]_(?:\{[^}]+\}|can|[A-Za-zℬλμ])|[A-Zℬ]\s*=\s*\((?:[^()]|\([^()]*\))*\)|N_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])\s*=\s*Ker\((?:[^()]|\([^()]*\))*\)|(?:Vect|Ker|Im|det|dim|Sp)\((?:[^()]|\([^()]*\))*\)(?:\^\{[^}]+\})?|[χπ]_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ])(?:\([^)]*\))?|N_(?:\{[^}]+\}|[−-]?\d+|[A-Za-zλμ]))(?:\s*[?!.:,;])?/g;
 const SUBSCRIPT_CHARACTERS: Record<string, string> = {
   "₀": "0",
   "₁": "1",
@@ -59,7 +60,10 @@ function normalizeScript(
   );
 }
 
-function ScriptedText({ source }: { source: string }) {
+function ScriptedText({ source: rawSource }: { source: string }) {
+  // Localize only after matrix/column cells have been split: their commas
+  // delimit cells and must not be confused with decimal commas.
+  const source = localizeDecimalText(rawSource);
   const parts: ReactNode[] = [];
   let previousEnd = 0;
 
@@ -114,7 +118,7 @@ function SquareRoot({ radicand }: { radicand: string }) {
     <span
       className="math-square-root"
       role="img"
-      aria-label={`Racine carrée de ${normalizedRadicand}`}
+      aria-label={`Racine carrée de ${localizeDecimalText(normalizedRadicand)}`}
     >
       <span className="math-radical-symbol" aria-hidden="true">
         √
@@ -172,7 +176,7 @@ function Fraction({
     <span
       className="math-fraction"
       role="img"
-      aria-label={`${numerator} sur ${denominator.replace("√", "racine carrée de ")}`}
+      aria-label={localizeDecimalText(`${numerator} sur ${denominator.replace("√", "racine carrée de ")}`)}
     >
       <span className="math-fraction-numerator" aria-hidden="true">
         <RootedText source={numerator} />
@@ -234,7 +238,7 @@ function Matrix({ source }: { source: string }) {
     <span
       className={`math-matrix order-${Math.max(rows.length, columnCount)}`}
       role="img"
-      aria-label={`Matrice, ${spokenRows}`}
+      aria-label={`Matrice, ${localizeDecimalText(spokenRows)}`}
     >
       <span
         className="math-matrix-grid"
@@ -260,7 +264,7 @@ function ColumnVector({ source }: { source: string }) {
     <span
       className="math-column-vector"
       role="img"
-      aria-label={`Vecteur colonne : ${coordinates.join(", ")}`}
+      aria-label={`Vecteur colonne : ${localizeDecimalText(coordinates.join(", "))}`}
     >
       <span className="math-column-vector-grid" aria-hidden="true">
         {coordinates.map((coordinate, index) => (

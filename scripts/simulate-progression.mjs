@@ -7,8 +7,8 @@ import {
   WORKSHOP_MODULES,
   basePassiveProduction,
   basisChangeGain,
+  basisChangePreview,
   correctAnomalyRewardMultiplier,
-  inheritedStructuralWorkshops,
   instrumentBulkCost,
   invariantProductionMultiplier,
   invariantProtocolCost,
@@ -20,11 +20,12 @@ import {
   workshopMasteryCost,
   workshopMasteryThreshold,
   workshopModuleCost,
+  workshopOutput,
 } from "../app/game-balance.ts";
 
 export const DEFAULT_RUN_TARGETS = [1, 2, 4, 8, 16];
 
-const PROTOCOL_PRIORITY = [1, 2, 5, 0, 4, 3];
+const PROTOCOL_PRIORITY = [5, 6, 1, 2, 0, 4, 3];
 const QUESTION_INTERVAL = 75;
 const MAX_ACTIONS = 100_000;
 
@@ -39,29 +40,29 @@ function freshWorkshopState() {
 function workshopCostFactor(state) {
   return (
     protocolWorkshopCostMultiplier(state.protocols) *
-    matrixWorkshopCostMultiplier(state.instruments)
+    (state.costSynergies ? matrixWorkshopCostMultiplier(state.instruments) : 1)
   );
 }
 
 function passiveRate(state) {
   return (
-    basePassiveProduction(
+    (state.productionSynergies ? basePassiveProduction(
       state.instruments,
       state.modules,
       state.masteries,
-    ) *
+    ) : INSTRUMENTS.reduce((sum, _workshop, index) => sum + workshopOutput(index, state.instruments[index], state.modules[index], state.masteries[index]), 0)) *
     state.invariantMultiplier(state.totalInvariants) *
-    protocolPassiveMultiplier(state.protocols)
+    protocolPassiveMultiplier(state.protocols) * (1 + state.masteryBonus)
   );
 }
 
 function manualRate(state) {
-  const clicksPerSecond =
+  const clicksPerSecond = state.clickRate ?? (
     state.runElapsed < 90
       ? 2
       : state.runElapsed < 900
         ? 0.25
-        : 0.05;
+        : 0.05);
   const emitterBonus = 1 + (state.instruments[0] ?? 0) * 0.1;
   const basisBonus = 1 + (state.instruments[6] ?? 0) * 0.05;
   return (
@@ -69,16 +70,18 @@ function manualRate(state) {
     emitterBonus *
     basisBonus *
     protocolManualMultiplier(state.protocols) *
+    state.resonanceMultiplier *
     state.invariantMultiplier(state.totalInvariants)
   );
 }
 
 function expectedQuestionRate(state, passive) {
-  const reward =
+  const correctReward =
     Math.max(24, passive * 20) *
     correctAnomalyRewardMultiplier(state.instruments) *
     protocolAnomalyMultiplier(state.protocols);
-  return reward / QUESTION_INTERVAL;
+  const wrongReward = Math.max(5, passive * 5);
+  return (correctReward * state.questionSuccessRate + wrongReward * (1 - state.questionSuccessRate)) / state.questionInterval;
 }
 
 function totalRate(state) {
@@ -132,12 +135,7 @@ function availableActions(state) {
         type: "instrument",
         index,
         quantity,
-        cost: instrumentBulkCost(
-          index,
-          currentLevel,
-          quantity,
-          factor,
-        ),
+        cost: cachedWorkshopCost(state, index, currentLevel, quantity, factor),
       });
     }
 
@@ -179,6 +177,15 @@ function availableActions(state) {
   }));
 }
 
+function cachedWorkshopCost(state, index, owned, quantity, factor) {
+  const reconstruction = state.protocols[6] ?? 0;
+  const key = `${index}:${owned}:${quantity}:${factor}:${reconstruction}`;
+  if (!state.costCache.has(key)) {
+    state.costCache.set(key, instrumentBulkCost(index, owned, quantity, factor, reconstruction));
+  }
+  return state.costCache.get(key);
+}
+
 function applyAction(state, action, unlocks) {
   state.coordinates -= action.cost;
   if (action.type === "instrument") {
@@ -206,7 +213,7 @@ function spendProtocols(state) {
   let purchased = true;
   while (purchased) {
     purchased = false;
-    for (const index of PROTOCOL_PRIORITY) {
+    for (const index of state.protocolPriority) {
       const protocol = INVARIANT_PROTOCOLS[index];
       const level = state.protocols[index];
       const cost = invariantProtocolCost(index, level);
@@ -221,15 +228,12 @@ function spendProtocols(state) {
 }
 
 function resetRun(state) {
-  const inherited = inheritedStructuralWorkshops(state.protocols);
+  const restart = basisChangePreview(0, state.totalInvariants, state.protocols);
   const fresh = freshWorkshopState();
-  for (let index = 0; index < inherited; index += 1) {
-    fresh.instruments[index] = 1;
-  }
   state.coordinates = 0;
   state.runTotal = 0;
   state.runElapsed = 0;
-  state.instruments = fresh.instruments;
+  state.instruments = restart.instruments;
   state.modules = fresh.modules;
   state.masteries = fresh.masteries;
 }
@@ -262,6 +266,17 @@ export function simulateProgression({
   runTargets = DEFAULT_RUN_TARGETS,
   maximumSeconds = 60 * 60 * 24 * 365,
   invariantMultiplier = invariantProductionMultiplier,
+  stopAtLastWorkshop = false,
+  questionInterval = QUESTION_INTERVAL,
+  questionSuccessRate = 1,
+  clickRate,
+  resonanceMultiplier = 1,
+  masteryBonus = 0,
+  protocolPriority = PROTOCOL_PRIORITY,
+  maximumSteps = 250_000,
+  actionDelay = 0,
+  productionSynergies = true,
+  costSynergies = true,
 } = {}) {
   const workshops = freshWorkshopState();
   const state = {
@@ -277,16 +292,42 @@ export function simulateProgression({
     totalInvariants: 0,
     protocols: INVARIANT_PROTOCOLS.map(() => 0),
     invariantMultiplier,
+    questionInterval,
+    questionSuccessRate,
+    clickRate,
+    resonanceMultiplier,
+    masteryBonus,
+    protocolPriority,
+    costCache: new Map(),
+    actionDelay,
+    productionSynergies,
+    costSynergies,
   };
   const changes = [];
   const unlocks = [];
   let actionCount = 0;
+  let stepCount = 0;
+  let stopReason = "targets-complete";
+  let firstUnsafeInvariantCount = null;
+  let maximumProduction = 0;
 
   while (
     changes.length < runTargets.length &&
     state.elapsed < maximumSeconds &&
-    actionCount < MAX_ACTIONS
+    actionCount < MAX_ACTIONS &&
+    stepCount < maximumSteps
   ) {
+    stepCount += 1;
+    if (stopAtLastWorkshop && state.instruments.at(-1) > 0) {
+      stopReason = "last-workshop-built";
+      break;
+    }
+    const checkedRate = totalRate(state);
+    maximumProduction = Math.max(maximumProduction, checkedRate);
+    if (![state.coordinates, state.runTotal, state.allTime, state.elapsed, checkedRate].every(Number.isFinite)) {
+      stopReason = "non-finite-number";
+      break;
+    }
     const targetGain = runTargets[changes.length];
     const targetTotal = PRESTIGE_SCALE * targetGain ** 2;
     if (state.runTotal >= targetTotal * (1 - 1e-12)) {
@@ -294,9 +335,12 @@ export function simulateProgression({
         state.runTotal,
         state.totalInvariants,
       );
+      const endingProduction = passiveRate(state);
       state.invariants += gained;
       state.totalInvariants += gained;
-      spendProtocols(state);
+      if (!Number.isSafeInteger(state.totalInvariants) && firstUnsafeInvariantCount === null) {
+        firstUnsafeInvariantCount = { change: changes.length + 1, total: state.totalInvariants, highestInstrument: state.instruments.reduce((highest, n, i) => n > 0 ? i : highest, -1) };
+      }
       changes.push({
         change: changes.length + 1,
         gained,
@@ -308,8 +352,14 @@ export function simulateProgression({
           -1,
         ),
         protocols: [...state.protocols],
+        endingProduction,
+        highestLevel: Math.max(...state.instruments),
+        highestMastery: Math.max(...state.masteries),
       });
       resetRun(state);
+      // In the game, newly earned invariants can be spent only after the reset.
+      // Base héritée bought then will apply at the following reset, not this one.
+      spendProtocols(state);
       continue;
     }
 
@@ -341,11 +391,12 @@ export function simulateProgression({
     if (chosenAction) {
       applyAction(state, chosenAction, unlocks);
       actionCount += 1;
+      if (state.actionDelay > 0) advance(state, state.actionDelay);
       continue;
     }
 
     const rate = totalRate(state);
-    if (!(rate > 0) || !Number.isFinite(rate)) break;
+    if (!(rate > 0) || !Number.isFinite(rate)) { stopReason = "invalid-rate"; break; }
     const nextCost = actions
       .filter(
         (action) =>
@@ -370,18 +421,38 @@ export function simulateProgression({
       1e-12,
       Math.min(secondsToCost, secondsToTarget, secondsToUnlock),
     );
-    if (!Number.isFinite(seconds)) break;
+    if (!Number.isFinite(seconds)) { stopReason = "no-next-event"; break; }
+    if (state.elapsed + seconds === state.elapsed && state.runTotal + rate * seconds === state.runTotal) {
+      stopReason = "floating-point-stall";
+      break;
+    }
     advance(state, seconds);
   }
 
+  if (state.elapsed >= maximumSeconds) stopReason = "time-limit";
+  else if (actionCount >= MAX_ACTIONS || stepCount >= maximumSteps) stopReason = "step-limit";
   return {
-    completed: changes.length === runTargets.length,
+    completed: stopReason === "last-workshop-built" || changes.length === runTargets.length,
+    stopReason,
     elapsed: state.elapsed,
     allTime: state.allTime,
     totalInvariants: state.totalInvariants,
     changes,
     unlocks,
     actionCount,
+    stepCount,
+    maximumProduction,
+    firstUnsafeInvariantCount,
+    final: {
+      coordinates: state.coordinates,
+      runTotal: state.runTotal,
+      instruments: [...state.instruments],
+      modules: state.modules.map(row => [...row]),
+      masteries: [...state.masteries],
+      protocols: [...state.protocols],
+      passiveProduction: passiveRate(state),
+      costMultiplier: workshopCostFactor(state),
+    },
   };
 }
 

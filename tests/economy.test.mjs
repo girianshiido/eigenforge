@@ -10,6 +10,7 @@ import {
   basePassiveProduction,
   basisChangeGain,
   basisChangeGainCap,
+  basisChangePreview,
   correctAnomalyRewardMultiplier,
   inheritedStructuralWorkshops,
   instrumentIndex,
@@ -27,6 +28,7 @@ import {
   protocolPassiveMultiplier,
   protocolResonanceMultiplier,
   protocolWorkshopCostMultiplier,
+  reconstructionCostMultiplier,
   resonanceDecayRate,
   workshopMasteryCost,
   workshopMasteryMultiplier,
@@ -278,38 +280,46 @@ test("basis change gains saturate before a run can skip the next cycle", () => {
   assert.equal(basisChangeGainCap(68), 69);
   assert.equal(basisChangeGain(750_000, 0), 1);
   assert.equal(basisChangeGain(3_000_000, 1), 2);
+  assert.equal(basisChangeGain(300_000_000, 19), 20);
+  assert.equal(basisChangeGain(300_000_000, 10), 11);
+  assert.equal(basisChangeGain(299_999_999, 19), 19);
   assert.equal(
     basisChangeGain(750_000 * 1029 ** 2, 68),
     69,
   );
 });
 
-test("invariant resonance grows by readable doubling tiers", () => {
+test("invariant production grows noticeably and slows without a cliff", () => {
   assert.equal(invariantProductionMultiplier(0), 1);
-  assert.equal(invariantProductionMultiplier(1), 1.15);
-  assert.equal(invariantProductionMultiplier(3), 1.45);
-  assert.equal(invariantProductionMultiplier(7), 2.05);
-  assert.equal(invariantProductionMultiplier(15), 2.25);
-  assert.ok(invariantProductionMultiplier(1_000_000) < 6);
+  assert.equal(invariantProductionMultiplier(1), 1.25);
+  assert.equal(invariantProductionMultiplier(3), 1.75);
+  assert.equal(invariantProductionMultiplier(7), 2.75);
+  assert.equal(invariantProductionMultiplier(15), 4.75);
+  const before = invariantProductionMultiplier(15) - invariantProductionMultiplier(14);
+  const after = invariantProductionMultiplier(16) - invariantProductionMultiplier(15);
+  assert.ok(after / before > 0.93);
+  assert.ok(invariantProductionMultiplier(1_000_000) < 50);
+  for (let n = 0; n < 1000; n++) assert.ok(invariantProductionMultiplier(n + 1) > invariantProductionMultiplier(n));
 });
 
-test("five basis changes preserve deliberate one-hour runs", () => {
+test("five basis changes speed up reconstruction while preserving substantial runs", () => {
   const report = simulateProgression();
 
   assert.equal(report.completed, true);
   assert.equal(report.changes.length, DEFAULT_RUN_TARGETS.length);
-  assert.ok(report.elapsed >= 4 * 3600);
-  assert.ok(report.elapsed <= 7 * 3600);
+  assert.ok(report.elapsed >= 3 * 3600);
+  assert.ok(report.elapsed <= 5 * 3600);
   assert.ok(
     report.changes.every(
       (change) =>
-        change.runDuration >= 30 * 60 &&
+        change.runDuration >= 20 * 60 &&
         change.runDuration <= 2 * 3600,
     ),
   );
   assert.ok(report.changes[0].highestInstrument >= 2);
   assert.ok(report.changes[0].highestInstrument <= 4);
   assert.ok(report.changes.at(-1).highestInstrument >= 5);
+  assert.ok(report.changes.at(-1).runDuration < report.changes[0].runDuration);
 });
 
 test("the simulated midpoint reveals nine cycles without late runaway", () => {
@@ -325,10 +335,10 @@ test("the simulated midpoint reveals nine cycles without late runaway", () => {
 
   assert.equal(report.completed, true);
   assert.ok(ninthCycle);
-  assert.ok(ninthCycle.seconds >= 20 * 3600);
-  assert.ok(ninthCycle.seconds <= 26 * 3600);
-  assert.ok(report.changes.at(-1).runDuration >= 30 * 60);
-  assert.ok(report.changes.at(-1).runDuration <= 90 * 60);
+  assert.ok(ninthCycle.seconds >= 8 * 3600);
+  assert.ok(ninthCycle.seconds <= 14 * 3600);
+  assert.ok(report.changes.at(-1).runDuration >= 10 * 60);
+  assert.ok(report.changes.at(-1).runDuration <= 30 * 60);
   assert.ok(
     INSTRUMENTS.at(-1).unlock <
       PRESTIGE_SCALE * Math.pow(2 ** 67, 2),
@@ -336,10 +346,12 @@ test("the simulated midpoint reveals nine cycles without late runaway", () => {
 });
 
 test("invariant protocols create permanent strategic upgrades", () => {
-  assert.equal(INVARIANT_PROTOCOLS.length, 6);
+  assert.equal(INVARIANT_PROTOCOLS.length, 7);
   assert.equal(invariantProtocolCost(0, 0), 1);
   assert.equal(invariantProtocolCost(0, 3), 4);
-  assert.equal(invariantProtocolCost(5, 2), 15);
+  assert.equal(invariantProtocolCost(5, 0), 1);
+  assert.equal(invariantProtocolCost(5, 2), 5);
+  assert.equal(invariantProtocolCost(6, 0), 2);
 
   assert.equal(protocolManualMultiplier([2]), 1.5);
   assert.ok(Math.abs(protocolPassiveMultiplier([0, 3]) - 1.36) < 1e-12);
@@ -349,7 +361,37 @@ test("invariant protocols create permanent strategic upgrades", () => {
   );
   assert.equal(protocolAnomalyMultiplier([0, 0, 0, 0, 2]), 1.3);
   assert.equal(inheritedStructuralWorkshops([0, 0, 0, 0, 0, 2]), 2);
-  assert.equal(inheritedStructuralWorkshops([0, 0, 0, 0, 0, 8]), 3);
+  assert.equal(inheritedStructuralWorkshops([0, 0, 0, 0, 0, 8]), 4);
+});
+
+test("a reset offers the axial generator and its preview matches the inherited state", () => {
+  const first = basisChangePreview(PRESTIGE_SCALE, 0, []);
+  assert.equal(first.gained, 1);
+  assert.equal(first.productionIncrease, 25);
+  assert.equal(first.retainedCount, 1);
+  assert.deepEqual(first.instruments, levels({ "axis-generator": 1 }));
+  const inherited = basisChangePreview(PRESTIGE_SCALE * 4, 10, [0, 0, 0, 0, 0, 3, 2]);
+  assert.equal(inherited.retainedCount, 4);
+  assert.equal(inherited.reconstructionDiscount, 24);
+  assert.deepEqual(inherited.instruments.slice(0, 4), [1, 1, 1, 1]);
+  assert.ok(inherited.instruments.slice(4).every(n => n === 0));
+  assert.ok(inherited.productionIncrease > basisChangePreview(PRESTIGE_SCALE, 10, []).productionIncrease);
+  assert.equal(basisChangePreview(0, 0, []).retainedCount, 0);
+});
+
+test("reconstruction discounts apply per unit without crossing workshop or level limits", () => {
+  assert.equal(reconstructionCostMultiplier(0, 0, 2), 0.76);
+  assert.equal(reconstructionCostMultiplier(7, 9, 2), 0.76);
+  assert.equal(reconstructionCostMultiplier(8, 0, 2), 1);
+  assert.equal(reconstructionCostMultiplier(0, 10, 2), 1);
+  const expected = Array.from({ length: 25 }, (_, offset) =>
+    Math.ceil(instrumentCost(0, 7 + offset) * 0.83 * (7 + offset < 10 ? 0.76 : 1)),
+  ).reduce((sum, cost) => sum + cost, 0);
+  assert.equal(instrumentBulkCost(0, 7, 25, 0.83, 2), expected);
+  assert.equal(maxAffordableInstrumentQuantity(0, 7, expected, 0.83, 2), 25);
+  assert.equal(maxAffordableInstrumentQuantity(0, 7, expected - 1, 0.83, 2), 24);
+  assert.equal(instrumentBulkCost(0, 7, 25, 0.83, 2),
+    instrumentBulkCost(0, 7, 3, 0.83, 2) + instrumentBulkCost(0, 10, 22, 0.83, 2));
 });
 
 test("the active first-hour model unlocks the spatial forge before the first basis change", () => {

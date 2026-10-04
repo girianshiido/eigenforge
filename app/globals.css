@@ -5311,6 +5311,37 @@ footer {
   text-align: center;
 }
 
+.basis-restart-summary,
+.basis-restart-options {
+  margin: 14px 0;
+  padding: 16px;
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(155, 141, 197, 0.3);
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.basis-restart-summary strong,
+.basis-restart-options strong {
+  color: var(--violet);
+}
+
+.basis-restart-summary span,
+.basis-restart-options p,
+.basis-restart-options small,
+.basis-wait-option {
+  margin: 0;
+  color: var(--ivory-muted);
+}
+
+.basis-wait-option {
+  font-size: 12px;
+  line-height: 1.6;
+}
+
 .basis-modal-actions {
   margin-top: 19px;
   display: flex;

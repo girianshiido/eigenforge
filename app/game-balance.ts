@@ -88,10 +88,18 @@ export const INVARIANT_PROTOCOLS = [
   {
     name: "Base héritée",
     mark: "B",
-    description: "Conserve un atelier dimensionnel supplémentaire après chaque changement de base.",
-    baseCost: 5,
-    costStep: 5,
+    description: "Au prochain changement de base, conserve une unité d’un atelier dimensionnel supplémentaire, en plus du générateur axial offert.",
+    baseCost: 1,
+    costStep: 2,
     maxLevel: 3,
+  },
+  {
+    name: "Reconstruction rapide",
+    mark: "↗",
+    description: "Chaque niveau réduit de 12 % le prix des dix premières unités de chacun des huit premiers ateliers. Cette remise se renouvelle à chaque changement de base.",
+    baseCost: 2,
+    costStep: 2,
+    maxLevel: 5,
   },
 ] as const;
 
@@ -407,12 +415,14 @@ export function instrumentBulkCost(
   owned: number,
   quantity: number,
   costMultiplier = 1,
+  reconstructionLevel = 0,
 ) {
   const safeQuantity = Math.max(0, Math.floor(quantity));
   let total = 0;
   for (let offset = 0; offset < safeQuantity; offset += 1) {
     const unitCost = Math.ceil(
-      instrumentCost(index, owned + offset) * costMultiplier,
+      instrumentCost(index, owned + offset) * costMultiplier *
+        reconstructionCostMultiplier(index, owned + offset, reconstructionLevel),
     );
     if (!Number.isFinite(unitCost) || total > Number.MAX_VALUE - unitCost) {
       return Number.POSITIVE_INFINITY;
@@ -427,13 +437,15 @@ export function maxAffordableInstrumentQuantity(
   owned: number,
   budget: number,
   costMultiplier = 1,
+  reconstructionLevel = 0,
 ) {
   if (Number.isNaN(budget) || budget < 0) return 0;
   let quantity = 0;
   let spent = 0;
   while (quantity < 10_000) {
     const unitCost = Math.ceil(
-      instrumentCost(index, owned + quantity) * costMultiplier,
+      instrumentCost(index, owned + quantity) * costMultiplier *
+        reconstructionCostMultiplier(index, owned + quantity, reconstructionLevel),
     );
     if (
       !Number.isFinite(unitCost) ||
@@ -540,14 +552,38 @@ export function protocolAnomalyMultiplier(
 
 export function invariantProductionMultiplier(totalInvariants: number) {
   const total = Math.max(0, totalInvariants);
-  if (total <= 7) return 1 + total * 0.15;
-  return 2.05 + Math.log2((total + 1) / 8) * 0.2;
+  if (total <= 15) return 1 + total * 0.25;
+  // Same value and slope at 15, with slower long-term growth for repeated resets.
+  return 4.75 + 4 * Math.log1p(Math.log((total + 1) / 16));
 }
 
 export function inheritedStructuralWorkshops(
   protocols: readonly number[],
+  totalInvariants = 0,
 ) {
-  return Math.min(3, protocols[5] ?? 0);
+  return Math.min(4, (totalInvariants > 0 ? 1 : 0) + (protocols[5] ?? 0));
+}
+
+export function reconstructionCostMultiplier(index: number, owned: number, level: number) {
+  if (index < 0 || index >= 8 || owned >= 10) return 1;
+  return 1 - Math.min(5, Math.max(0, level)) * 0.12;
+}
+
+export function basisChangePreview(runTotal: number, totalInvariants: number, protocols: readonly number[]) {
+  const gained = basisChangeGain(runTotal, totalInvariants);
+  const currentMultiplier = invariantProductionMultiplier(totalInvariants);
+  const futureMultiplier = invariantProductionMultiplier(totalInvariants + gained);
+  const retainedCount = inheritedStructuralWorkshops(protocols, totalInvariants + gained);
+  return {
+    gained,
+    currentMultiplier,
+    futureMultiplier,
+    productionIncrease: 100 * (futureMultiplier / currentMultiplier - 1),
+    retainedCount,
+    // Shared by the preview, the actual reset and the progression simulator.
+    instruments: INSTRUMENTS.map((_, index) => index < retainedCount ? 1 : 0),
+    reconstructionDiscount: Math.round(100 * (1 - reconstructionCostMultiplier(0, 0, protocols[6] ?? 0))),
+  };
 }
 
 export function basePassiveProduction(
