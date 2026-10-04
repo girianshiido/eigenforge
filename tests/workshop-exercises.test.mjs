@@ -12,6 +12,29 @@ function seeded(callback) {
   try { return callback(); } finally { Math.random = previous; }
 }
 
+test("rank after appending a vector distinguishes family size from rank and excludes singleton families", () => seeded(() => {
+  const family = WORKSHOP_EXERCISE_FAMILIES.find(f => f.workshopId === "rank-compressor");
+  const counts = new Set(), ranks = new Set();
+  let dependentFamilies = 0;
+  for (let draw = 0; draw < 300; draw++) {
+    const q = family.generateTask("rank-append");
+    const indices = [...q.formula.matchAll(/u_\{(\d+)\}/g)].map(m => Number(m[1]));
+    assert.ok(indices.length >= 2 && indices.length <= 6);
+    assert.deepEqual(indices, Array.from({ length: indices.length }, (_, i) => i + 1));
+    const rank = Number(q.formula.match(/rg\(F\) = (\d+)/)[1]);
+    assert.ok(rank >= 1 && rank <= indices.length);
+    assert.match(q.formula, /v ∉ Vect\(F\)/);
+    assert.doesNotMatch(q.formula, /u_r|…/);
+    assert.equal(Number(q.choices.find(c => c.correct).text), rank + 1);
+    counts.add(indices.length);
+    ranks.add(rank);
+    dependentFamilies += rank < indices.length;
+  }
+  assert.deepEqual([...counts].sort(), [2, 3, 4, 5, 6]);
+  assert.deepEqual([...ranks].sort(), [1, 2, 3, 4, 5]);
+  assert.ok(dependentFamilies > 0);
+}));
+
 test("coordinate subspaces list only the constrained coordinates without ellipses", () => seeded(() => {
   const family = WORKSHOP_EXERCISE_FAMILIES.find(f => f.workshopId === "dimension-extension");
   const cases = new Set();
@@ -48,6 +71,34 @@ function multiply(a, b) {
 }
 const identity = n => Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => +(i === j)));
 const transpose = a => a[0].map((_, j) => a.map(row => row[j]));
+
+test("plane classification excludes trivial matrices and varies exact rotations and reflections", () => seeded(() => {
+  const family = WORKSHOP_EXERCISE_FAMILIES.find(f => f.workshopId === "plane-rotation-engine");
+  const matrices = new Set(), types = new Set(), denominators = new Set();
+  for (let draw = 0; draw < 500; draw++) {
+    const q = family.generateTask("classify");
+    const h = Number(q.formula.match(/⟬1¦(\d+)⟭/)[1]);
+    const integers = parseMatrix(q.formula);
+    const a = integers.map(row => row.map(x => x / h));
+    assert.ok(a.flat().every(x => x !== 0 && Math.abs(x) < 1));
+    assert.ok(equal(multiply(transpose(a), a), identity(2)));
+    const determinant = a[0][0] * a[1][1] - a[0][1] * a[1][0];
+    assert.ok(Math.abs(Math.abs(determinant) - 1) < 1e-8);
+    const expected = determinant < 0 ? "Une réflexion." : "Une rotation.";
+    for (const c of q.choices) assert.equal(c.text === expected, c.correct);
+    assert.equal(new Set(q.choices.map(c => c.text)).size, 4);
+    assert.match(q.formula, /base canonique orthonormée/);
+    matrices.add(JSON.stringify([h, integers]));
+    types.add(expected);
+    denominators.add(h);
+    const vectorQuestion = family.generateTask("rotate-vector");
+    assert.ok(vectorQuestion.audit.inputs[1].every(x => x !== 0));
+  }
+  assert.equal(matrices.size, 48);
+  assert.deepEqual(types, new Set(["Une rotation.", "Une réflexion."]));
+  assert.deepEqual(denominators, new Set([5, 13, 17]));
+}));
+
 const trace = a => a.reduce((s, row, i) => s + row[i], 0);
 const subtract = (a, b) => a.map((r, i) => r.map((x, j) => x - b[i][j]));
 function pow(a, k) { let out = identity(a.length); for (let i = 0; i < k; i++) out = multiply(out, a); return out; }

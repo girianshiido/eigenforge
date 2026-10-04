@@ -1,75 +1,46 @@
 "use client";
 
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
-  INSTRUMENTS,
-  INVARIANT_PROTOCOLS,
-  LEGACY_INSTRUMENT_IDS,
-  WORKSHOP_CYCLES,
   WORKSHOP_MODULES,
-  basePassiveProduction,
-  basisChangeGain,
-  basisChangeGainCap,
-  basisChangePreview,
-  correctAnomalyRewardMultiplier,
   instrumentIndex,
   instrumentLevel,
-  instrumentBulkCost,
-  invariantGain,
-  invariantProductionMultiplier,
-  invariantProtocolCost,
-  legacyWorkshopModules,
-  maxAffordableInstrumentQuantity,
-  matrixWorkshopCostMultiplier,
-  nextInvariantThreshold,
-  protocolAnomalyMultiplier,
-  protocolManualMultiplier,
-  protocolPassiveMultiplier,
-  protocolResonanceMultiplier,
-  protocolWorkshopCostMultiplier,
   resonanceDecayRate,
-  workshopMasteryCost,
   workshopMasteryMultiplier,
   workshopMasteryThreshold,
-  workshopModuleCost,
   workshopModuleMultiplier,
-  workshopOutput,
 } from "./game-balance";
-import { generateQuestion as generateExercise } from "./question-generator";
+import {
+  INSTRUMENTS, INVARIANT_PROTOCOLS, WORKSHOP_CYCLES, basisChangeGain, basisChangeGainCap,
+  basisChangePreview, invariantGain, invariantProductionMultiplier, invariantProtocolCost,
+  nextInvariantThreshold, protocolResonanceMultiplier, protocolWorkshopCostMultiplier,
+  workshopOutput, frontierCycle, protocolUnlockCycle, INHERITED_UNIT_CAPS,
+} from "./game-economy";
+import {
+  production, boostedProduction, clickPower, workshopCost, workshopBulkCost, maxAffordableWorkshopQuantity,
+  moduleCost, masteryCost, creditIncome, canAfford, exactWorkshopBulkCost,
+  purchaseWorkshop, purchaseModule, purchaseMastery, purchaseProtocol,
+  applyEconomicAnswer, questionReward, restartEconomy, automaticPurchase,
+  pendingGate, workshopGateProgress, canOpenWorkshop,
+} from "./economy-state";
+import { generateQuestion as generateExercise, WORKSHOP_EXERCISE_FAMILIES } from "./question-generator";
 import MathExpression from "./math-expression";
 import ThemeToggle from "./theme-toggle";
 import { formatNumber, formatCount, formatDecimal } from "./format-number";
 import { useInteractionGuards } from "./use-interaction-guards";
-import { emptyPracticeHistory, restorePracticeHistory, recordQuestionShown, recordQuestionAnswer, type PracticeHistory } from "./question-review";
+import { recordQuestionShown, recordQuestionAnswer } from "./question-review";
+import { INITIAL_STATE, restoreState, type GameState } from "./save-state";
 
 type Sector = "vectors" | "bases" | "applications" | "matrices";
 type GameTab = "network" | "instruments" | "anomalies" | "atlas";
 type PurchaseAmount = 1 | 10 | 25 | "max";
 
-type GameState = {
-  saveVersion: number;
-  coordinates: number;
-  runTotal: number;
-  allTime: number;
-  instruments: number[];
-  instrumentIds: string[];
-  instrumentModules: number[][];
-  instrumentMasteries: number[];
-  mastery: Record<Sector, number>;
-  questionHistory: PracticeHistory;
-  correctAnswers: number;
-  anomalies: number;
-  nextAnomalyAt: number;
-  resonance: number;
-  invariants: number;
-  totalInvariants: number;
-  protocols: number[];
-  lastTick: number;
-};
 
 type Question = {
   id: string;
   recallKey?: string;
+  workshopId?: string;
+  taskKind?: string;
   sector: Sector;
   eyebrow: string;
   prompt: string;
@@ -94,30 +65,9 @@ type EmittedVectorVisual = {
 };
 
 const LEGACY_SAVE_KEY = "reseau-des-espaces-v1";
-const SAVE_KEY = "eigenforge-v2";
+const PREVIOUS_SAVE_KEY = "eigenforge-v2";
+const SAVE_KEY = "eigenforge-v3";
 
-const INITIAL_STATE: GameState = {
-  saveVersion: 2,
-  coordinates: 0,
-  runTotal: 0,
-  allTime: 0,
-  instruments: INSTRUMENTS.map(() => 0),
-  instrumentIds: INSTRUMENTS.map((instrument) => instrument.id),
-  instrumentModules: INSTRUMENTS.map(() =>
-    WORKSHOP_MODULES.map(() => 0),
-  ),
-  instrumentMasteries: INSTRUMENTS.map(() => 0),
-  mastery: { vectors: 0, bases: 0, applications: 0, matrices: 0 },
-  questionHistory: emptyPracticeHistory(),
-  correctAnswers: 0,
-  anomalies: 0,
-  nextAnomalyAt: 0,
-  resonance: 0,
-  invariants: 0,
-  totalInvariants: 0,
-  protocols: INVARIANT_PROTOCOLS.map(() => 0),
-  lastTick: 0,
-};
 
 const SECTOR_LABELS: Record<Sector, string> = {
   vectors: "Vecteurs",
@@ -145,434 +95,24 @@ function randomInt(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function nonZero() {
-  const values = [-3, -2, -1, 1, 2, 3];
-  return values[randomInt(0, values.length - 1)];
-}
 
-function shuffle<T>(items: T[]) {
-  const copy = [...items];
-  for (let index = copy.length - 1; index > 0; index -= 1) {
-    const target = randomInt(0, index);
-    [copy[index], copy[target]] = [copy[target], copy[index]];
-  }
-  return copy;
-}
-
-function vector(x: number, y: number) {
-  return `(${x} ; ${y})`;
-}
-
-function formatLinearExpression(terms: Array<[number, string]>) {
-  const visibleTerms = terms.filter(([coefficient]) => coefficient !== 0);
-  if (visibleTerms.length === 0) return "0";
-
-  return visibleTerms
-    .map(([coefficient, variable], index) => {
-      const absoluteValue = Math.abs(coefficient);
-      const magnitude = absoluteValue === 1 ? "" : `${absoluteValue}`;
-      const sign =
-        index === 0
-          ? coefficient < 0
-            ? "−"
-            : ""
-          : coefficient < 0
-            ? " − "
-            : " + ";
-      return `${sign}${magnitude}${variable}`;
-    })
-    .join("");
-}
-
-function arithmeticSum(first: number, second: number) {
-  return `${first} ${second < 0 ? "−" : "+"} ${Math.abs(second)}`;
-}
-
-function factor(value: number) {
-  return value < 0 ? `(${value})` : `${value}`;
-}
-
-function choices(correct: string, distractors: string[]) {
-  const unique = Array.from(new Set([correct, ...distractors]));
-  let offset = 1;
-  while (unique.length < 4) {
-    const numeric = Number(correct);
-    const vectorMatch = correct.match(/^\((-?\d+) ; (-?\d+)\)$/);
-    const fallback = Number.isFinite(numeric)
-      ? `${numeric + offset}`
-      : vectorMatch
-        ? vector(Number(vectorMatch[1]) + offset, Number(vectorMatch[2]) - offset)
-        : `Aucune des trois autres propositions (${offset})`;
-    if (!unique.includes(fallback)) unique.push(fallback);
-    offset += 1;
-  }
-  return shuffle(
-    unique.slice(0, 4).map((text) => ({ text, correct: text === correct })),
-  );
-}
-
-function vectorQuestion(): Question {
-  const template = randomInt(0, 2);
-
-  if (template === 0) {
-    const a = nonZero();
-    const b = nonZero();
-    const c = nonZero();
-    const d = nonZero();
-    const answer = vector(a + c, b + d);
-    return {
-      id: `V-SOM-${Date.now()}`,
-      sector: "vectors",
-      eyebrow: "Combinaison linéaire",
-      prompt: "Quelles sont les coordonnées de u + v ?",
-      formula: `u = ${vector(a, b)}   et   v = ${vector(c, d)}`,
-      choices: choices(answer, [
-        vector(a + c, b - d),
-        vector(a - c, b + d),
-        vector(a * c, b * d),
-      ]),
-      explanation: `On additionne les coordonnées terme à terme : u + v = (${arithmeticSum(a, c)} ; ${arithmeticSum(b, d)}) = ${answer}.`,
-      geometry:
-        "L’addition place les deux vecteurs bout à bout : la diagonale du parallélogramme représente leur somme.",
-      trap: "Il ne faut ni multiplier les coordonnées ni mélanger les deux axes.",
-    };
-  }
-
-  if (template === 1) {
-    const a = nonZero();
-    const b = nonZero();
-    const answer = vector(2 * a, 2 * b);
-    return {
-      id: `V-VECT-${Date.now()}`,
-      sector: "vectors",
-      eyebrow: "Sous-espace engendré",
-      prompt: `Quel vecteur appartient à Vect(${vector(a, b)}) ?`,
-      formula: "",
-      choices: choices(answer, [
-        vector(2 * a, 2 * b + 1),
-        vector(a + 1, b),
-        vector(-a, b),
-      ]),
-      explanation: `${answer} = 2 × ${vector(a, b)}. Il s’agit donc bien d’un multiple scalaire du vecteur générateur.`,
-      geometry:
-        "Tous les vecteurs de Vect(u) sont portés par la même droite vectorielle que u.",
-      trap: "Modifier une seule coordonnée ne conserve généralement pas la direction.",
-    };
-  }
-
-  const a = nonZero();
-  const b = nonZero();
-  const linearForm = formatLinearExpression([
-    [a, "x"],
-    [b, "y"],
-  ]);
-  const answer = `{(x ; y) ∈ ℝ² | ${linearForm} = 0}`;
-  return {
-    id: `V-SEV-${Date.now()}`,
-    sector: "vectors",
-    eyebrow: "Sous-espace vectoriel",
-    prompt: "Quel ensemble est nécessairement un sous-espace vectoriel de ℝ² ?",
-    formula: "Chercher une condition homogène et stable par combinaison linéaire.",
-    choices: choices(answer, [
-      `{(x ; y) ∈ ℝ² | ${linearForm} = 1}`,
-      "{(x ; y) ∈ ℝ² | x ≥ 0}",
-      "{(x ; y) ∈ ℝ² | xy = 0}",
-    ]),
-    explanation: `L’équation ${linearForm} = 0 est linéaire et homogène. L’ensemble de ses solutions contient 0 et reste stable par combinaison linéaire.`,
-    geometry:
-      "Dans ℝ², une équation linéaire homogène non triviale décrit une droite passant par l’origine.",
-    trap: "Une droite affine ne passant pas par l’origine n’est pas un sous-espace vectoriel.",
-  };
-}
-
-function basisQuestion(): Question {
-  const template = randomInt(0, 2);
-
-  if (template === 0) {
-    let a = nonZero();
-    let b = nonZero();
-    let c = nonZero();
-    let d = nonZero();
-    while (a * d - b * c === 0) {
-      a = nonZero();
-      b = nonZero();
-      c = nonZero();
-      d = nonZero();
-    }
-    const determinant = a * d - b * c;
-    const answer = `${determinant}`;
-    return {
-      id: `B-DET-${Date.now()}`,
-      sector: "bases",
-      eyebrow: "Famille libre",
-      prompt: "Quel est le déterminant de la famille (u, v) ?",
-      formula: `u = ${vector(a, b)}   et   v = ${vector(c, d)}`,
-      choices: choices(answer, [
-        `${a * c - b * d}`,
-        `${a * d + b * c}`,
-        `${b * c - a * d}`,
-      ]),
-      explanation: `det(u, v) = ${factor(a)} × ${factor(d)} − ${factor(b)} × ${factor(c)} = ${determinant}. Comme ce nombre est non nul, (u, v) est une base de ℝ².`,
-      geometry:
-        "La valeur absolue du déterminant mesure l’aire du parallélogramme construit sur u et v.",
-      trap: "Le produit croisé se soustrait : ad − bc, et non ad + bc.",
-    };
-  }
-
-  if (template === 1) {
-    const p = nonZero();
-    const alpha = nonZero();
-    const beta = nonZero();
-    const x = alpha + p * beta;
-    const answer = vector(alpha, beta);
-    const coordinateEquation = formatLinearExpression([
-      [1, "λ"],
-      [p, "μ"],
-    ]);
-    return {
-      id: `B-COORD-${Date.now()}`,
-      sector: "bases",
-      eyebrow: "Coordonnées dans une base",
-      prompt: "Quelles sont les coordonnées de x dans la base B = (e₁, e₂) ?",
-      formula: `e₁ = ${vector(1, 0)}, e₂ = ${vector(p, 1)} et x = ${vector(x, beta)}`,
-      choices: choices(answer, [
-        vector(x, beta),
-        vector(beta, alpha),
-        vector(alpha + p, beta),
-      ]),
-      explanation: `On cherche x = λe₁ + μe₂. La seconde coordonnée donne μ = ${beta}, puis ${coordinateEquation} = ${x}, donc λ = ${alpha}. Ainsi [x]_B = ${answer}.`,
-      geometry:
-        "Changer de base ne déplace pas le vecteur : seules les coordonnées utilisées pour le décrire changent.",
-      trap: "Les coordonnées canoniques de x ne sont pas automatiquement ses coordonnées dans B.",
-    };
-  }
-
-  const a = nonZero();
-  const b = nonZero();
-  const c = nonZero();
-  let d = nonZero();
-  while (a * d - b * c === 0) d = nonZero();
-  return {
-    id: `B-DIM-${Date.now()}`,
-    sector: "bases",
-    eyebrow: "Dimension",
-    prompt: "Quelle est la dimension du sous-espace engendré par cette famille ?",
-    formula: `F = Vect(${vector(a, b)}, ${vector(c, d)}, ${vector(a + c, b + d)})`,
-    choices: choices("2", ["0", "1", "3"]),
-    explanation:
-      "Les deux premiers vecteurs sont indépendants car leur déterminant est non nul. Le troisième est leur somme. La famille engendre donc tout ℝ² et dim(F) = 2.",
-    geometry:
-      "Deux directions indépendantes suffisent à parcourir tout le plan ; un troisième vecteur du plan n’ajoute aucun degré de liberté.",
-    trap: "La dimension compte les directions indépendantes, pas le nombre total de vecteurs écrits.",
-  };
-}
-
-function applicationQuestion(): Question {
-  const template = randomInt(0, 3);
-
-  if (template === 0) {
-    const a = nonZero();
-    const b = nonZero();
-    const answer = vector(b, -a);
-    const linearForm = formatLinearExpression([
-      [a, "x"],
-      [b, "y"],
-    ]);
-    return {
-      id: `A-KER-${Date.now()}`,
-      sector: "applications",
-      eyebrow: "Noyau",
-      prompt: "Quel vecteur appartient au noyau de f ?",
-      formula: `f : ℝ² → ℝ,   f(x, y) = ${linearForm}`,
-      choices: choices(answer, [
-        vector(a, b),
-        vector(b, a),
-        vector(-b, -a),
-      ]),
-      explanation: `En posant (x ; y) = ${answer}, on obtient f(x, y) = ab + b(−a) = ab − ab = 0. Ce vecteur appartient donc à Ker(f).`,
-      geometry:
-        "Le noyau rassemble toutes les directions que l’application écrase sur le vecteur nul.",
-      trap: "Un vecteur fixe par f et un vecteur envoyé sur 0 sont deux notions différentes.",
-    };
-  }
-
-  if (template === 1) {
-    const dimension = randomInt(3, 7);
-    const kernel = randomInt(1, dimension - 1);
-    const rank = dimension - kernel;
-    return {
-      id: `A-RANK-${Date.now()}`,
-      sector: "applications",
-      eyebrow: "Théorème du rang",
-      prompt: "Quel est le rang de f ?",
-      formula: `dim(E) = ${dimension}   et   dim(Ker f) = ${kernel}`,
-      choices: choices(`${rank}`, [
-        `${kernel}`,
-        `${dimension + kernel}`,
-        `${dimension}`,
-      ]),
-      explanation: `Le théorème du rang donne dim(E) = dim(Ker f) + rg(f). Ainsi rg(f) = ${dimension} − ${kernel} = ${rank}.`,
-      geometry:
-        "La dimension de départ se partage entre les directions écrasées et les directions encore visibles dans l’image.",
-      trap: "Le rang complète la dimension du noyau ; il ne s’y ajoute pas au-delà de dim(E).",
-    };
-  }
-
-  if (template === 2) {
-    const coefficient = nonZero();
-    const firstCoordinate = formatLinearExpression([[coefficient, "x"]]);
-    return {
-      id: `A-IMAGE-${Date.now()}`,
-      sector: "applications",
-      eyebrow: "Image et rang",
-      prompt: "Quel est le rang de cette application ?",
-      formula: `f(x, y) = (${firstCoordinate} ; 0)`,
-      choices: choices("1", ["0", "2", `${Math.abs(coefficient)}`]),
-      explanation: `Im(f) = Vect(${vector(1, 0)}). L’image est une droite vectorielle, donc rg(f) = 1.`,
-      geometry:
-        "L’application rabat tout le plan sur l’axe horizontal : une seule direction subsiste.",
-      trap: "Le rang est une dimension, pas la valeur du coefficient non nul.",
-    };
-  }
-
-  const a = nonZero();
-  const b = nonZero();
-  const c = nonZero();
-  const firstCoordinate = formatLinearExpression([
-    [a, "x"],
-    [b, "y"],
-  ]);
-  const secondCoordinate = formatLinearExpression([[c, "x"]]);
-  const nonlinearCoordinate = formatLinearExpression([
-    [a, "x²"],
-    [b, "y"],
-  ]);
-  const answer = `f(x, y) = (${firstCoordinate} ; ${secondCoordinate})`;
-  return {
-    id: `A-LIN-${Date.now()}`,
-    sector: "applications",
-    eyebrow: "Linéarité",
-    prompt: "Laquelle de ces applications est linéaire ?",
-    formula: "Une application linéaire conserve les combinaisons linéaires et envoie 0 sur 0.",
-    choices: choices(answer, [
-      `f(x, y) = (${firstCoordinate} + 1 ; ${secondCoordinate})`,
-      `f(x, y) = (${nonlinearCoordinate} ; ${secondCoordinate})`,
-      `f(x, y) = (${firstCoordinate} ; ${c})`,
-    ]),
-    explanation:
-      "Chaque coordonnée de l’application correcte est une combinaison linéaire homogène de x et y. Il n’y a ni terme constant ni produit non linéaire.",
-    geometry:
-      "Une transformation linéaire peut étirer, tourner, cisailler ou écraser l’espace, mais elle garde l’origine fixe.",
-    trap: "La présence d’un terme constant non nul suffit à détruire la linéarité.",
-  };
-}
-
-function generateQuestion(sectors: Sector[]) {
-  const sector = sectors[randomInt(0, sectors.length - 1)];
-  if (sector === "bases") return basisQuestion();
-  if (sector === "applications") return applicationQuestion();
-  return vectorQuestion();
-}
-
-function production(state: GameState) {
-  const base = basePassiveProduction(
-    state.instruments,
-    state.instrumentModules,
-    state.instrumentMasteries,
-  );
-  const invariantMultiplier = invariantProductionMultiplier(
-    state.totalInvariants,
-  );
-  const masteryTotal =
-    state.mastery.vectors + state.mastery.bases + state.mastery.applications;
-  return (
-    base *
-    invariantMultiplier *
-    protocolPassiveMultiplier(state.protocols) *
-    (1 + masteryTotal * 0.003)
-  );
-}
-
-function clickPower(state: GameState) {
-  const emitterBonus =
-    1 + instrumentLevel(state.instruments, "axis-generator") * 0.1;
-  const basisExtractionBonus =
-    1 + instrumentLevel(state.instruments, "basis-extractor") * 0.05;
-  const resonanceBonus = 1 + Math.floor(state.resonance / 25) * 0.5;
-  return (
-    emitterBonus *
-    basisExtractionBonus *
-    resonanceBonus *
-    protocolManualMultiplier(state.protocols) *
-    invariantProductionMultiplier(state.totalInvariants)
-  );
-}
-
-function workshopCost(state: GameState, index: number) {
-  return workshopBulkCost(state, index, 1);
-}
-
-function workshopCostFactor(state: GameState) {
-  return (
-    protocolWorkshopCostMultiplier(state.protocols) *
-    matrixWorkshopCostMultiplier(state.instruments)
-  );
-}
-
-function workshopBulkCost(
-  state: GameState,
-  index: number,
-  quantity: number,
-) {
-  return instrumentBulkCost(
-    index,
-    state.instruments[index],
-    quantity,
-    workshopCostFactor(state),
-    state.protocols[6] ?? 0,
-  );
-}
-
-function maxAffordableWorkshopQuantity(state: GameState, index: number) {
-  return maxAffordableInstrumentQuantity(
-    index,
-    state.instruments[index],
-    state.coordinates,
-    workshopCostFactor(state),
-    state.protocols[6] ?? 0,
-  );
-}
-
-function moduleCost(state: GameState, index: number, moduleIndex: number) {
-  return Math.ceil(
-    workshopModuleCost(index, moduleIndex) *
-      protocolWorkshopCostMultiplier(state.protocols) *
-      matrixWorkshopCostMultiplier(state.instruments),
-  );
-}
-
-function masteryCost(state: GameState, index: number) {
-  return Math.ceil(
-    workshopMasteryCost(index, state.instrumentMasteries[index] ?? 0) *
-      protocolWorkshopCostMultiplier(state.protocols) *
-      matrixWorkshopCostMultiplier(state.instruments),
-  );
-}
 
 function protocolEffect(index: number, level: number) {
   if (level === 0) return "Aucun bonus actif";
-  if (index === 0) return `Émission manuelle : +${level * 25} %`;
-  if (index === 1) return `Production passive : +${level * 12} %`;
+  if (index === 0) return `Émission manuelle : +${level * 15} %`;
+  if (index === 1) return `Production passive : +${level * 8} %`;
   if (index === 2) {
     const reduction = Math.round(
       (1 - protocolWorkshopCostMultiplier([0, 0, level])) * 100,
     );
     return `Prix des ateliers : −${reduction} %`;
   }
-  if (index === 3) return `Stabilité de résonance : +${level * 12} %`;
-  if (index === 4) return `Réponses justes : +${level * 15} %`;
-  if (index === 6) return `Dix premières unités des huit premiers ateliers : −${level * 12} %`;
-  return `${level} atelier${level > 1 ? "s" : ""} dimensionnel${level > 1 ? "s" : ""} conservé${level > 1 ? "s" : ""}`;
+  if (index === 3) return `Stabilité de résonance : +${level * 8} %`;
+  if (index === 4) return `Réponses justes : +${level * 10} %`;
+  if (index === 5) return `Jusqu’à ${INHERITED_UNIT_CAPS[level]} unités par atelier connu`;
+  if (index === 6) return `Dix premières unités des ateliers archivés : −${level * 12} %`;
+  if (index === 7) return `${[0, 1, 3, 5][level]} modules automatiques par atelier`;
+  return `Anciens ateliers renforcés jusqu’à ${level === 1 ? 25 : 50} unités`;
 }
 
 function anomalyDelay(allTime: number) {
@@ -590,96 +130,12 @@ function formatMultiplier(value: number) {
   });
 }
 
-function restoreState(raw: string | null): GameState {
-  if (!raw) return { ...INITIAL_STATE, lastTick: Date.now(), nextAnomalyAt: Date.now() + 8000 };
-  try {
-    const saved = JSON.parse(raw) as Partial<GameState>;
-    const savedInstrumentIds =
-      Array.isArray(saved.instrumentIds) &&
-      saved.instrumentIds.length === saved.instruments?.length
-        ? saved.instrumentIds
-        : [...LEGACY_INSTRUMENT_IDS];
-    const savedIndexById = new Map(
-      savedInstrumentIds.map((id, index) => [id, index]),
-    );
-    const instruments = INSTRUMENTS.map((instrument) =>
-      Math.max(
-        0,
-        Number(
-          saved.instruments?.[savedIndexById.get(instrument.id) ?? -1],
-        ) || 0,
-      ),
-    );
-    // Les anciennes versions autorisaient parfois un atelier avancé sans son
-    // prédécesseur. La migration rétablit une chaîne structurelle cohérente.
-    for (let index = instruments.length - 1; index > 0; index -= 1) {
-      if (instruments[index] > 0) {
-        instruments[index - 1] = Math.max(1, instruments[index - 1]);
-      }
-    }
-    const hasSavedModules = Array.isArray(saved.instrumentModules);
-    const instrumentModules = INSTRUMENTS.map((instrument, currentIndex) =>
-      WORKSHOP_MODULES.map((__, moduleIndex) => {
-        const savedIndex = savedIndexById.get(instrument.id) ?? -1;
-        if (hasSavedModules) {
-          return (saved.instrumentModules?.[savedIndex]?.[moduleIndex] ?? 0) >
-            0
-            ? 1
-            : 0;
-        }
-        // Les anciens paliers automatiques donnaient ×2 aux niveaux 10, 25 et
-        // 50. Cette migration conserve exactement ces bonus dans les parties
-        // existantes, sans offrir automatiquement les nouveaux modules ensuite.
-        return legacyWorkshopModules(instruments[currentIndex])[moduleIndex];
-      }),
-    );
-    const instrumentMasteries = INSTRUMENTS.map((instrument, index) => {
-      const savedIndex = savedIndexById.get(instrument.id) ?? -1;
-      const savedRank = Math.max(
-        0,
-        Math.floor(Number(saved.instrumentMasteries?.[savedIndex]) || 0),
-      );
-      let supportedRank = 0;
-      while (
-        supportedRank < savedRank &&
-        instruments[index] >= workshopMasteryThreshold(supportedRank)
-      ) {
-        supportedRank += 1;
-      }
-      return supportedRank;
-    });
-    return {
-      ...INITIAL_STATE,
-      ...saved,
-      saveVersion: 2,
-      instruments,
-      instrumentIds: INSTRUMENTS.map((instrument) => instrument.id),
-      instrumentModules,
-      instrumentMasteries,
-      protocols: INVARIANT_PROTOCOLS.map((protocol, index) =>
-        Math.min(
-          protocol.maxLevel,
-          Math.max(0, Number(saved.protocols?.[index]) || 0),
-        ),
-      ),
-      mastery: {
-        vectors: Number(saved.mastery?.vectors) || 0,
-        bases: Number(saved.mastery?.bases) || 0,
-        applications: Number(saved.mastery?.applications) || 0,
-        matrices: Number(saved.mastery?.matrices) || 0,
-      },
-      questionHistory: restorePracticeHistory(saved.questionHistory),
-      lastTick: Number(saved.lastTick) || Date.now(),
-      nextAnomalyAt: Number(saved.nextAnomalyAt) || Date.now() + 8000,
-    };
-  } catch {
-    return { ...INITIAL_STATE, lastTick: Date.now(), nextAnomalyAt: Date.now() + 8000 };
-  }
-}
 
 export default function Home() {
   useInteractionGuards();
   const [game, setGame] = useState<GameState>(INITIAL_STATE);
+  const latestGame = useRef(game);
+  useEffect(() => { latestGame.current = game; }, [game]);
   const [hydrated, setHydrated] = useState(false);
   const [question, setQuestion] = useState<Question | null>(null);
   const [answer, setAnswer] = useState<AnswerState | null>(null);
@@ -705,7 +161,7 @@ export default function Home() {
       mappedLength: 27,
     });
 
-  const rate = useMemo(() => production(game), [game]);
+  const rate = useMemo(() => boostedProduction(game, game.lastTick), [game]);
   const manualPower = useMemo(() => clickPower(game), [game]);
   // Le premier exemplaire de chaque atelier structurel ajoute un vecteur à la
   // base. Les exemplaires suivants renforcent la production sans changer dim(E).
@@ -726,8 +182,12 @@ export default function Home() {
   const spaceGeneratorList = basisVectors.join(", ");
 
   useEffect(() => {
-    window.localStorage.removeItem(LEGACY_SAVE_KEY);
-    const restored = restoreState(window.localStorage.getItem(SAVE_KEY));
+    let mounted = true;
+    queueMicrotask(() => {
+    if (!mounted) return;
+    const currentSave = window.localStorage.getItem(SAVE_KEY);
+    const previousSave = window.localStorage.getItem(PREVIOUS_SAVE_KEY) ?? window.localStorage.getItem(LEGACY_SAVE_KEY);
+    const restored = restoreState(currentSave ?? previousSave);
     const now = Date.now();
     const elapsed = Math.min(Math.max(0, now - restored.lastTick), 2 * 60 * 60 * 1000);
     const offlineGain = production(restored) * (elapsed / 1000);
@@ -736,10 +196,7 @@ export default function Home() {
         ? Math.min(3, restored.anomalies + 1)
         : restored.anomalies;
     setGame({
-      ...restored,
-      coordinates: restored.coordinates + offlineGain,
-      runTotal: restored.runTotal + offlineGain,
-      allTime: restored.allTime + offlineGain,
+      ...creditIncome(restored, offlineGain),
       anomalies: readyAnomaly,
       nextAnomalyAt:
         readyAnomaly > restored.anomalies
@@ -747,10 +204,16 @@ export default function Home() {
           : restored.nextAnomalyAt,
       lastTick: now,
     });
-    if (offlineGain >= 1) {
+    if (!currentSave && previousSave) {
+      setNotice("Économie mise à jour. Votre ancienne sauvegarde reste conservée et vos points gagnés sont préservés.");
+    } else if (offlineGain >= 1) {
       setNotice(`Le réseau a produit ${formatNumber(offlineGain)} coordonnées pendant votre absence.`);
     }
     setHydrated(true);
+    const nextIndex = restored.instruments.findIndex(n => n === 0);
+    if (nextIndex >= 0) setActiveWorkshopChapter(INSTRUMENTS[nextIndex].chapter);
+    });
+    return () => { mounted = false; };
   }, []);
 
   useEffect(() => {
@@ -759,7 +222,8 @@ export default function Home() {
       setGame((previous) => {
         const now = Date.now();
         const elapsed = Math.min(1, Math.max(0, (now - previous.lastTick) / 1000));
-        const gain = production(previous) * elapsed;
+        const boostedSeconds = Math.min(elapsed, Math.max(0, (previous.boostUntil - previous.lastTick) / 1000));
+        const gain = production(previous) * (elapsed + boostedSeconds);
         let anomalies = previous.anomalies;
         let nextAnomalyAt = previous.nextAnomalyAt;
         if (previous.allTime >= 15 && now >= nextAnomalyAt && anomalies < 3) {
@@ -768,11 +232,8 @@ export default function Home() {
         } else if (anomalies >= 3 && now >= nextAnomalyAt) {
           nextAnomalyAt = now + 25000;
         }
-        return {
-          ...previous,
-          coordinates: previous.coordinates + gain,
-          runTotal: previous.runTotal + gain,
-          allTime: previous.allTime + gain,
+        const updated = {
+          ...creditIncome(previous, gain),
           resonance: Math.max(
             0,
             previous.resonance -
@@ -783,6 +244,7 @@ export default function Home() {
           nextAnomalyAt,
           lastTick: now,
         };
+        return document.visibilityState === "visible" ? automaticPurchase(updated, now) : updated;
       });
     }, 250);
     return () => window.clearInterval(timer);
@@ -790,16 +252,13 @@ export default function Home() {
 
   useEffect(() => {
     if (!hydrated) return;
-    const saver = window.setInterval(() => {
-      setGame((current) => {
-        window.localStorage.setItem(
-          SAVE_KEY,
-          JSON.stringify({ ...current, lastTick: Date.now() }),
-        );
-        return current;
-      });
-    }, 2500);
-    return () => window.clearInterval(saver);
+    const persist = () => {
+      try { window.localStorage.setItem(SAVE_KEY, JSON.stringify(latestGame.current)); }
+      catch { /* A full or restricted browser store must not stop the game. */ }
+    };
+    const saver = window.setInterval(persist, 2500);
+    window.addEventListener("pagehide", persist);
+    return () => { window.clearInterval(saver); window.removeEventListener("pagehide", persist); };
   }, [hydrated]);
 
   useEffect(() => {
@@ -808,13 +267,6 @@ export default function Home() {
     return () => window.clearTimeout(timer);
   }, [notice]);
 
-  useEffect(() => {
-    if (!hydrated) return;
-    const nextIndex = game.instruments.findIndex((count) => count === 0);
-    if (nextIndex >= 0) {
-      setActiveWorkshopChapter(INSTRUMENTS[nextIndex].chapter);
-    }
-  }, [hydrated]);
 
   function emitVector() {
     if (!hydrated) return;
@@ -849,10 +301,7 @@ export default function Home() {
       const firstAnomaly =
         previous.anomalies === 0 && previous.allTime < 15 && previous.allTime + gain >= 15;
       return {
-        ...previous,
-        coordinates: previous.coordinates + gain,
-        runTotal: previous.runTotal + gain,
-        allTime: previous.allTime + gain,
+        ...creditIncome(previous, gain),
         resonance: Math.min(100, previous.resonance + 9),
         anomalies: firstAnomaly ? 1 : previous.anomalies,
         nextAnomalyAt: firstAnomaly
@@ -863,99 +312,17 @@ export default function Home() {
   }
 
   function buyInstrument(index: number, requestedAmount: PurchaseAmount) {
-    setGame((previous) => {
-      const quantity =
-        requestedAmount === "max"
-          ? maxAffordableWorkshopQuantity(previous, index)
-          : requestedAmount;
-      const cost = workshopBulkCost(previous, index, quantity);
-      const prerequisiteOwned =
-        index === 0 || (previous.instruments[index - 1] ?? 0) > 0;
-      if (
-        quantity < 1 ||
-        previous.coordinates < cost ||
-        previous.allTime < INSTRUMENTS[index].unlock ||
-        !prerequisiteOwned
-      ) {
-        return previous;
-      }
-      const instruments = [...previous.instruments];
-      instruments[index] += quantity;
-      return { ...previous, coordinates: previous.coordinates - cost, instruments };
-    });
+    setGame(previous => purchaseWorkshop(previous, index, requestedAmount === "max"
+      ? maxAffordableWorkshopQuantity(previous, index) : requestedAmount));
   }
-
   function buyWorkshopModule(index: number, moduleIndex: number) {
-    setGame((previous) => {
-      const module = WORKSHOP_MODULES[moduleIndex];
-      const alreadyOwned =
-        (previous.instrumentModules[index]?.[moduleIndex] ?? 0) > 0;
-      const cost = moduleCost(previous, index, moduleIndex);
-      if (
-        !module ||
-        alreadyOwned ||
-        (previous.instruments[index] ?? 0) < module.threshold ||
-        previous.coordinates < cost
-      ) {
-        return previous;
-      }
-      const instrumentModules = previous.instrumentModules.map((modules) => [
-        ...modules,
-      ]);
-      instrumentModules[index][moduleIndex] = 1;
-      return {
-        ...previous,
-        coordinates: previous.coordinates - cost,
-        instrumentModules,
-      };
-    });
+    setGame(previous => purchaseModule(previous, index, moduleIndex));
   }
-
   function buyWorkshopMastery(index: number) {
-    setGame((previous) => {
-      const rank = previous.instrumentMasteries[index] ?? 0;
-      const threshold = workshopMasteryThreshold(rank);
-      const modulesComplete = WORKSHOP_MODULES.every(
-        (_, moduleIndex) =>
-          (previous.instrumentModules[index]?.[moduleIndex] ?? 0) > 0,
-      );
-      const cost = masteryCost(previous, index);
-      if (
-        !modulesComplete ||
-        (previous.instruments[index] ?? 0) < threshold ||
-        previous.coordinates < cost
-      ) {
-        return previous;
-      }
-      const instrumentMasteries = [...previous.instrumentMasteries];
-      instrumentMasteries[index] = rank + 1;
-      return {
-        ...previous,
-        coordinates: previous.coordinates - cost,
-        instrumentMasteries,
-      };
-    });
+    setGame(previous => purchaseMastery(previous, index));
   }
-
   function buyProtocol(index: number) {
-    setGame((previous) => {
-      const currentLevel = previous.protocols[index] ?? 0;
-      const protocol = INVARIANT_PROTOCOLS[index];
-      const cost = invariantProtocolCost(index, currentLevel);
-      if (
-        currentLevel >= protocol.maxLevel ||
-        previous.invariants < cost
-      ) {
-        return previous;
-      }
-      const protocols = [...previous.protocols];
-      protocols[index] = currentLevel + 1;
-      return {
-        ...previous,
-        invariants: previous.invariants - cost,
-        protocols,
-      };
-    });
+    setGame(previous => purchaseProtocol(previous, index));
   }
 
   function openAnomaly() {
@@ -978,7 +345,13 @@ export default function Home() {
       (highest, count, index) => (count > 0 ? index : highest),
       -1,
     );
-    const next = generateExercise(pool, spaceDimension, highestOwnedInstrument, game.questionHistory);
+    const gate = pendingGate(game);
+    const gateFamilies = gate ? WORKSHOP_EXERCISE_FAMILIES.filter(family => family.minInstrument >= (gate - 2) * 4 && family.minInstrument < (gate - 1) * 4 && family.minInstrument <= highestOwnedInstrument) : [];
+    // During a frontier validation, offer only already-built workshops from
+    // the previous cycle; do not strand the player in unrelated old questions.
+    const next = gateFamilies.length
+      ? gateFamilies[randomInt(0, gateFamilies.length - 1)].generate(spaceDimension, game.questionHistory)
+      : generateExercise(pool, spaceDimension, highestOwnedInstrument, game.questionHistory);
     setQuestion(next);
     setGame((previous) => ({ ...previous, questionHistory: recordQuestionShown(previous.questionHistory, next) }));
     setAnswer(null);
@@ -987,32 +360,18 @@ export default function Home() {
   function chooseAnswer(index: number) {
     if (!question || answer) return;
     const isCorrect = question.choices[index].correct;
-    const reward =
-      Math.max(isCorrect ? 24 : 5, rate * (isCorrect ? 20 : 5)) *
-      (isCorrect
-        ? correctAnomalyRewardMultiplier(game.instruments) *
-          protocolAnomalyMultiplier(game.protocols)
-        : 1);
+    const reward = questionReward(game, isCorrect);
     setAnswer({ choice: index, correct: isCorrect, reward });
     setGame((previous) => {
       const now = Date.now();
       return {
-        ...previous,
-        coordinates: previous.coordinates + reward,
-        runTotal: previous.runTotal + reward,
-        allTime: previous.allTime + reward,
+        ...applyEconomicAnswer(previous, question, isCorrect, now),
         anomalies: Math.max(0, previous.anomalies - 1),
         nextAnomalyAt: isCorrect
           ? previous.nextAnomalyAt
           : Math.min(previous.nextAnomalyAt, now + 30000),
         correctAnswers: previous.correctAnswers + (isCorrect ? 1 : 0),
         questionHistory: recordQuestionAnswer(previous.questionHistory, question, isCorrect),
-        mastery: isCorrect
-          ? {
-              ...previous.mastery,
-              [question.sector]: Math.min(100, previous.mastery[question.sector] + 6),
-            }
-          : previous.mastery,
       };
     });
   }
@@ -1024,18 +383,11 @@ export default function Home() {
 
   function changeBasis() {
     setGame((previous) => {
-      const preview = basisChangePreview(previous.runTotal, previous.totalInvariants, previous.protocols);
-      if (preview.gained < 1) return previous;
+      const restarted = restartEconomy(previous);
+      if (restarted === previous) return previous;
       return {
-        ...INITIAL_STATE,
-        instruments: preview.instruments,
-        protocols: previous.protocols,
-        mastery: previous.mastery,
-        questionHistory: previous.questionHistory,
-        correctAnswers: previous.correctAnswers,
-        allTime: previous.allTime,
-        invariants: previous.invariants + preview.gained,
-        totalInvariants: previous.totalInvariants + preview.gained,
+        ...restarted,
+        anomalies: 0,
         lastTick: Date.now(),
         nextAnomalyAt: Date.now() + 8000,
       };
@@ -1048,6 +400,8 @@ export default function Home() {
 
   function resetGame() {
     window.localStorage.removeItem(SAVE_KEY);
+    window.localStorage.removeItem(PREVIOUS_SAVE_KEY);
+    window.localStorage.removeItem(LEGACY_SAVE_KEY);
     setGame({
       ...INITIAL_STATE,
       lastTick: Date.now(),
@@ -1058,23 +412,24 @@ export default function Home() {
     setNotice("La carte a été entièrement effacée.");
   }
 
-  const rawInvariantGain = invariantGain(game.runTotal);
-  const invariantGainCap = basisChangeGainCap(game.totalInvariants);
+  const frontier = frontierCycle(game.highestWorkshop);
+  const rawInvariantGain = invariantGain(game.runTotal, frontier, game.frontierResets);
+  const invariantGainCap = basisChangeGainCap(frontier);
   const pendingInvariantGain = basisChangeGain(
     game.runTotal,
-    game.totalInvariants,
+    frontier, game.frontierResets,
   );
   const invariantGainSaturated =
     rawInvariantGain >= invariantGainCap;
-  const followingInvariantThreshold = nextInvariantThreshold(pendingInvariantGain);
-  const restartPreview = basisChangePreview(game.runTotal, game.totalInvariants, game.protocols);
+  const followingInvariantThreshold = nextInvariantThreshold(pendingInvariantGain, frontier, game.frontierResets);
+  const restartPreview = basisChangePreview(game.runTotal, game.totalInvariants, game.protocols, game.instruments, game.highestWorkshop, game.frontierResets);
   const currentInvariantMultiplier = restartPreview.currentMultiplier;
   const futureInvariantMultiplier = restartPreview.futureMultiplier;
-  const retainedWorkshops = INSTRUMENTS.slice(0, restartPreview.retainedCount);
+  const startingProduction = pendingInvariantGain > 0 ? production(restartEconomy(game)) : 0;
   const extraInvariantPreview = invariantProductionMultiplier(game.totalInvariants + pendingInvariantGain + 1);
   const upcomingProtocols = [5, 6].filter(index => {
     const level = game.protocols[index] ?? 0;
-    return level < INVARIANT_PROTOCOLS[index].maxLevel && invariantProtocolCost(index, level) <= game.invariants + pendingInvariantGain;
+    return level < INVARIANT_PROTOCOLS[index].maxLevel && protocolUnlockCycle(index, level) <= frontier && invariantProtocolCost(index, level) <= game.invariants + pendingInvariantGain;
   });
   const unlockedSectorCount =
     1 +
@@ -1092,7 +447,7 @@ export default function Home() {
     .padStart(2, "0");
   const nextAnomalySeconds = Math.max(
     0,
-    Math.ceil((game.nextAnomalyAt - Date.now()) / 1000),
+    Math.ceil((game.nextAnomalyAt - game.lastTick) / 1000),
   );
   const mission =
     game.allTime < 15
@@ -1101,6 +456,12 @@ export default function Home() {
           text: "Forgez 15 coordonnées pour provoquer la première anomalie.",
           progress: Math.min(100, (game.allTime / 15) * 100),
         }
+      : nextWorkshop && workshopGateProgress(game, nextWorkshopIndex) < 3
+        ? {
+            title: `Valider l’entrée du cycle ${Math.floor(nextWorkshopIndex / 4) + 1}`,
+            text: `Réussissez trois types de questions distincts du cycle précédent : ${workshopGateProgress(game, nextWorkshopIndex)}/3 validés. Les validations restent acquises après un changement de base.`,
+            progress: workshopGateProgress(game, nextWorkshopIndex) / 3 * 100,
+          }
       : nextWorkshop && game.allTime < nextWorkshop.unlock
         ? {
             title: `Révéler ${nextWorkshop.name}`,
@@ -1125,7 +486,7 @@ export default function Home() {
               text: "Renforcez les ateliers et stabilisez les anomalies.",
               progress: Math.min(
                 100,
-                (game.runTotal / nextInvariantThreshold(0)) * 100,
+                (game.runTotal / nextInvariantThreshold(0, frontier, game.frontierResets)) * 100,
               ),
             };
 
@@ -1149,7 +510,7 @@ export default function Home() {
           <div className="resource-strip" aria-label="Ressources">
             <div className="resource">
               <span>Coordonnées</span>
-              <strong>{formatNumber(game.coordinates)}</strong>
+              <strong>{game.coordinates < 100 ? formatDecimal(game.coordinates, 1) : formatNumber(game.coordinates)}</strong>
             </div>
             <div className="resource">
               <span>Production</span>
@@ -1553,8 +914,8 @@ export default function Home() {
                       if (instrument.chapter !== chapter) return null;
                       const prerequisiteOwned =
                         index === 0 || (game.instruments[index - 1] ?? 0) > 0;
-                      const progressUnlocked = game.allTime >= instrument.unlock;
-                      const unlocked = prerequisiteOwned && progressUnlocked;
+                      const gateProgress = workshopGateProgress(game, index);
+                      const unlocked = canOpenWorkshop(game, index);
                       const count = game.instruments[index] ?? 0;
                       const purchaseQuantity =
                         purchaseAmount === "max"
@@ -1570,7 +931,7 @@ export default function Home() {
                           : workshopCost(game, index);
                       const affordable =
                         purchaseQuantity > 0 &&
-                        game.coordinates >= cost;
+                        canAfford(game, exactWorkshopBulkCost(game, index, purchaseQuantity));
                       const modules =
                         game.instrumentModules[index] ??
                         WORKSHOP_MODULES.map(() => 0);
@@ -1615,6 +976,7 @@ export default function Home() {
                             : `${Math.max(0, nextMasteryLevel - count)} niveaux avant la maîtrise ${masteryRank + 1}`;
                       const lockedDescription = !prerequisiteOwned
                         ? `Nécessite d’abord ${INSTRUMENTS[index - 1].name}.`
+                        : gateProgress < 3 ? `Validez trois types de questions du cycle précédent (${gateProgress}/3).`
                         : `Se révèle à ${formatNumber(instrument.unlock)} coordonnées cumulées.`;
                       return (
                         <article
@@ -1682,7 +1044,9 @@ export default function Home() {
                                 }
                                 disabled={!unlocked || !affordable}
                                 aria-label={
-                                  purchaseQuantity > 0
+                                  gateProgress < 3 && prerequisiteOwned
+                                    ? `Valider trois types de questions du cycle précédent pour ${instrument.name} : ${gateProgress} sur 3`
+                                  : purchaseQuantity > 0
                                     ? `Construire ${purchaseQuantity} unité${purchaseQuantity > 1 ? "s" : ""} de ${instrument.name} pour ${formatNumber(cost)} coordonnées`
                                     : `Coordonnées insuffisantes pour construire une unité de ${instrument.name}`
                                 }
@@ -1696,16 +1060,16 @@ export default function Home() {
                                           : "Forger au maximum"
                                         : `Forger ${purchaseQuantity === 1 ? "une" : purchaseQuantity} unité${purchaseQuantity > 1 ? "s" : ""}`
                                       : prerequisiteOwned
-                                        ? "Atelier verrouillé"
+                                        ? gateProgress < 3 ? "Frontière à valider" : "Atelier verrouillé"
                                         : "Prérequis manquant"}
                                   </small>
                                   <strong>
                                     {unlocked
                                       ? formatNumber(cost)
                                       : prerequisiteOwned
-                                        ? formatNumber(instrument.unlock)
+                                        ? gateProgress < 3 ? `${gateProgress}/3 questions` : formatNumber(instrument.unlock)
                                         : "—"}
-                                    {prerequisiteOwned && <em> coord.</em>}
+                                    {prerequisiteOwned && gateProgress >= 3 && <em> coord.</em>}
                                   </strong>
                                 </span>
                                 <span className="workshop-buy-mark" aria-hidden="true">
@@ -1768,7 +1132,7 @@ export default function Home() {
                                           moduleIndex,
                                         );
                                         const affordable =
-                                          game.coordinates >= cost;
+                                          canAfford(game, cost);
                                         return (
                                           <div
                                             className={[
@@ -1843,8 +1207,7 @@ export default function Home() {
                                       }
                                       disabled={
                                         !masteryAvailable ||
-                                        game.coordinates <
-                                          masteryCost(game, index)
+                                        !canAfford(game, masteryCost(game, index))
                                       }
                                       aria-label={`Acquérir la maîtrise ${masteryRank + 1} de ${instrument.name} pour ${formatNumber(masteryCost(game, index))} coordonnées`}
                                     >
@@ -1886,6 +1249,12 @@ export default function Home() {
             </div>
           </div>
 
+          <div className="economy-status" aria-live="polite">
+            <strong>{game.boostUntil > game.lastTick ? `Production ×2 · ${Math.ceil((game.boostUntil - game.lastTick) / 1000)} s restantes` : `Série de bonnes réponses : ${game.streak}/3`}</strong>
+            <span>Trois bonnes réponses consécutives déclenchent 60 secondes de production doublée. Une erreur ne rapporte rien, mais ne retire aucune coordonnée.</span>
+            {pendingGate(game) && <span>Frontière du cycle {pendingGate(game)} : {game.gateValidations[pendingGate(game)!]?.length ?? 0}/3 types de questions validés dans le cycle précédent.</span>}
+          </div>
+
           <div className="anomaly-workspace">
             <section className={`anomaly-card ${game.anomalies > 0 ? "ready" : ""}`}>
               <div className="anomaly-orbit" aria-hidden="true">
@@ -1914,9 +1283,9 @@ export default function Home() {
               <p>Révision adaptative</p>
               <h3>Le réseau cible les notions fragiles</h3>
               <span>
-                Les anomalies puisent d’abord dans le secteur débloqué dont la
-                maîtrise est la plus faible. Une erreur déclenche une correction,
-                sans retirer de coordonnées.
+                {pendingGate(game)
+                  ? "À cette frontière, les anomalies portent sur les ateliers construits du cycle précédent. Réussissez trois types distincts pour valider l’entrée du suivant."
+                  : "Les anomalies puisent d’abord dans le secteur débloqué dont la maîtrise est la plus faible. Une erreur déclenche une correction, sans retirer de coordonnées."}
               </span>
               <div className="queue-indicator" aria-label={`${game.anomalies} anomalies sur 3`}>
                 {[0, 1, 2].map((index) => (
@@ -2019,7 +1388,8 @@ export default function Home() {
                         Math.max(0, followingInvariantThreshold - game.runTotal),
                       )} coordonnées`}
                 </span>
-                <span className="basis-detail">Plafond du prochain changement : +{formatCount(invariantGainCap)} invariant{invariantGainCap > 1 ? "s" : ""}</span>
+                <span className="basis-detail">Cycle {frontier} · plafond : +{formatCount(invariantGainCap)} invariants</span>
+                <span className="basis-detail">Même frontière : les seuils doublent à chaque redémarrage. Ouvrir un nouveau cycle remet cette pénalité à zéro.</span>
               </div>
             </div>
             <button
@@ -2052,7 +1422,8 @@ export default function Home() {
                 const level = game.protocols[index] ?? 0;
                 const cost = invariantProtocolCost(index, level);
                 const complete = level >= protocol.maxLevel;
-                const affordable = !complete && game.invariants >= cost;
+                const requiredCycle = protocolUnlockCycle(index, level);
+                const affordable = !complete && requiredCycle <= frontier && game.invariants >= cost;
                 return (
                   <article
                     className={`protocol-card ${complete ? "complete" : ""}`}
@@ -2070,6 +1441,16 @@ export default function Home() {
                       <strong className="protocol-effect">
                         <MathExpression text={protocolEffect(index, level)} />
                       </strong>
+                      {!complete && requiredCycle > frontier && <small>Prochain niveau disponible au cycle {requiredCycle}</small>}
+                      {index >= 7 && level > 0 && (
+                        <label className="automation-toggle">
+                          <input type="checkbox" checked={game.automationEnabled[index - 7]} onChange={event => {
+                            const enabled = event.target.checked;
+                            setGame(previous => ({ ...previous, automationEnabled: previous.automationEnabled.map((value, i) => i === index - 7 ? enabled : value) }));
+                          }} />
+                          Activer les achats automatiques
+                        </label>
+                      )}
                       <div className="protocol-levels" aria-label={`Niveau ${level} sur ${protocol.maxLevel}`}>
                         {Array.from({ length: protocol.maxLevel }, (_, item) => (
                           <span className={item < level ? "filled" : ""} key={item} />
@@ -2085,7 +1466,7 @@ export default function Home() {
                           "Principe maîtrisé"
                         ) : (
                           <>
-                            Renforcer
+                            {requiredCycle > frontier ? `Cycle ${requiredCycle} requis` : "Renforcer"}
                             <strong>{cost} invariant{cost > 1 ? "s" : ""}</strong>
                           </>
                         )}
@@ -2232,9 +1613,10 @@ export default function Home() {
 
             <div className="basis-restart-summary">
               <strong>+{formatDecimal(restartPreview.productionIncrease, 1)} % de production et d’émission, à ateliers identiques</strong>
-              <span>Au démarrage : une unité de {retainedWorkshops.map(workshop => workshop.name).join(", ")}.</span>
+              <span>Au démarrage : {restartPreview.retainedCount} ateliers connus, avec jusqu’à {restartPreview.unitCap} unité{restartPreview.unitCap > 1 ? "s" : ""} chacun, sans dépasser ce qui était déjà construit. Aucun atelier inédit n’est offert.</span>
+              <span>Production au redémarrage : {formatNumber(startingProduction)}/s, avant reconstruction des unités et des modules.</span>
               {restartPreview.reconstructionDiscount > 0 && (
-                <span>Premiers achats : −{restartPreview.reconstructionDiscount} % sur les dix premières unités de chacun des huit premiers ateliers.</span>
+                <span>Premiers achats : −{restartPreview.reconstructionDiscount} % sur les dix premières unités de chaque atelier archivé.</span>
               )}
             </div>
 
@@ -2257,6 +1639,7 @@ export default function Home() {
                   <li>Tous les secteurs déjà révélés</li>
                   <li>Les invariants précédents</li>
                   <li>Les principes permanents renforcés</li>
+                  <li>Les validations des frontières de cycles</li>
                 </ul>
               </section>
 
@@ -2276,7 +1659,7 @@ export default function Home() {
                 <strong>À acheter dans l’Atlas avec vos {formatCount(game.invariants + pendingInvariantGain)} invariants après le changement</strong>
                 {upcomingProtocols.map(index => (
                   <p key={index}>
-                    {INVARIANT_PROTOCOLS[index].name} · {invariantProtocolCost(index, game.protocols[index] ?? 0)} invariant{invariantProtocolCost(index, game.protocols[index] ?? 0) > 1 ? "s" : ""} : {index === 5 ? `${Math.min(4, restartPreview.retainedCount + 1)} ateliers hérités au changement suivant` : `−${((game.protocols[6] ?? 0) + 1) * 12} % sur les premiers achats`}.
+                    {INVARIANT_PROTOCOLS[index].name} · {invariantProtocolCost(index, game.protocols[index] ?? 0)} invariant{invariantProtocolCost(index, game.protocols[index] ?? 0) > 1 ? "s" : ""} : {index === 5 ? `jusqu’à ${INHERITED_UNIT_CAPS[(game.protocols[5] ?? 0) + 1]} unités de chaque atelier connu au changement suivant` : `−${((game.protocols[6] ?? 0) + 1) * 12} % sur les premiers achats des ateliers archivés`}.
                   </p>
                 ))}
                 {upcomingProtocols.length > 1 && <small>Ces achats sont indépendants : vérifiez le solde disponible pour les combiner.</small>}
@@ -2293,15 +1676,12 @@ export default function Home() {
             )}
 
             <p className="basis-modal-note">
-              Chaque changement de base peut rapporter au plus un invariant de plus que le
-              total déjà découvert. Le plafond d’invariants augmente au prochain
-              changement de base. Les 17 cycles d’ateliers peuvent se débloquer
-              pendant la même partie, sans changement de base obligatoire.{" "}
-              Les quinze premiers invariants ajoutent chacun 0,25 au multiplicateur
-              de production et d’émission. Ensuite, la progression ralentit graduellement.
-              Le générateur axial est offert au redémarrage ; Base héritée conserve des ateliers supplémentaires.
-              Ce bonus permanent
-              demeure même lorsqu’un invariant est dépensé dans un principe.
+              Le plafond dépend du cycle le plus avancé : numéro du cycle + 1.
+              À la même frontière, les seuils doublent après chaque changement ;
+              ouvrir un nouveau cycle remet cette pénalité à zéro.
+              Les points gagnés renforcent durablement la production et l’émission,
+              même après leur dépense. Les changements de base réguliers sont
+              conseillés : sans eux, atteindre les cycles avancés prend nettement plus de temps.
             </p>
 
             <div className="basis-modal-actions">

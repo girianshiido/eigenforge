@@ -58,7 +58,11 @@ export const foundations: WorkshopTasks = {
     task("rank-axis", "Calculer le rang d’une famille colinéaire", () => { const a = nz(), b = nz(); return number("Quel est le rang de F ?", `F = ((1 ; ${a}), (${b} ; ${a * b}), (0 ; 0))`, 1, "La famille contient un vecteur non nul et tous les autres en sont des multiples."); }),
     task("rank-parameter", "Étudier le rang selon un paramètre", () => { const a = pick([0, nz()]); return number("Quel est le rang de F ?", `F = ((1 ; 0 ; 0), (0 ; 1 ; 0), (1 ; 1 ; ${a}))`, a === 0 ? 2 : 3, a === 0 ? "Le troisième vecteur est la somme des deux premiers." : "La troisième coordonnée apporte une direction indépendante."); }),
     task("rank-extraction", "Relier rang et famille libre maximale", () => { const r = int(1, 5); return number("Quel est le cardinal maximal d’une sous-famille libre ?", `La famille F a pour rang ${r}.`, r, "Le rang est le cardinal d’une base extraite de la famille."); }),
-    task("rank-append", "Suivre le rang après ajout d’un vecteur", () => { const r = int(1, 5); return number("Quel est le rang de (u₁, …, u_r, v) ?", `rg(u₁, …, u_r) = ${r} et v ∉ Vect(u₁, …, u_r).`, r + 1, "Un vecteur extérieur à l’espace engendré augmente le rang d’une unité."); }),
+    task("rank-append", "Suivre le rang après ajout d’un vecteur", () => {
+      const count = int(2, 6), rank = int(1, Math.min(count, 5));
+      const family = `(${Array.from({ length: count }, (_, i) => `u_{${i + 1}}`).join(", ")})`;
+      return number("Quel est le rang de la famille obtenue en ajoutant v à F ?", `F = ${family} est une famille de vecteurs de E, rg(F) = ${rank} et v ∉ Vect(F).`, rank + 1, `Un vecteur extérieur à Vect(F) augmente le rang d’une unité : ${rank} + 1 = ${rank + 1}.`);
+    }),
     task("rank-generating", "Comparer rang et dimension ambiante", () => { const n = int(2, 6), r = int(0, n); return yesno("F est-elle génératrice de E ?", `dim(E) = ${n} et rg(F) = ${r}.`, r === n, "La famille engendre E exactement lorsque son rang vaut dim(E)."); }),
   ],
   "subspace-generator": [

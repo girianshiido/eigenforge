@@ -144,9 +144,9 @@ function availableActions(state) {
       moduleIndex < WORKSHOP_MODULES.length;
       moduleIndex += 1
     ) {
-      const module = WORKSHOP_MODULES[moduleIndex];
+      const moduleDefinition = WORKSHOP_MODULES[moduleIndex];
       if (
-        state.instruments[index] >= module.threshold &&
+        state.instruments[index] >= moduleDefinition.threshold &&
         state.modules[index][moduleIndex] === 0
       ) {
         actions.push({
@@ -220,6 +220,13 @@ function spendProtocols(state) {
       if (level < protocol.maxLevel && state.invariants >= cost) {
         state.invariants -= cost;
         state.protocols[index] += 1;
+        state.protocolPurchases.push({
+          index,
+          level: level + 1,
+          cost,
+          seconds: state.elapsed,
+          totalInvariants: state.totalInvariants,
+        });
         purchased = true;
         break;
       }
@@ -291,6 +298,7 @@ export function simulateProgression({
     invariants: 0,
     totalInvariants: 0,
     protocols: INVARIANT_PROTOCOLS.map(() => 0),
+    protocolPurchases: [],
     invariantMultiplier,
     questionInterval,
     questionSuccessRate,
@@ -355,6 +363,7 @@ export function simulateProgression({
         endingProduction,
         highestLevel: Math.max(...state.instruments),
         highestMastery: Math.max(...state.masteries),
+        totalInvariants: state.totalInvariants,
       });
       resetRun(state);
       // In the game, newly earned invariants can be spent only after the reset.
@@ -439,6 +448,7 @@ export function simulateProgression({
     totalInvariants: state.totalInvariants,
     changes,
     unlocks,
+    protocolPurchases: state.protocolPurchases,
     actionCount,
     stepCount,
     maximumProduction,

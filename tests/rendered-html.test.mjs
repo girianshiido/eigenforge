@@ -3,6 +3,11 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { runInNewContext } from "node:vm";
 
+test("question headings reserve space below the last line for unclipped subscripts", async () => {
+  const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(css, /\.lab-question-copy h2,\s*\.question-modal > h2\s*\{[^}]*padding-bottom:\s*0\.35em;/);
+});
+
 async function render(path = "/") {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
   workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
@@ -115,8 +120,9 @@ test("turns workshop milestones into compact purchased modules and infinite mast
   assert.match(balance, /threshold: 100/);
   assert.match(balance, /FIRST_MASTERY_THRESHOLD = 200/);
   assert.match(balance, /workshopMasteryThreshold/);
-  assert.match(page, /instrumentModules: number\[\]\[\]/);
-  assert.match(page, /instrumentMasteries: number\[\]/);
+  const state = await readFile(new URL("../app/save-state.ts", import.meta.url), "utf8");
+  assert.match(state, /instrumentModules: number\[\]\[\]/);
+  assert.match(state, /instrumentMasteries: number\[\]/);
   assert.match(page, /buyWorkshopModule/);
   assert.match(page, /buyWorkshopMastery/);
   assert.match(page, /PURCHASE_AMOUNTS.*\[1, 10, 25, "max"\]/);
@@ -125,7 +131,7 @@ test("turns workshop milestones into compact purchased modules and infinite mast
   assert.match(page, /className="module-pips"/);
   assert.match(page, /className=\{`upgrade-toggle/);
   assert.match(page, /className=\{`workshop-mastery-row/);
-  assert.match(page, /Les anciens paliers automatiques/);
+  assert.match(state, /Les anciens paliers automatiques/);
   assert.match(styles, /\.workshop-grid \{[\s\S]*align-items: start/);
   assert.doesNotMatch(
     styles,
@@ -379,13 +385,13 @@ test("turns invariants into a permanent post-basis progression", async () => {
 
   assert.match(page, /Principes permanents/);
   assert.match(page, /buyProtocol/);
-  assert.match(page, /protocols: previous\.protocols/);
+  assert.match(page, /restartEconomy\(previous\)/);
   assert.match(page, /basisChangePreview/);
   assert.match(page, /invariantProductionMultiplier/);
   assert.match(page, /basisChangeGain/);
   assert.match(page, /Résonance saturée · changez de base/);
-  assert.match(page, /Chaque changement de base peut rapporter au plus un invariant de plus/);
-  assert.match(page, /progression ralentit graduellement/);
+  assert.match(page, /Le plafond dépend du cycle le plus avancé/);
+  assert.match(page, /les seuils doublent après chaque changement/);
   assert.doesNotMatch(page, /accordent chacun \+15 %/);
   assert.match(balance, /name: "Principe d’homogénéité"/);
   assert.match(balance, /name: "Base héritée"/);
@@ -394,17 +400,19 @@ test("turns invariants into a permanent post-basis progression", async () => {
   assert.match(styles, /\.protocol-card/);
 });
 
-test("starts the restructured curriculum from a clean versioned save", async () => {
+test("uses a separate economy save and preserves the previous save during migration", async () => {
   const page = await readFile(
     new URL("../app/page.tsx", import.meta.url),
     "utf8",
   );
 
   assert.match(page, /const LEGACY_SAVE_KEY = "reseau-des-espaces-v1"/);
-  assert.match(page, /const SAVE_KEY = "eigenforge-v2"/);
-  assert.match(page, /saveVersion: 2/);
+  assert.match(page, /const SAVE_KEY = "eigenforge-v3"/);
+  assert.match(page, /const PREVIOUS_SAVE_KEY = "eigenforge-v2"/);
+  const state = await readFile(new URL("../app/save-state.ts", import.meta.url), "utf8");
+  assert.match(state, /saveVersion: 3/);
   assert.match(
-    page,
+    state,
     /instrumentIds: INSTRUMENTS\.map\(\(instrument\) => instrument\.id\)/,
   );
   assert.match(page, /window\.localStorage\.removeItem\(LEGACY_SAVE_KEY\)/);

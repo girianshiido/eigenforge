@@ -43,6 +43,11 @@ test("renders all workshop tasks and nested mathematical notation without raw ma
       assert.doesNotMatch(visibleMarkup(html), /\[x\]_|_\{/);
     }
     assert.match(render("[f(x)]_B = P[x]_can"), /\[f\(x\)\]<sub class="math-subscript">B<\/sub>/);
+    for (const index of ["{-3}", "{−3}", "-3", "−3"]) {
+      const html = render(`Quelle est dim(N_${index}) ?`);
+      assert.match(html, /dim\(N<sub class="math-subscript">−3<\/sub>\)/);
+      assert.doesNotMatch(visibleMarkup(html), /N_|_\{/);
+    }
     assert.match(render("x = -1.25 et y = 0.5."), /-1,25 et y.*0,5\./);
     const decimalMatrix = render("A = ⟦1.5,-2.25;0.5,3⟧");
     assert.match(decimalMatrix, /--matrix-columns:2/);

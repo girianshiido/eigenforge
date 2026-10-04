@@ -1,0 +1,5150 @@
+{
+  "version": "candidate-audit-2026-10-04",
+  "note": "Isolated model; live economy unchanged. Scenario options are defined by CANDIDATE_SCENARIOS in the simulation script.",
+  "results": [
+    {
+      "id": "regular",
+      "label": "70 % de réussite, un redémarrage par frontière",
+      "completed": true,
+      "stopReason": "finished",
+      "hours": 77.78419822356659,
+      "activeHours": 77.78419822356659,
+      "workshops": 68,
+      "frontier": 17,
+      "invariants": 74,
+      "balance": 1,
+      "protocols": [
+        4,
+        3,
+        2,
+        3,
+        3,
+        3,
+        3,
+        1,
+        0
+      ],
+      "protocolCostPaid": 73,
+      "resets": [
+        {
+          "cycle": 1,
+          "gain": 2,
+          "minutes": 52.258439539257274,
+          "reconstructionMinutes": 11.63293769678274
+        },
+        {
+          "cycle": 2,
+          "gain": 3,
+          "minutes": 58.0810981522953,
+          "reconstructionMinutes": 40.69087057188065
+        },
+        {
+          "cycle": 3,
+          "gain": 4,
+          "minutes": 114.97980022541303,
+          "reconstructionMinutes": 104.22381334216585
+        },
+        {
+          "cycle": 4,
+          "gain": 5,
+          "minutes": 181.44030496530326,
+          "reconstructionMinutes": 133.24035711773115
+        },
+        {
+          "cycle": 5,
+          "gain": 5,
+          "minutes": 190.20419716716268,
+          "reconstructionMinutes": 176.7861599505685
+        },
+        {
+          "cycle": 6,
+          "gain": 5,
+          "minutes": 232.11477064192357,
+          "reconstructionMinutes": 217.54041991135065
+        },
+        {
+          "cycle": 7,
+          "gain": 5,
+          "minutes": 271.6945277635099,
+          "reconstructionMinutes": 199.67851164284414
+        },
+        {
+          "cycle": 8,
+          "gain": 5,
+          "minutes": 247.53844605590444,
+          "reconstructionMinutes": 228.21700527104113
+        },
+        {
+          "cycle": 9,
+          "gain": 5,
+          "minutes": 271.5415584114225,
+          "reconstructionMinutes": 257.27178517974824
+        },
+        {
+          "cycle": 10,
+          "gain": 5,
+          "minutes": 298.56159253486186,
+          "reconstructionMinutes": 288.57205891520476
+        },
+        {
+          "cycle": 11,
+          "gain": 5,
+          "minutes": 331.973308159833,
+          "reconstructionMinutes": 324.99279732868746
+        },
+        {
+          "cycle": 12,
+          "gain": 5,
+          "minutes": 360.8619563831133,
+          "reconstructionMinutes": 345.20590094094564
+        },
+        {
+          "cycle": 13,
+          "gain": 5,
+          "minutes": 383.1155690370918,
+          "reconstructionMinutes": 363.1807508489384
+        },
+        {
+          "cycle": 14,
+          "gain": 5,
+          "minutes": 396.93526966444574,
+          "reconstructionMinutes": 378.0079569634103
+        },
+        {
+          "cycle": 15,
+          "gain": 5,
+          "minutes": 404.512945894035,
+          "reconstructionMinutes": 415.57789163481505
+        },
+        {
+          "cycle": 16,
+          "gain": 5,
+          "minutes": 436.30202648587147,
+          "reconstructionMinutes": 417.6508555852226
+        }
+      ],
+      "resetRunHours": 70.53526351802407,
+      "cycles": [
+        {
+          "cycle": 1,
+          "entryMinutes": 1.25,
+          "workshopMinutes": [
+            1.25,
+            4.42767095715761,
+            10.234911696114324,
+            19.61676862216369
+          ],
+          "insideMinutes": 18.36676862216369,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 2,
+          "entryMinutes": 72.5,
+          "workshopMinutes": [
+            72.5,
+            84.69784082886864,
+            97.19619499734583,
+            110.33953769155256
+          ],
+          "insideMinutes": 37.839537691552565,
+          "gapMinutes": 52.88323137783631
+        },
+        {
+          "cycle": 3,
+          "entryMinutes": 186.17372864268452,
+          "workshopMinutes": [
+            186.17372864268452,
+            200.90291443594336,
+            213.450581430513,
+            225.3193379169656
+          ],
+          "insideMinutes": 39.14560927428108,
+          "gapMinutes": 75.83419095113194
+        },
+        {
+          "cycle": 4,
+          "entryMinutes": 368.93602199937624,
+          "workshopMinutes": [
+            368.93602199937624,
+            383.5517744038034,
+            394.962008126919,
+            406.75964288226885
+          ],
+          "insideMinutes": 37.823620882892584,
+          "gapMinutes": 143.61668408241067
+        },
+        {
+          "cycle": 5,
+          "entryMinutes": 568.7668186257591,
+          "workshopMinutes": [
+            568.7668186257591,
+            579.6364406951416,
+            587.8038011766031,
+            596.9638400494315
+          ],
+          "insideMinutes": 28.197021423672414,
+          "gapMinutes": 162.00717574349025
+        },
+        {
+          "cycle": 6,
+          "entryMinutes": 801.5467302957767,
+          "workshopMinutes": [
+            801.5467302957767,
+            810.9946519778003,
+            820.2795949996873,
+            829.078610691355
+          ],
+          "insideMinutes": 27.531880395578387,
+          "gapMinutes": 204.58289024634516
+        },
+        {
+          "cycle": 7,
+          "entryMinutes": 1073.973105891582,
+          "workshopMinutes": [
+            1073.973105891582,
+            1084.2417300769857,
+            1092.448333667643,
+            1100.773138454865
+          ],
+          "insideMinutes": 26.80003256328285,
+          "gapMinutes": 244.89449520022706
+        },
+        {
+          "cycle": 8,
+          "entryMinutes": 1324.4372852302627,
+          "workshopMinutes": [
+            1324.4372852302627,
+            1331.861898442884,
+            1339.5010630550328,
+            1348.3115845107693
+          ],
+          "insideMinutes": 23.874299280506722,
+          "gapMinutes": 223.6641467753977
+        },
+        {
+          "cycle": 9,
+          "entryMinutes": 1598.4302934466455,
+          "workshopMinutes": [
+            1598.4302934466455,
+            1605.7900963640402,
+            1613.75,
+            1619.8531429221919
+          ],
+          "insideMinutes": 21.422849475546535,
+          "gapMinutes": 250.11870893587596
+        },
+        {
+          "cycle": 10,
+          "entryMinutes": 1897.5,
+          "workshopMinutes": [
+            1897.5,
+            1905.5633611980693,
+            1912.1024399395794,
+            1918.4147354570537
+          ],
+          "insideMinutes": 20.91473545705376,
+          "gapMinutes": 277.6468570778081
+        },
+        {
+          "cycle": 11,
+          "entryMinutes": 2227.914549915021,
+          "workshopMinutes": [
+            2227.914549915021,
+            2236.811082844027,
+            2244.5654689171947,
+            2250.3880436168865
+          ],
+          "insideMinutes": 22.473493701865664,
+          "gapMinutes": 309.4998144579673
+        },
+        {
+          "cycle": 12,
+          "entryMinutes": 2592.071507375559,
+          "workshopMinutes": [
+            2592.071507375559,
+            2598.581346602322,
+            2604.9862897144467,
+            2611.25
+          ],
+          "insideMinutes": 19.178492624440697,
+          "gapMinutes": 341.6834637586726
+        },
+        {
+          "cycle": 13,
+          "entryMinutes": 2976.4168947150124,
+          "workshopMinutes": [
+            2976.4168947150124,
+            2983.4324029269296,
+            2987.9883628002585,
+            2994.365569037092
+          ],
+          "insideMinutes": 17.948674322079267,
+          "gapMinutes": 365.1668947150126
+        },
+        {
+          "cycle": 14,
+          "entryMinutes": 3375,
+          "workshopMinutes": [
+            3375,
+            3380.5095380818498,
+            3386.1120645777123,
+            3391.3008387015375
+          ],
+          "insideMinutes": 16.30083870153758,
+          "gapMinutes": 380.6344309629082
+        },
+        {
+          "cycle": 15,
+          "entryMinutes": 3784.670426780763,
+          "workshopMinutes": [
+            3784.670426780763,
+            3788.75,
+            3792.4978891303126,
+            3795.8137845955725
+          ],
+          "insideMinutes": 11.143357814809617,
+          "gapMinutes": 393.3695880792254
+        },
+        {
+          "cycle": 16,
+          "entryMinutes": 4223.75,
+          "workshopMinutes": [
+            4223.75,
+            4227.974011478068,
+            4230.075374500976,
+            4232.115811081444
+          ],
+          "insideMinutes": 8.365811081444068,
+          "gapMinutes": 427.9362154044274
+        },
+        {
+          "cycle": 17,
+          "entryMinutes": 4659.149778413267,
+          "workshopMinutes": [
+            4659.149778413267,
+            4662.5,
+            4664.163032437797,
+            4667.0518934139955
+          ],
+          "insideMinutes": 7.90211500072813,
+          "gapMinutes": 427.0339673318231
+        }
+      ],
+      "questions": 3733,
+      "correct": 2606,
+      "boosts": 566,
+      "boostDuty": 0.12101415875644361,
+      "automaticPurchases": 10,
+      "manualPurchases": 14431,
+      "ineffectiveDebits": 3,
+      "minimumCostFactor": 0.45125,
+      "maxRewardSeconds": 26.650215069690855,
+      "maximumAward": 5,
+      "sources": {
+        "passive": 4.3633013388160006e+45,
+        "manual": 3145176.23107693,
+        "questions": 6.463842375390865e+44,
+        "offline": 0
+      },
+      "steps": 43014,
+      "executionSeconds": 3.8938985830000004
+    },
+    {
+      "id": "regular-seed-7",
+      "label": "70 %, autre tirage déterministe (7)",
+      "completed": true,
+      "stopReason": "finished",
+      "hours": 77.33333333333333,
+      "activeHours": 77.33333333333333,
+      "workshops": 68,
+      "frontier": 17,
+      "invariants": 74,
+      "balance": 1,
+      "protocols": [
+        4,
+        3,
+        2,
+        3,
+        3,
+        3,
+        3,
+        1,
+        0
+      ],
+      "protocolCostPaid": 73,
+      "resets": [
+        {
+          "cycle": 1,
+          "gain": 2,
+          "minutes": 52.42253759513567,
+          "reconstructionMinutes": 12.577462404864324
+        },
+        {
+          "cycle": 2,
+          "gain": 3,
+          "minutes": 61.25039836581182,
+          "reconstructionMinutes": 43.22780850313628
+        },
+        {
+          "cycle": 3,
+          "gain": 4,
+          "minutes": 116.04290758151981,
+          "reconstructionMinutes": 104.94832469652856
+        },
+        {
+          "cycle": 4,
+          "gain": 5,
+          "minutes": 178.415934084069,
+          "reconstructionMinutes": 124.85933876713801
+        },
+        {
+          "cycle": 5,
+          "gain": 5,
+          "minutes": 185.3788289304678,
+          "reconstructionMinutes": 174.03498345532353
+        },
+        {
+          "cycle": 6,
+          "gain": 5,
+          "minutes": 228.039071927857,
+          "reconstructionMinutes": 212.0606876898472
+        },
+        {
+          "cycle": 7,
+          "gain": 5,
+          "minutes": 265.66475714494857,
+          "reconstructionMinutes": 201.15204234669375
+        },
+        {
+          "cycle": 8,
+          "gain": 5,
+          "minutes": 247.95335129651613,
+          "reconstructionMinutes": 221.55241437442018
+        },
+        {
+          "cycle": 9,
+          "gain": 5,
+          "minutes": 264.5292007838538,
+          "reconstructionMinutes": 254.05301228982037
+        },
+        {
+          "cycle": 10,
+          "gain": 5,
+          "minutes": 293.98264070661025,
+          "reconstructionMinutes": 287.4306191193095
+        },
+        {
+          "cycle": 11,
+          "gain": 5,
+          "minutes": 330.5002472664421,
+          "reconstructionMinutes": 319.32252926035386
+        },
+        {
+          "cycle": 12,
+          "gain": 5,
+          "minutes": 355.820124316768,
+          "reconstructionMinutes": 339.8603352800341
+        },
+        {
+          "cycle": 13,
+          "gain": 5,
+          "minutes": 380.39854576465535,
+          "reconstructionMinutes": 367.5489337543016
+        },
+        {
+          "cycle": 14,
+          "gain": 5,
+          "minutes": 401.8027453035048,
+          "reconstructionMinutes": 384.9581678750309
+        },
+        {
+          "cycle": 15,
+          "gain": 5,
+          "minutes": 413.18114533578967,
+          "reconstructionMinutes": 410.8675635960501
+        },
+        {
+          "cycle": 16,
+          "gain": 5,
+          "minutes": 431.63801154288086,
+          "reconstructionMinutes": 418.5413940908164
+        }
+      ],
+      "resetRunHours": 70.11700746578052,
+      "cycles": [
+        {
+          "cycle": 1,
+          "entryMinutes": 1.25,
+          "workshopMinutes": [
+            1.25,
+            5.28044509184556,
+            12.033178441330346,
+            20.19881237957811
+          ],
+          "insideMinutes": 18.94881237957811,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 2,
+          "entryMinutes": 73.45238150836819,
+          "workshopMinutes": [
+            73.45238150836819,
+            85.1788632283364,
+            99.20309430370426,
+            113.6729359609475
+          ],
+          "insideMinutes": 40.22055445257931,
+          "gapMinutes": 53.253569128790076
+        },
+        {
+          "cycle": 3,
+          "entryMinutes": 190.4799058651885,
+          "workshopMinutes": [
+            190.4799058651885,
+            203.75,
+            216.25,
+            229.7158435424673
+          ],
+          "insideMinutes": 39.2359376772788,
+          "gapMinutes": 76.80696990424102
+        },
+        {
+          "cycle": 4,
+          "entryMinutes": 371.7701617189891,
+          "workshopMinutes": [
+            371.7701617189891,
+            385.900653177837,
+            398.4900705598068,
+            408.1317776265363
+          ],
+          "insideMinutes": 36.36161590754721,
+          "gapMinutes": 142.0543181765218
+        },
+        {
+          "cycle": 5,
+          "entryMinutes": 563.8373090030548,
+          "workshopMinutes": [
+            563.8373090030548,
+            574.4481564765883,
+            583.8624426841818,
+            593.510606557004
+          ],
+          "insideMinutes": 29.673297553949304,
+          "gapMinutes": 155.70553137651848
+        },
+        {
+          "cycle": 6,
+          "entryMinutes": 796.337920445548,
+          "workshopMinutes": [
+            796.337920445548,
+            804.5132364545098,
+            813.0749940575076,
+            821.5496784848611
+          ],
+          "insideMinutes": 25.21175803931316,
+          "gapMinutes": 202.82731388854384
+        },
+        {
+          "cycle": 7,
+          "entryMinutes": 1062.0999325987511,
+          "workshopMinutes": [
+            1062.0999325987511,
+            1071.6068087488723,
+            1080.208857601876,
+            1087.2144356298097
+          ],
+          "insideMinutes": 25.114503031058483,
+          "gapMinutes": 240.55025411389008
+        },
+        {
+          "cycle": 8,
+          "entryMinutes": 1311.995845393415,
+          "workshopMinutes": [
+            1311.995845393415,
+            1320,
+            1327.4634819806074,
+            1335.1677869263258
+          ],
+          "insideMinutes": 23.17194153291081,
+          "gapMinutes": 224.7814097636053
+        },
+        {
+          "cycle": 9,
+          "entryMinutes": 1578.5286485268039,
+          "workshopMinutes": [
+            1578.5286485268039,
+            1586.7854550944219,
+            1592.8611766431109,
+            1599.6969877101797
+          ],
+          "insideMinutes": 21.168339183375792,
+          "gapMinutes": 243.36086160047805
+        },
+        {
+          "cycle": 10,
+          "entryMinutes": 1874.3439104634415,
+          "workshopMinutes": [
+            1874.3439104634415,
+            1881.7211267303899,
+            1888.5565663541124,
+            1893.67962841679
+          ],
+          "insideMinutes": 19.335717953348407,
+          "gapMinutes": 274.64692275326183
+        },
+        {
+          "cycle": 11,
+          "entryMinutes": 2201.2727144757077,
+          "workshopMinutes": [
+            2201.2727144757077,
+            2209.9448090514243,
+            2218.4339346555903,
+            2224.179875683232
+          ],
+          "insideMinutes": 22.907161207524283,
+          "gapMinutes": 307.59308605891783
+        },
+        {
+          "cycle": 12,
+          "entryMinutes": 2561.6211768724006,
+          "workshopMinutes": [
+            2561.6211768724006,
+            2567.2438677683826,
+            2573.5297420675365,
+            2580
+          ],
+          "insideMinutes": 18.37882312759951,
+          "gapMinutes": 337.4413011891685
+        },
+        {
+          "cycle": 13,
+          "entryMinutes": 2940.2681211473828,
+          "workshopMinutes": [
+            2940.2681211473828,
+            2947.7104604832325,
+            2954.610473617022,
+            2960.3985457646554
+          ],
+          "insideMinutes": 20.130424617272606,
+          "gapMinutes": 360.2681211473828
+        },
+        {
+          "cycle": 14,
+          "entryMinutes": 3345.4771374712063,
+          "workshopMinutes": [
+            3345.4771374712063,
+            3351.25,
+            3357.64340686914,
+            3362.20129106816
+          ],
+          "insideMinutes": 16.724153596953936,
+          "gapMinutes": 385.07859170655087
+        },
+        {
+          "cycle": 15,
+          "entryMinutes": 3761.8663073483017,
+          "workshopMinutes": [
+            3761.8663073483017,
+            3766.560407901908,
+            3771.25,
+            3775.3824364039497
+          ],
+          "insideMinutes": 13.516129055648344,
+          "gapMinutes": 399.66501628014134
+        },
+        {
+          "cycle": 16,
+          "entryMinutes": 4199.368218308782,
+          "workshopMinutes": [
+            4199.368218308782,
+            4202.673351378486,
+            4204.566776454417,
+            4207.020447946831
+          ],
+          "insideMinutes": 7.652229638048933,
+          "gapMinutes": 423.9857819048319
+        },
+        {
+          "cycle": 17,
+          "entryMinutes": 4632.539647389029,
+          "workshopMinutes": [
+            4632.539647389029,
+            4635.449320478816,
+            4637.160247367511,
+            4640
+          ],
+          "insideMinutes": 7.460352610971313,
+          "gapMinutes": 425.51919944219793
+        }
+      ],
+      "questions": 3712,
+      "correct": 2621,
+      "boosts": 591,
+      "boostDuty": 0.12669526102927403,
+      "automaticPurchases": 10,
+      "manualPurchases": 14388,
+      "ineffectiveDebits": 1,
+      "minimumCostFactor": 0.45125,
+      "maxRewardSeconds": 26.650215069690855,
+      "maximumAward": 5,
+      "sources": {
+        "passive": 4.3749013591648215e+45,
+        "manual": 3098134.4725732016,
+        "questions": 1.2962932302093981e+45,
+        "offline": 0
+      },
+      "steps": 42896,
+      "executionSeconds": 3.873566333
+    },
+    {
+      "id": "regular-seed-2026",
+      "label": "70 %, autre tirage déterministe (2026)",
+      "completed": true,
+      "stopReason": "finished",
+      "hours": 77.35416666666667,
+      "activeHours": 77.35416666666667,
+      "workshops": 68,
+      "frontier": 17,
+      "invariants": 74,
+      "balance": 1,
+      "protocols": [
+        4,
+        3,
+        2,
+        3,
+        3,
+        3,
+        3,
+        1,
+        0
+      ],
+      "protocolCostPaid": 73,
+      "resets": [
+        {
+          "cycle": 1,
+          "gain": 2,
+          "minutes": 52.21929201608112,
+          "reconstructionMinutes": 10.869190206503754
+        },
+        {
+          "cycle": 2,
+          "gain": 3,
+          "minutes": 59.61179856557907,
+          "reconstructionMinutes": 40.95223625885922
+        },
+        {
+          "cycle": 3,
+          "gain": 4,
+          "minutes": 115.69362791034567,
+          "reconstructionMinutes": 101.22528150799414
+        },
+        {
+          "cycle": 4,
+          "gain": 5,
+          "minutes": 177.11835610753315,
+          "reconstructionMinutes": 127.75476101575259
+        },
+        {
+          "cycle": 5,
+          "gain": 5,
+          "minutes": 182.96293111655396,
+          "reconstructionMinutes": 175.32577603384416
+        },
+        {
+          "cycle": 6,
+          "gain": 5,
+          "minutes": 227.9982842722374,
+          "reconstructionMinutes": 218.14571001166962
+        },
+        {
+          "cycle": 7,
+          "gain": 5,
+          "minutes": 270.8007716824839,
+          "reconstructionMinutes": 202.34493832918574
+        },
+        {
+          "cycle": 8,
+          "gain": 5,
+          "minutes": 247.87886698609267,
+          "reconstructionMinutes": 228.3602300510109
+        },
+        {
+          "cycle": 9,
+          "gain": 5,
+          "minutes": 268.3964617027984,
+          "reconstructionMinutes": 253.97744911779446
+        },
+        {
+          "cycle": 10,
+          "gain": 5,
+          "minutes": 297.2554213419205,
+          "reconstructionMinutes": 287.44177426477717
+        },
+        {
+          "cycle": 11,
+          "gain": 5,
+          "minutes": 328.8402613296695,
+          "reconstructionMinutes": 317.11771438826884
+        },
+        {
+          "cycle": 12,
+          "gain": 5,
+          "minutes": 355.7803123346729,
+          "reconstructionMinutes": 333.408858230547
+        },
+        {
+          "cycle": 13,
+          "gain": 5,
+          "minutes": 371.9082029461657,
+          "reconstructionMinutes": 373.3595742624753
+        },
+        {
+          "cycle": 14,
+          "gain": 5,
+          "minutes": 406.9649075558938,
+          "reconstructionMinutes": 384.52395247110445
+        },
+        {
+          "cycle": 15,
+          "gain": 5,
+          "minutes": 415.61905053169465,
+          "reconstructionMinutes": 406.7958699773769
+        },
+        {
+          "cycle": 16,
+          "gain": 5,
+          "minutes": 429.0197262905926,
+          "reconstructionMinutes": 414.8409583330038
+        }
+      ],
+      "resetRunHours": 70.13447121150524,
+      "cycles": [
+        {
+          "cycle": 1,
+          "entryMinutes": 1.25,
+          "workshopMinutes": [
+            1.25,
+            4.42767095715761,
+            10.440001901862269,
+            19.374784696471647
+          ],
+          "insideMinutes": 18.124784696471647,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 2,
+          "entryMinutes": 72.5,
+          "workshopMinutes": [
+            72.5,
+            84.81182850780507,
+            97.5346725220586,
+            111.83109058166019
+          ],
+          "insideMinutes": 39.33109058166019,
+          "gapMinutes": 53.12521530352835
+        },
+        {
+          "cycle": 3,
+          "entryMinutes": 187.60244419019298,
+          "workshopMinutes": [
+            187.60244419019298,
+            200.73709923042364,
+            213.4803534136136,
+            227.52471849200586
+          ],
+          "insideMinutes": 39.92227430181289,
+          "gapMinutes": 75.77135360853278
+        },
+        {
+          "cycle": 4,
+          "entryMinutes": 367.9984317211176,
+          "workshopMinutes": [
+            367.9984317211176,
+            380.7242522202829,
+            392.34674843526614,
+            404.64307459953903
+          ],
+          "insideMinutes": 36.644642878421415,
+          "gapMinutes": 140.47371322911172
+        },
+        {
+          "cycle": 5,
+          "entryMinutes": 560,
+          "workshopMinutes": [
+            560,
+            570.2842855360872,
+            579.2200146716284,
+            587.6060057160929
+          ],
+          "insideMinutes": 27.606005716092962,
+          "gapMinutes": 155.356925400461
+        },
+        {
+          "cycle": 6,
+          "entryMinutes": 789.47981562587,
+          "workshopMinutes": [
+            789.47981562587,
+            798.355060799318,
+            807.5,
+            815.6042899883304
+          ],
+          "insideMinutes": 26.124474362460386,
+          "gapMinutes": 201.873809909777
+        },
+        {
+          "cycle": 7,
+          "entryMinutes": 1060.6765256765195,
+          "workshopMinutes": [
+            1060.6765256765195,
+            1070.0716992410953,
+            1079.2717692943402,
+            1086.4050616708143
+          ],
+          "insideMinutes": 25.728535994294848,
+          "gapMinutes": 245.07223568818907
+        },
+        {
+          "cycle": 8,
+          "entryMinutes": 1310.1162021570044,
+          "workshopMinutes": [
+            1310.1162021570044,
+            1318.1793420068223,
+            1326.25,
+            1334.283928656907
+          ],
+          "insideMinutes": 24.16772649990259,
+          "gapMinutes": 223.7111404861901
+        },
+        {
+          "cycle": 9,
+          "entryMinutes": 1583.2452101743381,
+          "workshopMinutes": [
+            1583.2452101743381,
+            1590,
+            1596.0618930823923,
+            1602.6803903597054
+          ],
+          "insideMinutes": 19.435180185367063,
+          "gapMinutes": 248.9612815174313
+        },
+        {
+          "cycle": 10,
+          "entryMinutes": 1878.2084615273352,
+          "workshopMinutes": [
+            1878.2084615273352,
+            1885.003705879244,
+            1892.2575030288708,
+            1899.9358117016259
+          ],
+          "insideMinutes": 21.727350174290525,
+          "gapMinutes": 275.52807116762995
+        },
+        {
+          "cycle": 11,
+          "entryMinutes": 2207.7029565578496,
+          "workshopMinutes": [
+            2207.7029565578496,
+            2215.9637114280317,
+            2222.798853133735,
+            2228.7760730312953
+          ],
+          "insideMinutes": 21.073116473445648,
+          "gapMinutes": 307.76714485622387
+        },
+        {
+          "cycle": 12,
+          "entryMinutes": 2565,
+          "workshopMinutes": [
+            2565,
+            2571.443784288216,
+            2577.8795817124405,
+            2584.5563853659683
+          ],
+          "insideMinutes": 19.55638536596816,
+          "gapMinutes": 336.2239269687047
+        },
+        {
+          "cycle": 13,
+          "entryMinutes": 2937.5,
+          "workshopMinutes": [
+            2937.5,
+            2943.7651454847387,
+            2950.5063333773137,
+            2956.464588312134
+          ],
+          "insideMinutes": 18.964588312133856,
+          "gapMinutes": 352.94361463403186
+        },
+        {
+          "cycle": 14,
+          "entryMinutes": 3347.5,
+          "workshopMinutes": [
+            3347.5,
+            3352.5111670914675,
+            3358.6604184940857,
+            3363.4294958680275
+          ],
+          "insideMinutes": 15.929495868027637,
+          "gapMinutes": 391.03541168786614
+        },
+        {
+          "cycle": 15,
+          "entryMinutes": 3763.074300316464,
+          "workshopMinutes": [
+            3763.074300316464,
+            3768.6988526635873,
+            3774.03243556153,
+            3779.0485463997225
+          ],
+          "insideMinutes": 15.974246083258185,
+          "gapMinutes": 399.6448044484365
+        },
+        {
+          "cycle": 16,
+          "entryMinutes": 4199.642756491561,
+          "workshopMinutes": [
+            4199.642756491561,
+            4203.75,
+            4205.799049708203,
+            4208.068272690315
+          ],
+          "insideMinutes": 8.425516198754,
+          "gapMinutes": 420.5942100918386
+        },
+        {
+          "cycle": 17,
+          "entryMinutes": 4631.25,
+          "workshopMinutes": [
+            4631.25,
+            4635.240447042446,
+            4638.170946038784,
+            4641.25
+          ],
+          "insideMinutes": 10,
+          "gapMinutes": 423.1817273096851
+        }
+      ],
+      "questions": 3713,
+      "correct": 2605,
+      "boosts": 592,
+      "boostDuty": 0.12678956810949962,
+      "automaticPurchases": 12,
+      "manualPurchases": 14461,
+      "ineffectiveDebits": 4,
+      "minimumCostFactor": 0.45125,
+      "maxRewardSeconds": 26.650215069690855,
+      "maximumAward": 5,
+      "sources": {
+        "passive": 4.151002022676081e+45,
+        "manual": 3180953.462244131,
+        "questions": 8.048385629693687e+44,
+        "offline": 0
+      },
+      "steps": 43000,
+      "executionSeconds": 3.8317557910000004
+    },
+    {
+      "id": "novice",
+      "label": "40 % de réussite, réponses toutes les 90 s",
+      "completed": true,
+      "stopReason": "finished",
+      "hours": 90.54750485122712,
+      "activeHours": 90.54750485122712,
+      "workshops": 68,
+      "frontier": 17,
+      "invariants": 74,
+      "balance": 1,
+      "protocols": [
+        4,
+        3,
+        2,
+        3,
+        3,
+        3,
+        3,
+        1,
+        0
+      ],
+      "protocolCostPaid": 73,
+      "resets": [
+        {
+          "cycle": 1,
+          "gain": 2,
+          "minutes": 65.28853927358938,
+          "reconstructionMinutes": 13.1994002830959
+        },
+        {
+          "cycle": 2,
+          "gain": 3,
+          "minutes": 68.25331594332964,
+          "reconstructionMinutes": 48.69304283300236
+        },
+        {
+          "cycle": 3,
+          "gain": 4,
+          "minutes": 136.22927734222907,
+          "reconstructionMinutes": 118.80066001187849
+        },
+        {
+          "cycle": 4,
+          "gain": 5,
+          "minutes": 203.76382391591906,
+          "reconstructionMinutes": 150.34245627715597
+        },
+        {
+          "cycle": 5,
+          "gain": 5,
+          "minutes": 214.96504352493284,
+          "reconstructionMinutes": 207.0386407224094
+        },
+        {
+          "cycle": 6,
+          "gain": 5,
+          "minutes": 271.3448027234647,
+          "reconstructionMinutes": 245.56641677793243
+        },
+        {
+          "cycle": 7,
+          "gain": 5,
+          "minutes": 309.02577335653706,
+          "reconstructionMinutes": 241.5994252681623
+        },
+        {
+          "cycle": 8,
+          "gain": 5,
+          "minutes": 296.2299767219328,
+          "reconstructionMinutes": 267.31152693750727
+        },
+        {
+          "cycle": 9,
+          "gain": 5,
+          "minutes": 314.2468205122777,
+          "reconstructionMinutes": 300.4188944109429
+        },
+        {
+          "cycle": 10,
+          "gain": 5,
+          "minutes": 350.184823856164,
+          "reconstructionMinutes": 331.6071187638474
+        },
+        {
+          "cycle": 11,
+          "gain": 5,
+          "minutes": 382.71382799258623,
+          "reconstructionMinutes": 370.61153149505117
+        },
+        {
+          "cycle": 12,
+          "gain": 5,
+          "minutes": 411.75397483703756,
+          "reconstructionMinutes": 399.12794703840285
+        },
+        {
+          "cycle": 13,
+          "gain": 5,
+          "minutes": 445.6756671317465,
+          "reconstructionMinutes": 427.91917379944545
+        },
+        {
+          "cycle": 14,
+          "gain": 5,
+          "minutes": 468.05313000551394,
+          "reconstructionMinutes": 448.03666485449793
+        },
+        {
+          "cycle": 15,
+          "gain": 5,
+          "minutes": 482.10601680836163,
+          "reconstructionMinutes": 472.34265543009485
+        },
+        {
+          "cycle": 16,
+          "gain": 5,
+          "minutes": 500.5770609134352,
+          "reconstructionMinutes": 493.3783879285542
+        }
+      ],
+      "resetRunHours": 82.00686458098428,
+      "cycles": [
+        {
+          "cycle": 1,
+          "entryMinutes": 1.5,
+          "workshopMinutes": [
+            1.5,
+            6,
+            12.71267696620235,
+            23.214683147742758
+          ],
+          "insideMinutes": 21.714683147742758,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 2,
+          "entryMinutes": 87.6564143798841,
+          "workshopMinutes": [
+            87.6564143798841,
+            100.29201360964606,
+            116.51495038278534,
+            133.54185521691903
+          ],
+          "insideMinutes": 45.88544083703493,
+          "gapMinutes": 64.44173123214134
+        },
+        {
+          "cycle": 3,
+          "entryMinutes": 223.42833087489507,
+          "workshopMinutes": [
+            223.42833087489507,
+            239.76610929014655,
+            255.1089458857941,
+            269.7711325591481
+          ],
+          "insideMinutes": 46.342801684253025,
+          "gapMinutes": 89.88647565797605
+        },
+        {
+          "cycle": 4,
+          "entryMinutes": 430.8122644520064,
+          "workshopMinutes": [
+            430.8122644520064,
+            447,
+            460.3871376909636,
+            473.53495647506713
+          ],
+          "insideMinutes": 42.72269202306076,
+          "gapMinutes": 161.0411318928583
+        },
+        {
+          "cycle": 5,
+          "entryMinutes": 656.2961338472736,
+          "workshopMinutes": [
+            656.2961338472736,
+            668.1080533834266,
+            678.0019232132076,
+            688.5
+          ],
+          "insideMinutes": 32.20386615272643,
+          "gapMinutes": 182.76117737220642
+        },
+        {
+          "cycle": 6,
+          "entryMinutes": 926.9592456380378,
+          "workshopMinutes": [
+            926.9592456380378,
+            938.3088499935004,
+            949.579671244277,
+            959.8448027234647
+          ],
+          "insideMinutes": 32.88555708542687,
+          "gapMinutes": 238.45924563803783
+        },
+        {
+          "cycle": 7,
+          "entryMinutes": 1237.0788107696378,
+          "workshopMinutes": [
+            1237.0788107696378,
+            1248.7138503715714,
+            1259.2803233704738,
+            1268.8705760800017
+          ],
+          "insideMinutes": 31.79176531036404,
+          "gapMinutes": 277.234008046173
+        },
+        {
+          "cycle": 8,
+          "entryMinutes": 1537.4884544512556,
+          "workshopMinutes": [
+            1537.4884544512556,
+            1547.7795022334822,
+            1555.777944464637,
+            1565.1005528019346
+          ],
+          "insideMinutes": 27.612098350679055,
+          "gapMinutes": 268.61787837125377
+        },
+        {
+          "cycle": 9,
+          "entryMinutes": 1856.2319251331928,
+          "workshopMinutes": [
+            1856.2319251331928,
+            1865.0993153475547,
+            1872.8789367202594,
+            1879.3473733142123
+          ],
+          "insideMinutes": 23.115448181019506,
+          "gapMinutes": 291.13137233125815
+        },
+        {
+          "cycle": 10,
+          "entryMinutes": 2205,
+          "workshopMinutes": [
+            2205,
+            2212.8598054987165,
+            2221.3323009697497,
+            2229.532197170376
+          ],
+          "insideMinutes": 24.532197170376215,
+          "gapMinutes": 325.65262668578777
+        },
+        {
+          "cycle": 11,
+          "entryMinutes": 2585.708124492606,
+          "workshopMinutes": [
+            2585.708124492606,
+            2595.8492895093277,
+            2604.4051784058183,
+            2612.2460251629623
+          ],
+          "insideMinutes": 26.53790067035637,
+          "gapMinutes": 356.1759273222298
+        },
+        {
+          "cycle": 12,
+          "entryMinutes": 3004.2793777806137,
+          "workshopMinutes": [
+            3004.2793777806137,
+            3010.7089056323625,
+            3017.5402808839344,
+            3024
+          ],
+          "insideMinutes": 19.720622219386374,
+          "gapMinutes": 392.0333526176512
+        },
+        {
+          "cycle": 13,
+          "entryMinutes": 3447.386445889001,
+          "workshopMinutes": [
+            3447.386445889001,
+            3455.3818398351955,
+            3462.5602900255094,
+            3469.6756671317466
+          ],
+          "insideMinutes": 22.289221242745406,
+          "gapMinutes": 423.3864458890011
+        },
+        {
+          "cycle": 14,
+          "entryMinutes": 3918.0783094041517,
+          "workshopMinutes": [
+            3918.0783094041517,
+            3925.108781956201,
+            3932.232305665874,
+            3937.7287971372602
+          ],
+          "insideMinutes": 19.650487733108942,
+          "gapMinutes": 448.402642272405
+        },
+        {
+          "cycle": 15,
+          "entryMinutes": 4404,
+          "workshopMinutes": [
+            4404,
+            4409.451446203048,
+            4414.574030290329,
+            4419.834813945622
+          ],
+          "insideMinutes": 15.834813945622106,
+          "gapMinutes": 466.27120286273953
+        },
+        {
+          "cycle": 16,
+          "entryMinutes": 4908.765131096812,
+          "workshopMinutes": [
+            4908.765131096812,
+            4914.268567961958,
+            4917,
+            4920.411874859057
+          ],
+          "insideMinutes": 11.64674376224478,
+          "gapMinutes": 488.9303171511904
+        },
+        {
+          "cycle": 17,
+          "entryMinutes": 5421.937162244084,
+          "workshopMinutes": [
+            5421.937162244084,
+            5426.635132896393,
+            5428.968248289259,
+            5432.850291073627
+          ],
+          "insideMinutes": 10.91312882954274,
+          "gapMinutes": 501.52528738502684
+        }
+      ],
+      "questions": 3621,
+      "correct": 1410,
+      "boosts": 126,
+      "boostDuty": 0.023008180476716267,
+      "automaticPurchases": 11,
+      "manualPurchases": 14463,
+      "ineffectiveDebits": 5,
+      "minimumCostFactor": 0.45125,
+      "maxRewardSeconds": 20.915923566878984,
+      "maximumAward": 5,
+      "sources": {
+        "passive": 5.109501390821231e+45,
+        "manual": 1507931.6167169018,
+        "questions": 1.781852526736247e+44,
+        "offline": 0
+      },
+      "steps": 42914,
+      "executionSeconds": 3.852211792
+    },
+    {
+      "id": "expert",
+      "label": "95 % de réussite, réponses toutes les 65 s",
+      "completed": true,
+      "stopReason": "finished",
+      "hours": 65.4623211525445,
+      "activeHours": 65.4623211525445,
+      "workshops": 68,
+      "frontier": 17,
+      "invariants": 74,
+      "balance": 1,
+      "protocols": [
+        4,
+        3,
+        2,
+        3,
+        3,
+        3,
+        3,
+        1,
+        0
+      ],
+      "protocolCostPaid": 73,
+      "resets": [
+        {
+          "cycle": 1,
+          "gain": 2,
+          "minutes": 39.094108917860304,
+          "reconstructionMinutes": 8.651350808858577
+        },
+        {
+          "cycle": 2,
+          "gain": 3,
+          "minutes": 47.28659287299705,
+          "reconstructionMinutes": 34.28166115424298
+        },
+        {
+          "cycle": 3,
+          "gain": 4,
+          "minutes": 98.86929820914266,
+          "reconstructionMinutes": 84.69470808163793
+        },
+        {
+          "cycle": 4,
+          "gain": 5,
+          "minutes": 145.55869756071806,
+          "reconstructionMinutes": 112.49831759235477
+        },
+        {
+          "cycle": 5,
+          "gain": 5,
+          "minutes": 161.41466694412992,
+          "reconstructionMinutes": 148.86806651311625
+        },
+        {
+          "cycle": 6,
+          "gain": 5,
+          "minutes": 194.75380558931258,
+          "reconstructionMinutes": 183.2262665988824
+        },
+        {
+          "cycle": 7,
+          "gain": 5,
+          "minutes": 228.46250060781554,
+          "reconstructionMinutes": 173.53339042130514
+        },
+        {
+          "cycle": 8,
+          "gain": 5,
+          "minutes": 213.3936626313572,
+          "reconstructionMinutes": 193.4225756984728
+        },
+        {
+          "cycle": 9,
+          "gain": 5,
+          "minutes": 228.02368078774379,
+          "reconstructionMinutes": 217.51722297871893
+        },
+        {
+          "cycle": 10,
+          "gain": 5,
+          "minutes": 251.89298587892287,
+          "reconstructionMinutes": 249.16666666666666
+        },
+        {
+          "cycle": 11,
+          "gain": 5,
+          "minutes": 285.51312335516343,
+          "reconstructionMinutes": 269.1290937671445
+        },
+        {
+          "cycle": 12,
+          "gain": 5,
+          "minutes": 300.70527985718047,
+          "reconstructionMinutes": 288.12262449862413
+        },
+        {
+          "cycle": 13,
+          "gain": 5,
+          "minutes": 318.36493012098947,
+          "reconstructionMinutes": 309.7788962483542
+        },
+        {
+          "cycle": 14,
+          "gain": 5,
+          "minutes": 338,
+          "reconstructionMinutes": 328.7401300737901
+        },
+        {
+          "cycle": 15,
+          "gain": 5,
+          "minutes": 352.0088662917871,
+          "reconstructionMinutes": 339.08773322120055
+        },
+        {
+          "cycle": 16,
+          "gain": 5,
+          "minutes": 358.64628542139445,
+          "reconstructionMinutes": 351.60675723748767
+        }
+      ],
+      "resetRunHours": 59.36647475077525,
+      "cycles": [
+        {
+          "cycle": 1,
+          "entryMinutes": 0.06666666666666667,
+          "workshopMinutes": [
+            0.06666666666666667,
+            1.3736075997725323,
+            5.990677951492959,
+            12.408937875540444
+          ],
+          "insideMinutes": 12.342271208873777,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 2,
+          "entryMinutes": 54.916037982650074,
+          "workshopMinutes": [
+            54.916037982650074,
+            64.75612514171958,
+            75.55091166120897,
+            86.38070179085734
+          ],
+          "insideMinutes": 31.464663808207273,
+          "gapMinutes": 42.50710010710963
+        },
+        {
+          "cycle": 3,
+          "entryMinutes": 150.4927322316563,
+          "workshopMinutes": [
+            150.4927322316563,
+            162.22284131952955,
+            173.95286064445835,
+            185.25
+          ],
+          "insideMinutes": 34.75726776834369,
+          "gapMinutes": 64.11203044079896
+        },
+        {
+          "cycle": 4,
+          "entryMinutes": 301.7481044262228,
+          "workshopMinutes": [
+            301.7481044262228,
+            313.07710338875677,
+            322.19738225668544,
+            330.8086975607181
+          ],
+          "insideMinutes": 29.06059313449526,
+          "gapMinutes": 116.49810442622281
+        },
+        {
+          "cycle": 5,
+          "entryMinutes": 468,
+          "workshopMinutes": [
+            468,
+            476.7606234285612,
+            484.92230473054127,
+            492.223364504848
+          ],
+          "insideMinutes": 24.223364504847996,
+          "gapMinutes": 137.19130243928194
+        },
+        {
+          "cycle": 6,
+          "entryMinutes": 663.7632076854403,
+          "workshopMinutes": [
+            663.7632076854403,
+            671.8934930544666,
+            679.3490962196925,
+            686.9771700941606
+          ],
+          "insideMinutes": 23.213962408720302,
+          "gapMinutes": 171.5398431805923
+        },
+        {
+          "cycle": 7,
+          "entryMinutes": 893.0698217289566,
+          "workshopMinutes": [
+            893.0698217289566,
+            901.6221054416817,
+            908.8298611087645,
+            915.4396707019762
+          ],
+          "insideMinutes": 22.369848973019543,
+          "gapMinutes": 206.092651634796
+        },
+        {
+          "cycle": 8,
+          "entryMinutes": 1108.7495693360736,
+          "workshopMinutes": [
+            1108.7495693360736,
+            1114.8796745602492,
+            1121.8277300655348,
+            1128.8333333333333
+          ],
+          "insideMinutes": 20.083763997259666,
+          "gapMinutes": 193.30989863409752
+        },
+        {
+          "cycle": 9,
+          "entryMinutes": 1339.3403974018975,
+          "workshopMinutes": [
+            1339.3403974018975,
+            1345.979939244518,
+            1351.8589610762037,
+            1356.857014121077
+          ],
+          "insideMinutes": 17.51661671917973,
+          "gapMinutes": 210.50706406856406
+        },
+        {
+          "cycle": 10,
+          "entryMinutes": 1591.511350886715,
+          "workshopMinutes": [
+            1591.511350886715,
+            1597.2786252869657,
+            1603.503969362279,
+            1608.75
+          ],
+          "insideMinutes": 17.238649113284918,
+          "gapMinutes": 234.65433676563796
+        },
+        {
+          "cycle": 11,
+          "entryMinutes": 1875.8940235911107,
+          "workshopMinutes": [
+            1875.8940235911107,
+            1882.8333333333333,
+            1888.622633761278,
+            1894.2631233551633
+          ],
+          "insideMinutes": 18.36909976405271,
+          "gapMinutes": 267.1440235911107
+        },
+        {
+          "cycle": 12,
+          "entryMinutes": 2179.906500004582,
+          "workshopMinutes": [
+            2179.906500004582,
+            2184.8719638205393,
+            2190.427972707147,
+            2194.9684032123437
+          ],
+          "insideMinutes": 15.061903207761983,
+          "gapMinutes": 285.6433766494185
+        },
+        {
+          "cycle": 13,
+          "entryMinutes": 2499.3144715128283,
+          "workshopMinutes": [
+            2499.3144715128283,
+            2504.294269046169,
+            2509.361610949841,
+            2513.3333333333335
+          ],
+          "insideMinutes": 14.018861820505117,
+          "gapMinutes": 304.3460683004843
+        },
+        {
+          "cycle": 14,
+          "entryMinutes": 2837.833093013786,
+          "workshopMinutes": [
+            2837.833093013786,
+            2842.6666666666665,
+            2847.4644706705253,
+            2851.3333333333335
+          ],
+          "insideMinutes": 13.50024031954769,
+          "gapMinutes": 324.4997596804523
+        },
+        {
+          "cycle": 15,
+          "entryMinutes": 3192.1336645677093,
+          "workshopMinutes": [
+            3192.1336645677093,
+            3195.8333333333335,
+            3199.8334306291204,
+            3203.3421996251204
+          ],
+          "insideMinutes": 11.208535057411064,
+          "gapMinutes": 340.8003312343761
+        },
+        {
+          "cycle": 16,
+          "entryMinutes": 3553.029884380459,
+          "workshopMinutes": [
+            3553.029884380459,
+            3557.5144450705757,
+            3559.8333333333335,
+            3561.988485046515
+          ],
+          "insideMinutes": 8.958600666055766,
+          "gapMinutes": 349.6876847553387
+        },
+        {
+          "cycle": 17,
+          "entryMinutes": 3920.5833333333335,
+          "workshopMinutes": [
+            3920.5833333333335,
+            3923.5360503973125,
+            3925.4136505843503,
+            3927.73926915267
+          ],
+          "insideMinutes": 7.155935819336931,
+          "gapMinutes": 358.5948482868184
+        }
+      ],
+      "questions": 3625,
+      "correct": 3426,
+      "boosts": 1070,
+      "boostDuty": 0.2718962159106418,
+      "automaticPurchases": 15,
+      "manualPurchases": 14393,
+      "ineffectiveDebits": 5,
+      "minimumCostFactor": 0.45125,
+      "maxRewardSeconds": 21.07857142857143,
+      "maximumAward": 5,
+      "sources": {
+        "passive": 4.282658721148997e+45,
+        "manual": 66149981.564125374,
+        "questions": 8.827067389684857e+44,
+        "offline": 0
+      },
+      "steps": 42436,
+      "executionSeconds": 3.807007375000001
+    },
+    {
+      "id": "no-reset",
+      "label": "70 %, sans redémarrage",
+      "completed": true,
+      "stopReason": "finished",
+      "hours": 32.415228239645,
+      "activeHours": 32.415228239645,
+      "workshops": 68,
+      "frontier": 17,
+      "invariants": 0,
+      "balance": 0,
+      "protocols": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "protocolCostPaid": 0,
+      "resets": [],
+      "resetRunHours": 0,
+      "cycles": [
+        {
+          "cycle": 1,
+          "entryMinutes": 1.25,
+          "workshopMinutes": [
+            1.25,
+            4.42767095715761,
+            10.234911696114324,
+            19.61676862216369
+          ],
+          "insideMinutes": 18.36676862216369,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 2,
+          "entryMinutes": 32.12516154311818,
+          "workshopMinutes": [
+            32.12516154311818,
+            46.321278112270065,
+            62.51265431246205,
+            78.17457014786173
+          ],
+          "insideMinutes": 46.04940860474355,
+          "gapMinutes": 12.508392920954494
+        },
+        {
+          "cycle": 3,
+          "entryMinutes": 131.74046288714825,
+          "workshopMinutes": [
+            131.74046288714825,
+            156.14071063968194,
+            176.25,
+            197.9918633840722
+          ],
+          "insideMinutes": 66.25140049692395,
+          "gapMinutes": 53.56589273928651
+        },
+        {
+          "cycle": 4,
+          "entryMinutes": 265.33009180523453,
+          "workshopMinutes": [
+            265.33009180523453,
+            292.5,
+            314.12543217640365,
+            332.34754498434717
+          ],
+          "insideMinutes": 67.01745317911264,
+          "gapMinutes": 67.33822842116233
+        },
+        {
+          "cycle": 5,
+          "entryMinutes": 389.72469607181614,
+          "workshopMinutes": [
+            389.72469607181614,
+            412.4391390277348,
+            431.27482377931386,
+            449.6843464169075
+          ],
+          "insideMinutes": 59.9596503450913,
+          "gapMinutes": 57.377151087469
+        },
+        {
+          "cycle": 6,
+          "entryMinutes": 508.43544789341087,
+          "workshopMinutes": [
+            508.43544789341087,
+            533.9092972320011,
+            553.7887433767511,
+            573.0872725807689
+          ],
+          "insideMinutes": 64.65182468735796,
+          "gapMinutes": 58.75110147650339
+        },
+        {
+          "cycle": 7,
+          "entryMinutes": 629.5815015551403,
+          "workshopMinutes": [
+            629.5815015551403,
+            656.3505389873033,
+            676.0490480637716,
+            696.0149418730374
+          ],
+          "insideMinutes": 66.433440317897,
+          "gapMinutes": 56.49422897437156
+        },
+        {
+          "cycle": 8,
+          "entryMinutes": 749.8338105522137,
+          "workshopMinutes": [
+            749.8338105522137,
+            772.5,
+            791.383206015153,
+            811.25
+          ],
+          "insideMinutes": 61.41618944778638,
+          "gapMinutes": 53.818868679176255
+        },
+        {
+          "cycle": 9,
+          "entryMinutes": 870.8033569783946,
+          "workshopMinutes": [
+            870.8033569783946,
+            897.8727947499636,
+            919.4191609276884,
+            938.0038854300225
+          ],
+          "insideMinutes": 67.2005284516279,
+          "gapMinutes": 59.55335697839461
+        },
+        {
+          "cycle": 10,
+          "entryMinutes": 1006.1312015153254,
+          "workshopMinutes": [
+            1006.1312015153254,
+            1034.6431879667869,
+            1057.006304488459,
+            1081.3775196024392
+          ],
+          "insideMinutes": 75.2463180871137,
+          "gapMinutes": 68.12731608530291
+        },
+        {
+          "cycle": 11,
+          "entryMinutes": 1154.1508931109443,
+          "workshopMinutes": [
+            1154.1508931109443,
+            1184.4366949985101,
+            1209.3339699009061,
+            1233.9337132430128
+          ],
+          "insideMinutes": 79.7828201320687,
+          "gapMinutes": 72.77337350850503
+        },
+        {
+          "cycle": 12,
+          "entryMinutes": 1289.361959055423,
+          "workshopMinutes": [
+            1289.361959055423,
+            1317.9983029984592,
+            1341.366459240078,
+            1365.6820441364746
+          ],
+          "insideMinutes": 76.32008508105136,
+          "gapMinutes": 55.42824581241027
+        },
+        {
+          "cycle": 13,
+          "entryMinutes": 1469.0679177080895,
+          "workshopMinutes": [
+            1469.0679177080895,
+            1503.571966844032,
+            1523.035739971092,
+            1547.8823925377417
+          ],
+          "insideMinutes": 78.81447482965231,
+          "gapMinutes": 103.385873571615
+        },
+        {
+          "cycle": 14,
+          "entryMinutes": 1631.5563886210568,
+          "workshopMinutes": [
+            1631.5563886210568,
+            1665.7579663913255,
+            1685,
+            1703.9470275402111
+          ],
+          "insideMinutes": 72.3906389191543,
+          "gapMinutes": 83.67399608331495
+        },
+        {
+          "cycle": 15,
+          "entryMinutes": 1752.610889256623,
+          "workshopMinutes": [
+            1752.610889256623,
+            1776.3126111703493,
+            1791.5469313714252,
+            1808.75
+          ],
+          "insideMinutes": 56.139110743376904,
+          "gapMinutes": 48.663861716412065
+        },
+        {
+          "cycle": 16,
+          "entryMinutes": 1854.8843498774463,
+          "workshopMinutes": [
+            1854.8843498774463,
+            1868.4332678513235,
+            1878.1793641286697,
+            1887.0604905040318
+          ],
+          "insideMinutes": 32.17614062658564,
+          "gapMinutes": 46.13434987744622
+        },
+        {
+          "cycle": 17,
+          "entryMinutes": 1916.3923708459815,
+          "workshopMinutes": [
+            1916.3923708459815,
+            1925.8002470916892,
+            1934.395014971706,
+            1944.9136943787005
+          ],
+          "insideMinutes": 28.521323532718817,
+          "gapMinutes": 29.331880341949727
+        }
+      ],
+      "questions": 1555,
+      "correct": 1073,
+      "boosts": 229,
+      "boostDuty": 0.11774301382208845,
+      "automaticPurchases": 0,
+      "manualPurchases": 1487,
+      "ineffectiveDebits": 2,
+      "minimumCostFactor": 0.5,
+      "maxRewardSeconds": 15.345132743362829,
+      "maximumAward": 0,
+      "sources": {
+        "passive": 3.593904558163572e+45,
+        "manual": 275996.90888727555,
+        "questions": 4.595009383965065e+44,
+        "offline": 0
+      },
+      "steps": 7373,
+      "executionSeconds": 0.7876212500000002
+    },
+    {
+      "id": "four-resets",
+      "label": "70 %, redémarrages aux frontières 4, 8, 12 et 16",
+      "completed": true,
+      "stopReason": "finished",
+      "hours": 49.97312318239084,
+      "activeHours": 49.97312318239084,
+      "workshops": 68,
+      "frontier": 17,
+      "invariants": 20,
+      "balance": 0,
+      "protocols": [
+        1,
+        2,
+        1,
+        0,
+        1,
+        2,
+        2,
+        0,
+        0
+      ],
+      "protocolCostPaid": 20,
+      "resets": [
+        {
+          "cycle": 4,
+          "gain": 5,
+          "minutes": 332.34754498434717,
+          "reconstructionMinutes": 186.63016935706278
+        },
+        {
+          "cycle": 8,
+          "gain": 5,
+          "minutes": 498.26068145187276,
+          "reconstructionMinutes": 377.2730343304718
+        },
+        {
+          "cycle": 12,
+          "gain": 5,
+          "minutes": 641.5630230545524,
+          "reconstructionMinutes": 601.462957721171
+        },
+        {
+          "cycle": 16,
+          "gain": 5,
+          "minutes": 795.0862676430933,
+          "reconstructionMinutes": 700.9088348428229
+        }
+      ],
+      "resetRunHours": 37.787625285564424,
+      "cycles": [
+        {
+          "cycle": 1,
+          "entryMinutes": 1.25,
+          "workshopMinutes": [
+            1.25,
+            4.42767095715761,
+            10.234911696114324,
+            19.61676862216369
+          ],
+          "insideMinutes": 18.36676862216369,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 2,
+          "entryMinutes": 32.12516154311818,
+          "workshopMinutes": [
+            32.12516154311818,
+            46.321278112270065,
+            62.51265431246205,
+            78.17457014786173
+          ],
+          "insideMinutes": 46.04940860474355,
+          "gapMinutes": 12.508392920954494
+        },
+        {
+          "cycle": 3,
+          "entryMinutes": 131.74046288714825,
+          "workshopMinutes": [
+            131.74046288714825,
+            156.14071063968194,
+            176.25,
+            197.9918633840722
+          ],
+          "insideMinutes": 66.25140049692395,
+          "gapMinutes": 53.56589273928651
+        },
+        {
+          "cycle": 4,
+          "entryMinutes": 265.33009180523453,
+          "workshopMinutes": [
+            265.33009180523453,
+            292.5,
+            314.12543217640365,
+            332.34754498434717
+          ],
+          "insideMinutes": 67.01745317911264,
+          "gapMinutes": 67.33822842116233
+        },
+        {
+          "cycle": 5,
+          "entryMinutes": 559.6244794498436,
+          "workshopMinutes": [
+            559.6244794498436,
+            573.7371571240695,
+            585.2919308236679,
+            598.235359798615
+          ],
+          "insideMinutes": 38.61088034877139,
+          "gapMinutes": 227.2769344654965
+        },
+        {
+          "cycle": 6,
+          "entryMinutes": 634.1499606260508,
+          "workshopMinutes": [
+            634.1499606260508,
+            647.2247006064626,
+            660.7669659113263,
+            674.9837940259534
+          ],
+          "insideMinutes": 40.83383339990275,
+          "gapMinutes": 35.91460082743567
+        },
+        {
+          "cycle": 7,
+          "entryMinutes": 717.7171724009805,
+          "workshopMinutes": [
+            717.7171724009805,
+            730.5528223667466,
+            742.4045403954448,
+            755.1311821410486
+          ],
+          "insideMinutes": 37.414009740068046,
+          "gapMinutes": 42.73337837502707
+        },
+        {
+          "cycle": 8,
+          "entryMinutes": 791.1747630493782,
+          "workshopMinutes": [
+            791.1747630493782,
+            803.6699646009394,
+            817.1277408725684,
+            830.6082264362199
+          ],
+          "insideMinutes": 39.43346338684169,
+          "gapMinutes": 36.04358090832963
+        },
+        {
+          "cycle": 9,
+          "entryMinutes": 1242.5,
+          "workshopMinutes": [
+            1242.5,
+            1251.7817723448973,
+            1261.0028812225048,
+            1271.25
+          ],
+          "insideMinutes": 28.75,
+          "gapMinutes": 411.8917735637801
+        },
+        {
+          "cycle": 10,
+          "entryMinutes": 1302.1692388705917,
+          "workshopMinutes": [
+            1302.1692388705917,
+            1315,
+            1326.25,
+            1337.9510325954175
+          ],
+          "insideMinutes": 35.78179372482579,
+          "gapMinutes": 30.919238870591652
+        },
+        {
+          "cycle": 11,
+          "entryMinutes": 1373.947741074734,
+          "workshopMinutes": [
+            1373.947741074734,
+            1388.8110903756203,
+            1401.136905070702,
+            1410.5806120727345
+          ],
+          "insideMinutes": 36.632870998000485,
+          "gapMinutes": 35.99670847931654
+        },
+        {
+          "cycle": 12,
+          "entryMinutes": 1441.9248829006779,
+          "workshopMinutes": [
+            1441.9248829006779,
+            1451.1440520367853,
+            1462.182502818562,
+            1472.1712494907724
+          ],
+          "insideMinutes": 30.2463665900946,
+          "gapMinutes": 31.344270827943305
+        },
+        {
+          "cycle": 13,
+          "entryMinutes": 2104.678690391086,
+          "workshopMinutes": [
+            2104.678690391086,
+            2113.9133966061904,
+            2122.973708113083,
+            2132.279662806704
+          ],
+          "insideMinutes": 27.60097241561792,
+          "gapMinutes": 632.5074409003137
+        },
+        {
+          "cycle": 14,
+          "entryMinutes": 2159.9924172384267,
+          "workshopMinutes": [
+            2159.9924172384267,
+            2170.6144773273695,
+            2178.677552261366,
+            2186.945551389815
+          ],
+          "insideMinutes": 26.95313415138856,
+          "gapMinutes": 27.712754431722715
+        },
+        {
+          "cycle": 15,
+          "entryMinutes": 2208.578445474771,
+          "workshopMinutes": [
+            2208.578445474771,
+            2217.3719628540257,
+            2225.870620951643,
+            2232.3190035477046
+          ],
+          "insideMinutes": 23.74055807293383,
+          "gapMinutes": 21.63289408495572
+        },
+        {
+          "cycle": 16,
+          "entryMinutes": 2250.24781184562,
+          "workshopMinutes": [
+            2250.24781184562,
+            2256.3758110516806,
+            2261.25,
+            2267.257517133866
+          ],
+          "insideMinutes": 17.00970528824546,
+          "gapMinutes": 17.928808297915385
+        },
+        {
+          "cycle": 17,
+          "entryMinutes": 2983.6283784384204,
+          "workshopMinutes": [
+            2983.6283784384204,
+            2989.5861834901675,
+            2993.6761218587035,
+            2998.3873909434506
+          ],
+          "insideMinutes": 14.759012505030357,
+          "gapMinutes": 716.3708613045548
+        }
+      ],
+      "questions": 2398,
+      "correct": 1655,
+      "boosts": 354,
+      "boostDuty": 0.11790653769250216,
+      "automaticPurchases": 0,
+      "manualPurchases": 5375,
+      "ineffectiveDebits": 1,
+      "minimumCostFactor": 0.475,
+      "maxRewardSeconds": 17.737500000000004,
+      "maximumAward": 5,
+      "sources": {
+        "passive": 3.566356507955673e+45,
+        "manual": 1116274.5729792805,
+        "questions": 5.999999360591095e+44,
+        "offline": 0
+      },
+      "steps": 18516,
+      "executionSeconds": 1.7333009170000004
+    },
+    {
+      "id": "random",
+      "label": "25 %, choix aléatoires",
+      "completed": true,
+      "stopReason": "finished",
+      "hours": 93.42522380549846,
+      "activeHours": 93.42522380549846,
+      "workshops": 68,
+      "frontier": 17,
+      "invariants": 74,
+      "balance": 1,
+      "protocols": [
+        4,
+        3,
+        2,
+        3,
+        3,
+        3,
+        3,
+        1,
+        0
+      ],
+      "protocolCostPaid": 73,
+      "resets": [
+        {
+          "cycle": 1,
+          "gain": 2,
+          "minutes": 66.06456052014525,
+          "reconstructionMinutes": 13.755909286264378
+        },
+        {
+          "cycle": 2,
+          "gain": 3,
+          "minutes": 72.02072092952646,
+          "reconstructionMinutes": 52.253892727757346
+        },
+        {
+          "cycle": 3,
+          "gain": 4,
+          "minutes": 141.0213705269051,
+          "reconstructionMinutes": 118.39334802342321
+        },
+        {
+          "cycle": 4,
+          "gain": 5,
+          "minutes": 208.90958183941967,
+          "reconstructionMinutes": 158.16611734676474
+        },
+        {
+          "cycle": 5,
+          "gain": 5,
+          "minutes": 228.01946055551605,
+          "reconstructionMinutes": 210.6631849514277
+        },
+        {
+          "cycle": 6,
+          "gain": 5,
+          "minutes": 274.8487855053372,
+          "reconstructionMinutes": 255.381892489915
+        },
+        {
+          "cycle": 7,
+          "gain": 5,
+          "minutes": 320.6695094388308,
+          "reconstructionMinutes": 251.16861320512422
+        },
+        {
+          "cycle": 8,
+          "gain": 5,
+          "minutes": 306.8497151448981,
+          "reconstructionMinutes": 274.0212929091084
+        },
+        {
+          "cycle": 9,
+          "gain": 5,
+          "minutes": 321.1140714423629,
+          "reconstructionMinutes": 307.3356205537229
+        },
+        {
+          "cycle": 10,
+          "gain": 5,
+          "minutes": 359.29505232810845,
+          "reconstructionMinutes": 346.3912439057778
+        },
+        {
+          "cycle": 11,
+          "gain": 5,
+          "minutes": 396.97574873527094,
+          "reconstructionMinutes": 380.36784542726866
+        },
+        {
+          "cycle": 12,
+          "gain": 5,
+          "minutes": 422.97473336330296,
+          "reconstructionMinutes": 409.8652368473248
+        },
+        {
+          "cycle": 13,
+          "gain": 5,
+          "minutes": 454.78295801989685,
+          "reconstructionMinutes": 441.6652634240464
+        },
+        {
+          "cycle": 14,
+          "gain": 5,
+          "minutes": 485.1290892826597,
+          "reconstructionMinutes": 469.8112205946648
+        },
+        {
+          "cycle": 15,
+          "gain": 5,
+          "minutes": 503.2074015890292,
+          "reconstructionMinutes": 489.0995772093796
+        },
+        {
+          "cycle": 16,
+          "gain": 5,
+          "minutes": 517.2504087251019,
+          "reconstructionMinutes": 506.021126216618
+        }
+      ],
+      "resetRunHours": 84.65221946577186,
+      "cycles": [
+        {
+          "cycle": 1,
+          "entryMinutes": 1.6,
+          "workshopMinutes": [
+            1.6,
+            5.727145514722813,
+            13.615746270719216,
+            23.75069849576571
+          ],
+          "insideMinutes": 22.15069849576571,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 2,
+          "entryMinutes": 90.88166848345203,
+          "workshopMinutes": [
+            90.88166848345203,
+            104.3684764970608,
+            120.63806386555562,
+            138.0852814496717
+          ],
+          "insideMinutes": 47.20361296621968,
+          "gapMinutes": 67.13096998768631
+        },
+        {
+          "cycle": 3,
+          "entryMinutes": 230.57257010819265,
+          "workshopMinutes": [
+            230.57257010819265,
+            247.10174231564963,
+            263.0444752263836,
+            279.10665197657676
+          ],
+          "insideMinutes": 48.53408186838415,
+          "gapMinutes": 92.48728865852094
+        },
+        {
+          "cycle": 4,
+          "entryMinutes": 441.8966095836579,
+          "workshopMinutes": [
+            441.8966095836579,
+            458.6606196272731,
+            473.06520042906254,
+            488.01623381599643
+          ],
+          "insideMinutes": 46.11962423233854,
+          "gapMinutes": 162.78995760708113
+        },
+        {
+          "cycle": 5,
+          "entryMinutes": 680.6441110850704,
+          "workshopMinutes": [
+            680.6441110850704,
+            692.9387763369632,
+            704.265583796923,
+            716.0356943715125
+          ],
+          "insideMinutes": 35.391583286442014,
+          "gapMinutes": 192.62787726907402
+        },
+        {
+          "cycle": 6,
+          "entryMinutes": 959.921427173928,
+          "workshopMinutes": [
+            959.921427173928,
+            970.0829003569072,
+            980.8629542963193,
+            990.8844798768497
+          ],
+          "insideMinutes": 30.963052702921654,
+          "gapMinutes": 243.88573280241556
+        },
+        {
+          "cycle": 7,
+          "entryMinutes": 1278.8828774694778,
+          "workshopMinutes": [
+            1278.8828774694778,
+            1290.785092154837,
+            1301.3517013166477,
+            1311.5539893156806
+          ],
+          "insideMinutes": 32.67111184620274,
+          "gapMinutes": 287.99839759262807
+        },
+        {
+          "cycle": 8,
+          "entryMinutes": 1589.8155216611724,
+          "workshopMinutes": [
+            1589.8155216611724,
+            1599.8074041699465,
+            1609.5825969406553,
+            1618.4037044605786
+          ],
+          "insideMinutes": 28.5881827994063,
+          "gapMinutes": 278.2615323454918
+        },
+        {
+          "cycle": 9,
+          "entryMinutes": 1916.2808347586094,
+          "workshopMinutes": [
+            1916.2808347586094,
+            1925.0495818160118,
+            1933.1219639435485,
+            1939.5177759029416
+          ],
+          "insideMinutes": 23.236941144332135,
+          "gapMinutes": 297.87713029803075
+        },
+        {
+          "cycle": 10,
+          "entryMinutes": 2272.6892730023615,
+          "workshopMinutes": [
+            2272.6892730023615,
+            2281.952691890247,
+            2290.6047963801375,
+            2298.81282823105
+          ],
+          "insideMinutes": 26.123555228688442,
+          "gapMinutes": 333.17149709942
+        },
+        {
+          "cycle": 11,
+          "entryMinutes": 2670.353199241385,
+          "workshopMinutes": [
+            2670.353199241385,
+            2679.4513707660717,
+            2688.2539670275773,
+            2695.7885769663208
+          ],
+          "insideMinutes": 25.435377724935826,
+          "gapMinutes": 371.54037101033515
+        },
+        {
+          "cycle": 12,
+          "entryMinutes": 3097.092979219151,
+          "workshopMinutes": [
+            3097.092979219151,
+            3105.244460866261,
+            3112.4495907469154,
+            3118.763310329624
+          ],
+          "insideMinutes": 21.670331110473004,
+          "gapMinutes": 401.30440225282996
+        },
+        {
+          "cycle": 13,
+          "entryMinutes": 3552.0004365851782,
+          "workshopMinutes": [
+            3552.0004365851782,
+            3559.2590042659754,
+            3566.4819009771013,
+            3573.5462683495207
+          ],
+          "insideMinutes": 21.545831764342438,
+          "gapMinutes": 433.2371262555544
+        },
+        {
+          "cycle": 14,
+          "entryMinutes": 4037.811502268258,
+          "workshopMinutes": [
+            4037.811502268258,
+            4045.1614028771232,
+            4052.1673505127796,
+            4058.6753576321803
+          ],
+          "insideMinutes": 20.863855363922386,
+          "gapMinutes": 464.2652339187373
+        },
+        {
+          "cycle": 15,
+          "entryMinutes": 4545.521744910088,
+          "workshopMinutes": [
+            4545.521744910088,
+            4551.209385448545,
+            4556.387373550358,
+            4561.882759221209
+          ],
+          "insideMinutes": 16.361014311121348,
+          "gapMinutes": 486.8463872779078
+        },
+        {
+          "cycle": 16,
+          "entryMinutes": 5067.354949034862,
+          "workshopMinutes": [
+            5067.354949034862,
+            5072.829413406741,
+            5075.7266176973,
+            5079.133167946312
+          ],
+          "insideMinutes": 11.778218911449464,
+          "gapMinutes": 505.47218981365245
+        },
+        {
+          "cycle": 17,
+          "entryMinutes": 5594.456698683908,
+          "workshopMinutes": [
+            5594.456698683908,
+            5598.75,
+            5601.999367290514,
+            5605.513428329908
+          ],
+          "insideMinutes": 11.056729645998955,
+          "gapMinutes": 515.3235307375968
+        }
+      ],
+      "questions": 4484,
+      "correct": 1094,
+      "boosts": 42,
+      "boostDuty": 0.007451195405554438,
+      "automaticPurchases": 12,
+      "manualPurchases": 14417,
+      "ineffectiveDebits": 1,
+      "minimumCostFactor": 0.45125,
+      "maxRewardSeconds": 27.279747709132373,
+      "maximumAward": 5,
+      "sources": {
+        "passive": 4.953829821025769e+45,
+        "manual": 3872707.7513972893,
+        "questions": 2.0988418387750336e+44,
+        "offline": 0
+      },
+      "steps": 45072,
+      "executionSeconds": 3.948532500000001
+    },
+    {
+      "id": "passive",
+      "label": "Sans exercices",
+      "completed": false,
+      "stopReason": "educational-gate",
+      "hours": 16.481197242107903,
+      "activeHours": 16.481197242107903,
+      "workshops": 12,
+      "frontier": 3,
+      "invariants": 0,
+      "balance": 0,
+      "protocols": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "protocolCostPaid": 0,
+      "resets": [],
+      "resetRunHours": 0,
+      "cycles": [
+        {
+          "cycle": 1,
+          "entryMinutes": 8,
+          "workshopMinutes": [
+            8,
+            13.27986426416931,
+            22.193474855238417,
+            33.650349712017125
+          ],
+          "insideMinutes": 25.650349712017125,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 2,
+          "entryMinutes": 52.64054968657985,
+          "workshopMinutes": [
+            52.64054968657985,
+            74.83352895062144,
+            103.21489312281555,
+            137.87186224660758
+          ],
+          "insideMinutes": 85.23131256002772,
+          "gapMinutes": 18.990199974562724
+        },
+        {
+          "cycle": 3,
+          "entryMinutes": 421.03518972308336,
+          "workshopMinutes": [
+            421.03518972308336,
+            482.6579047853762,
+            536.846644486701,
+            589.45219165425
+          ],
+          "insideMinutes": 168.41700193116654,
+          "gapMinutes": 283.1633274764758
+        },
+        {
+          "cycle": 4,
+          "entryMinutes": null,
+          "workshopMinutes": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "insideMinutes": null,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 5,
+          "entryMinutes": null,
+          "workshopMinutes": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "insideMinutes": null,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 6,
+          "entryMinutes": null,
+          "workshopMinutes": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "insideMinutes": null,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 7,
+          "entryMinutes": null,
+          "workshopMinutes": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "insideMinutes": null,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 8,
+          "entryMinutes": null,
+          "workshopMinutes": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "insideMinutes": null,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 9,
+          "entryMinutes": null,
+          "workshopMinutes": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "insideMinutes": null,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 10,
+          "entryMinutes": null,
+          "workshopMinutes": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "insideMinutes": null,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 11,
+          "entryMinutes": null,
+          "workshopMinutes": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "insideMinutes": null,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 12,
+          "entryMinutes": null,
+          "workshopMinutes": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "insideMinutes": null,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 13,
+          "entryMinutes": null,
+          "workshopMinutes": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "insideMinutes": null,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 14,
+          "entryMinutes": null,
+          "workshopMinutes": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "insideMinutes": null,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 15,
+          "entryMinutes": null,
+          "workshopMinutes": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "insideMinutes": null,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 16,
+          "entryMinutes": null,
+          "workshopMinutes": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "insideMinutes": null,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 17,
+          "entryMinutes": null,
+          "workshopMinutes": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "insideMinutes": null,
+          "gapMinutes": null
+        }
+      ],
+      "questions": 0,
+      "correct": 0,
+      "boosts": 0,
+      "boostDuty": 0,
+      "automaticPurchases": 0,
+      "manualPurchases": 97,
+      "ineffectiveDebits": 0,
+      "minimumCostFactor": 1,
+      "maxRewardSeconds": 0,
+      "maximumAward": 0,
+      "sources": {
+        "passive": 49221436164.51926,
+        "manual": 12516.428715841548,
+        "questions": 0,
+        "offline": 0
+      },
+      "steps": 1155,
+      "executionSeconds": 0.040961374999998953
+    },
+    {
+      "id": "frequent",
+      "label": "Redémarrage au premier point",
+      "completed": false,
+      "stopReason": "time-limit",
+      "hours": 168,
+      "activeHours": 168,
+      "workshops": 36,
+      "frontier": 9,
+      "invariants": 73,
+      "balance": 0,
+      "protocols": [
+        4,
+        3,
+        3,
+        3,
+        3,
+        3,
+        2,
+        1,
+        0
+      ],
+      "protocolCostPaid": 73,
+      "resets": [
+        {
+          "cycle": 2,
+          "gain": 1,
+          "minutes": 35.53735900119226,
+          "reconstructionMinutes": 21.799038934036002
+        },
+        {
+          "cycle": 2,
+          "gain": 1,
+          "minutes": 34.71789227659594,
+          "reconstructionMinutes": 27.637485508434533
+        },
+        {
+          "cycle": 2,
+          "gain": 1,
+          "minutes": 38.80669264427332,
+          "reconstructionMinutes": 26.66013489673616
+        },
+        {
+          "cycle": 2,
+          "gain": 1,
+          "minutes": 44.25901912391448,
+          "reconstructionMinutes": 36.67903695402401
+        },
+        {
+          "cycle": 2,
+          "gain": 1,
+          "minutes": 54.17903695402401,
+          "reconstructionMinutes": 42.7607991238527
+        },
+        {
+          "cycle": 2,
+          "gain": 1,
+          "minutes": 51.89466338869406,
+          "reconstructionMinutes": 45.50987345208341
+        },
+        {
+          "cycle": 2,
+          "gain": 1,
+          "minutes": 63.486440638849736,
+          "reconstructionMinutes": 38.20337688787125
+        },
+        {
+          "cycle": 2,
+          "gain": 1,
+          "minutes": 62.460277498308336,
+          "reconstructionMinutes": 40.483635515037044
+        },
+        {
+          "cycle": 3,
+          "gain": 1,
+          "minutes": 71.06339742226767,
+          "reconstructionMinutes": 67.40506986070274
+        },
+        {
+          "cycle": 3,
+          "gain": 1,
+          "minutes": 69.36683601657259,
+          "reconstructionMinutes": 63.243628341652766
+        },
+        {
+          "cycle": 3,
+          "gain": 1,
+          "minutes": 73.61585643122277,
+          "reconstructionMinutes": 59.36252860408482
+        },
+        {
+          "cycle": 3,
+          "gain": 1,
+          "minutes": 78.11252860408483,
+          "reconstructionMinutes": 75.3559089495695
+        },
+        {
+          "cycle": 3,
+          "gain": 1,
+          "minutes": 88.37180118182829,
+          "reconstructionMinutes": 83.64578310545184
+        },
+        {
+          "cycle": 3,
+          "gain": 1,
+          "minutes": 95.51082989919753,
+          "reconstructionMinutes": 83.36105497645063
+        },
+        {
+          "cycle": 3,
+          "gain": 1,
+          "minutes": 102.09365388604917,
+          "reconstructionMinutes": 92.70512722871621
+        },
+        {
+          "cycle": 3,
+          "gain": 1,
+          "minutes": 103.64177153098608,
+          "reconstructionMinutes": 88.48206640068832
+        },
+        {
+          "cycle": 3,
+          "gain": 1,
+          "minutes": 106.98967955202716,
+          "reconstructionMinutes": 89.13139183177798
+        },
+        {
+          "cycle": 3,
+          "gain": 1,
+          "minutes": 116.26924631809283,
+          "reconstructionMinutes": 82.91778547145489
+        },
+        {
+          "cycle": 4,
+          "gain": 1,
+          "minutes": 115.87301763181895,
+          "reconstructionMinutes": 93.40621492018641
+        },
+        {
+          "cycle": 4,
+          "gain": 1,
+          "minutes": 94.8303998065266,
+          "reconstructionMinutes": 94.84847049756135
+        },
+        {
+          "cycle": 4,
+          "gain": 1,
+          "minutes": 102.6696001934734,
+          "reconstructionMinutes": 93.75
+        },
+        {
+          "cycle": 4,
+          "gain": 1,
+          "minutes": 105.04888578431807,
+          "reconstructionMinutes": 96.8186180447609
+        },
+        {
+          "cycle": 4,
+          "gain": 1,
+          "minutes": 106.85030723847133,
+          "reconstructionMinutes": 107.22999274390968
+        },
+        {
+          "cycle": 4,
+          "gain": 1,
+          "minutes": 116.1006596837217,
+          "reconstructionMinutes": 109.59526820348037
+        },
+        {
+          "cycle": 4,
+          "gain": 1,
+          "minutes": 122.62877317045591,
+          "reconstructionMinutes": 104.09566739964018
+        },
+        {
+          "cycle": 4,
+          "gain": 1,
+          "minutes": 112.38769151336722,
+          "reconstructionMinutes": 103.68693142176102
+        },
+        {
+          "cycle": 4,
+          "gain": 1,
+          "minutes": 116.98368260966575,
+          "reconstructionMinutes": 110.95192840640472
+        },
+        {
+          "cycle": 4,
+          "gain": 1,
+          "minutes": 132.06852500379853,
+          "reconstructionMinutes": 104.40483735963693
+        },
+        {
+          "cycle": 5,
+          "gain": 1,
+          "minutes": 128.50358014124018,
+          "reconstructionMinutes": 124.4278948549613
+        },
+        {
+          "cycle": 5,
+          "gain": 1,
+          "minutes": 125.279597201128,
+          "reconstructionMinutes": 124.67279667102508
+        },
+        {
+          "cycle": 5,
+          "gain": 1,
+          "minutes": 132.37204280636166,
+          "reconstructionMinutes": 126.3803935084652
+        },
+        {
+          "cycle": 5,
+          "gain": 1,
+          "minutes": 138.91380991523087,
+          "reconstructionMinutes": 129.6492063685403
+        },
+        {
+          "cycle": 5,
+          "gain": 1,
+          "minutes": 138.9491797893633,
+          "reconstructionMinutes": 133.51566119059572
+        },
+        {
+          "cycle": 5,
+          "gain": 1,
+          "minutes": 141.45656835731353,
+          "reconstructionMinutes": 133.9264982708463
+        },
+        {
+          "cycle": 5,
+          "gain": 1,
+          "minutes": 144.11855459653015,
+          "reconstructionMinutes": 132.66621642001263
+        },
+        {
+          "cycle": 5,
+          "gain": 1,
+          "minutes": 140.55835221551874,
+          "reconstructionMinutes": 135.23286556377667
+        },
+        {
+          "cycle": 5,
+          "gain": 1,
+          "minutes": 147.58680083939785,
+          "reconstructionMinutes": 128.3812854219005
+        },
+        {
+          "cycle": 5,
+          "gain": 1,
+          "minutes": 147.3608845227068,
+          "reconstructionMinutes": 132.41396560278227
+        },
+        {
+          "cycle": 6,
+          "gain": 1,
+          "minutes": 154.08210461141036,
+          "reconstructionMinutes": 158.5229586842499
+        },
+        {
+          "cycle": 6,
+          "gain": 1,
+          "minutes": 159.81375218101846,
+          "reconstructionMinutes": 156.63313380990877
+        },
+        {
+          "cycle": 6,
+          "gain": 1,
+          "minutes": 163.27777131706145,
+          "reconstructionMinutes": 156.3781379609102
+        },
+        {
+          "cycle": 6,
+          "gain": 1,
+          "minutes": 169.35013226673811,
+          "reconstructionMinutes": 155.95019313779486
+        },
+        {
+          "cycle": 6,
+          "gain": 1,
+          "minutes": 164.57289373498352,
+          "reconstructionMinutes": 163.71464383182368
+        },
+        {
+          "cycle": 6,
+          "gain": 1,
+          "minutes": 170.48545050019845,
+          "reconstructionMinutes": 150.18951459544672
+        },
+        {
+          "cycle": 6,
+          "gain": 1,
+          "minutes": 162.11653812750106,
+          "reconstructionMinutes": 156.9286162442382
+        },
+        {
+          "cycle": 6,
+          "gain": 1,
+          "minutes": 164.54669044196297,
+          "reconstructionMinutes": 157.43140710397856
+        },
+        {
+          "cycle": 6,
+          "gain": 1,
+          "minutes": 167.608221337466,
+          "reconstructionMinutes": 156.3385591085166
+        },
+        {
+          "cycle": 6,
+          "gain": 1,
+          "minutes": 173.34426076542684,
+          "reconstructionMinutes": 161.49974905972581
+        },
+        {
+          "cycle": 7,
+          "gain": 1,
+          "minutes": 180.12850848259308,
+          "reconstructionMinutes": 152.50515447574531
+        },
+        {
+          "cycle": 7,
+          "gain": 1,
+          "minutes": 153.15587167953683,
+          "reconstructionMinutes": 147.9648041176076
+        },
+        {
+          "cycle": 7,
+          "gain": 1,
+          "minutes": 153.2099512552532,
+          "reconstructionMinutes": 144.25747440781754
+        },
+        {
+          "cycle": 7,
+          "gain": 1,
+          "minutes": 154.60465508557974,
+          "reconstructionMinutes": 156.28530282468031
+        },
+        {
+          "cycle": 7,
+          "gain": 1,
+          "minutes": 162.77817094811567,
+          "reconstructionMinutes": 156.85558930005547
+        },
+        {
+          "cycle": 7,
+          "gain": 1,
+          "minutes": 162.2571318765646,
+          "reconstructionMinutes": 158.55864340716508
+        },
+        {
+          "cycle": 7,
+          "gain": 1,
+          "minutes": 168.46657048871856,
+          "reconstructionMinutes": 157.53570973512444
+        },
+        {
+          "cycle": 7,
+          "gain": 1,
+          "minutes": 162.40140610964832,
+          "reconstructionMinutes": 164.08897304359706
+        },
+        {
+          "cycle": 7,
+          "gain": 1,
+          "minutes": 174.1320234016331,
+          "reconstructionMinutes": 160.71401996964704
+        },
+        {
+          "cycle": 7,
+          "gain": 1,
+          "minutes": 176.02785585749953,
+          "reconstructionMinutes": 153.97214414250047
+        },
+        {
+          "cycle": 8,
+          "gain": 1,
+          "minutes": 169.37453418249595,
+          "reconstructionMinutes": 166.31708171428374
+        },
+        {
+          "cycle": 8,
+          "gain": 1,
+          "minutes": 167.09760996000452,
+          "reconstructionMinutes": 176.66135067276676
+        },
+        {
+          "cycle": 8,
+          "gain": 1,
+          "minutes": 182.0080758334739,
+          "reconstructionMinutes": 165.4919241665261
+        },
+        {
+          "cycle": 8,
+          "gain": 1,
+          "minutes": 173.78476664330034,
+          "reconstructionMinutes": 173.0248138094767
+        },
+        {
+          "cycle": 8,
+          "gain": 1,
+          "minutes": 180.18542413204753,
+          "reconstructionMinutes": 177.8868288915488
+        },
+        {
+          "cycle": 8,
+          "gain": 1,
+          "minutes": 183.58794079471747,
+          "reconstructionMinutes": 186.33161781644932
+        },
+        {
+          "cycle": 8,
+          "gain": 1,
+          "minutes": 189.54979083811924,
+          "reconstructionMinutes": 187.45694537229915
+        },
+        {
+          "cycle": 8,
+          "gain": 1,
+          "minutes": 193.38400175834153,
+          "reconstructionMinutes": 186.0853504092161
+        },
+        {
+          "cycle": 8,
+          "gain": 1,
+          "minutes": 197.426571148503,
+          "reconstructionMinutes": 176.71317473132416
+        },
+        {
+          "cycle": 9,
+          "gain": 1,
+          "minutes": 190.9422765356343,
+          "reconstructionMinutes": 187.31540192151053
+        },
+        {
+          "cycle": 9,
+          "gain": 1,
+          "minutes": 189.1247208310563,
+          "reconstructionMinutes": 185.61863898945933
+        },
+        {
+          "cycle": 9,
+          "gain": 1,
+          "minutes": 192.29375638523877,
+          "reconstructionMinutes": 186.46267509956766
+        },
+        {
+          "cycle": 9,
+          "gain": 1,
+          "minutes": 189.61709685560007,
+          "reconstructionMinutes": 189.8309518678366
+        },
+        {
+          "cycle": 9,
+          "gain": 1,
+          "minutes": 198.08215853775036,
+          "reconstructionMinutes": 194.06801335569278
+        },
+        {
+          "cycle": 9,
+          "gain": 1,
+          "minutes": 200.84190995962126,
+          "reconstructionMinutes": null
+        }
+      ],
+      "resetRunHours": 164.9096415042234,
+      "cycles": [
+        {
+          "cycle": 1,
+          "entryMinutes": 1.25,
+          "workshopMinutes": [
+            1.25,
+            4.42767095715761,
+            10.234911696114324,
+            19.61676862216369
+          ],
+          "insideMinutes": 18.36676862216369,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 2,
+          "entryMinutes": 32.12516154311818,
+          "workshopMinutes": [
+            32.12516154311818,
+            68.80749001846611,
+            147.5,
+            206.21689154208346
+          ],
+          "insideMinutes": 174.09172999896526,
+          "gapMinutes": 12.508392920954494
+        },
+        {
+          "cycle": 3,
+          "entryMinutes": 456.4047789481198,
+          "workshopMinutes": [
+            456.4047789481198,
+            672.5,
+            764.4475242164273,
+            957.5753248168955
+          ],
+          "insideMinutes": 501.1705458687758,
+          "gapMinutes": 250.18788740603634
+        },
+        {
+          "cycle": 4,
+          "entryMinutes": 1406.25,
+          "workshopMinutes": [
+            1406.25,
+            1705.634679981978,
+            1814.2914821860252,
+            2050
+          ],
+          "insideMinutes": 643.75,
+          "gapMinutes": 448.6746751831044
+        },
+        {
+          "cycle": 5,
+          "entryMinutes": 2544.3221051450387,
+          "workshopMinutes": [
+            2544.3221051450387,
+            2937.5,
+            3079.0081889055323,
+            3361.9769713438377
+          ],
+          "insideMinutes": 817.6548661987991,
+          "gapMinutes": 494.32210514503873
+        },
+        {
+          "cycle": 6,
+          "entryMinutes": 3955,
+          "workshopMinutes": [
+            3955,
+            4443.483447552078,
+            4610.5883782944375,
+            4940.574102013956
+          ],
+          "insideMinutes": 985.5741020139559,
+          "gapMinutes": 593.0230286561622
+        },
+        {
+          "cycle": 7,
+          "entryMinutes": 5630.24421915495,
+          "workshopMinutes": [
+            5630.24421915495,
+            6087.563846668489,
+            6253.197299130279,
+            6581.25
+          ],
+          "insideMinutes": 951.00578084505,
+          "gapMinutes": 689.670117140994
+        },
+        {
+          "cycle": 8,
+          "entryMinutes": 7266.652390039995,
+          "workshopMinutes": [
+            7266.652390039995,
+            7787.165819396421,
+            7968.250538955932,
+            8153.283390035294
+          ],
+          "insideMinutes": 886.6309999952986,
+          "gapMinutes": 685.4023900399955
+        },
+        {
+          "cycle": 9,
+          "entryMinutes": 8924.618847684138,
+          "workshopMinutes": [
+            8924.618847684138,
+            9305.517605246689,
+            9691.852190695121,
+            9893.903053824737
+          ],
+          "insideMinutes": 969.2842061406002,
+          "gapMinutes": 771.3354576488433
+        },
+        {
+          "cycle": 10,
+          "entryMinutes": null,
+          "workshopMinutes": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "insideMinutes": null,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 11,
+          "entryMinutes": null,
+          "workshopMinutes": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "insideMinutes": null,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 12,
+          "entryMinutes": null,
+          "workshopMinutes": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "insideMinutes": null,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 13,
+          "entryMinutes": null,
+          "workshopMinutes": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "insideMinutes": null,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 14,
+          "entryMinutes": null,
+          "workshopMinutes": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "insideMinutes": null,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 15,
+          "entryMinutes": null,
+          "workshopMinutes": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "insideMinutes": null,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 16,
+          "entryMinutes": null,
+          "workshopMinutes": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "insideMinutes": null,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 17,
+          "entryMinutes": null,
+          "workshopMinutes": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "insideMinutes": null,
+          "gapMinutes": null
+        }
+      ],
+      "questions": 8063,
+      "correct": 5608,
+      "boosts": 1224,
+      "boostDuty": 0.12032970166539231,
+      "automaticPurchases": 21,
+      "manualPurchases": 30223,
+      "ineffectiveDebits": 0,
+      "minimumCostFactor": 0.7832268500612865,
+      "maxRewardSeconds": 17.90704225352113,
+      "maximumAward": 1,
+      "sources": {
+        "passive": 1.5781757547364891e+25,
+        "manual": 5710026.704475672,
+        "questions": 1.993948702309796e+24,
+        "offline": 0
+      },
+      "steps": 92468,
+      "executionSeconds": 4.6383643339999985
+    },
+    {
+      "id": "funding",
+      "label": "Trois redémarrages par frontière, enveloppe 32/128/512",
+      "completed": true,
+      "stopReason": "finished",
+      "hours": 159.67759054321817,
+      "activeHours": 159.67759054321817,
+      "workshops": 68,
+      "frontier": 17,
+      "invariants": 277,
+      "balance": 2,
+      "protocols": [
+        6,
+        6,
+        5,
+        5,
+        5,
+        3,
+        4,
+        3,
+        2
+      ],
+      "protocolCostPaid": 275,
+      "resets": [
+        {
+          "cycle": 1,
+          "gain": 2,
+          "minutes": 273.4222891342276,
+          "reconstructionMinutes": 10.70336635725307
+        },
+        {
+          "cycle": 1,
+          "gain": 2,
+          "minutes": 450.3900133780857,
+          "reconstructionMinutes": 11.170662467211393
+        },
+        {
+          "cycle": 1,
+          "gain": 2,
+          "minutes": 1023.6876974876867,
+          "reconstructionMinutes": 8.857745261233989
+        },
+        {
+          "cycle": 2,
+          "gain": 3,
+          "minutes": 55.629275446650475,
+          "reconstructionMinutes": 36.01956321981343
+        },
+        {
+          "cycle": 2,
+          "gain": 3,
+          "minutes": 58.45393278074286,
+          "reconstructionMinutes": 32.31566654018558
+        },
+        {
+          "cycle": 2,
+          "gain": 3,
+          "minutes": 64.97979864458635,
+          "reconstructionMinutes": 32.95914145894955
+        },
+        {
+          "cycle": 3,
+          "gain": 4,
+          "minutes": 94.07981332477405,
+          "reconstructionMinutes": 80.89472286442081
+        },
+        {
+          "cycle": 3,
+          "gain": 4,
+          "minutes": 90.44892848654199,
+          "reconstructionMinutes": 71.09985094947575
+        },
+        {
+          "cycle": 3,
+          "gain": 4,
+          "minutes": 92.0593430649979,
+          "reconstructionMinutes": 67.24827717599837
+        },
+        {
+          "cycle": 4,
+          "gain": 5,
+          "minutes": 122.94047422471535,
+          "reconstructionMinutes": 101.88338151248124
+        },
+        {
+          "cycle": 4,
+          "gain": 5,
+          "minutes": 109.3108667590995,
+          "reconstructionMinutes": 98.72111059469074
+        },
+        {
+          "cycle": 4,
+          "gain": 5,
+          "minutes": 119.59756726789152,
+          "reconstructionMinutes": 92.02305590775214
+        },
+        {
+          "cycle": 5,
+          "gain": 5,
+          "minutes": 133.05739850052632,
+          "reconstructionMinutes": 120.05352628096443
+        },
+        {
+          "cycle": 5,
+          "gain": 6,
+          "minutes": 126.94260149947368,
+          "reconstructionMinutes": 119.32891219422454
+        },
+        {
+          "cycle": 5,
+          "gain": 6,
+          "minutes": 134.35552592062547,
+          "reconstructionMinutes": 109.82190927055198
+        },
+        {
+          "cycle": 6,
+          "gain": 5,
+          "minutes": 144.62503194486538,
+          "reconstructionMinutes": 133.51944213450915
+        },
+        {
+          "cycle": 6,
+          "gain": 6,
+          "minutes": 138.51944213450915,
+          "reconstructionMinutes": 127.11129873369403
+        },
+        {
+          "cycle": 6,
+          "gain": 7,
+          "minutes": 140.97483767767892,
+          "reconstructionMinutes": 121.52516232232107
+        },
+        {
+          "cycle": 7,
+          "gain": 5,
+          "minutes": 153.15493803756058,
+          "reconstructionMinutes": 130.65721654845984
+        },
+        {
+          "cycle": 7,
+          "gain": 6,
+          "minutes": 136.15310192959927,
+          "reconstructionMinutes": 125.83902246790772
+        },
+        {
+          "cycle": 7,
+          "gain": 7,
+          "minutes": 137.19489372448783,
+          "reconstructionMinutes": 126.95638095374501
+        },
+        {
+          "cycle": 8,
+          "gain": 5,
+          "minutes": 158.1208960041462,
+          "reconstructionMinutes": 162.42192878975038
+        },
+        {
+          "cycle": 8,
+          "gain": 6,
+          "minutes": 167.82582231869551,
+          "reconstructionMinutes": 153.81761267205923
+        },
+        {
+          "cycle": 8,
+          "gain": 7,
+          "minutes": 164.83169426339833,
+          "reconstructionMinutes": 152.7081772887444
+        },
+        {
+          "cycle": 9,
+          "gain": 5,
+          "minutes": 177.48283904025206,
+          "reconstructionMinutes": 168.5619550483272
+        },
+        {
+          "cycle": 9,
+          "gain": 6,
+          "minutes": 173.63032670781638,
+          "reconstructionMinutes": 166.22107612750744
+        },
+        {
+          "cycle": 9,
+          "gain": 7,
+          "minutes": 176.94618132221223,
+          "reconstructionMinutes": 163.61325481908474
+        },
+        {
+          "cycle": 10,
+          "gain": 5,
+          "minutes": 188.36261139240816,
+          "reconstructionMinutes": 175.22968027771083
+        },
+        {
+          "cycle": 10,
+          "gain": 6,
+          "minutes": 181.05942824230587,
+          "reconstructionMinutes": 170.51242933943868
+        },
+        {
+          "cycle": 10,
+          "gain": 7,
+          "minutes": 181.29469409451025,
+          "reconstructionMinutes": 163.7917007024274
+        },
+        {
+          "cycle": 11,
+          "gain": 5,
+          "minutes": 188.97287758605768,
+          "reconstructionMinutes": 178.99485765887076
+        },
+        {
+          "cycle": 11,
+          "gain": 6,
+          "minutes": 183.99485765887076,
+          "reconstructionMinutes": 170.3504899001884
+        },
+        {
+          "cycle": 11,
+          "gain": 7,
+          "minutes": 179.26148430016474,
+          "reconstructionMinutes": 168.80095877625862
+        },
+        {
+          "cycle": 12,
+          "gain": 5,
+          "minutes": 189.52992911524004,
+          "reconstructionMinutes": 192.45858658459522
+        },
+        {
+          "cycle": 12,
+          "gain": 6,
+          "minutes": 197.51472732905532,
+          "reconstructionMinutes": 182.57015025198635
+        },
+        {
+          "cycle": 12,
+          "gain": 7,
+          "minutes": 191.1938592555399,
+          "reconstructionMinutes": 184.4130056767608
+        },
+        {
+          "cycle": 13,
+          "gain": 5,
+          "minutes": 204.83477004786448,
+          "reconstructionMinutes": 196.69714388053205
+        },
+        {
+          "cycle": 13,
+          "gain": 6,
+          "minutes": 201.41522995213552,
+          "reconstructionMinutes": 198.9309578773643
+        },
+        {
+          "cycle": 13,
+          "gain": 7,
+          "minutes": 206.75682552334814,
+          "reconstructionMinutes": 184.49317447665186
+        },
+        {
+          "cycle": 14,
+          "gain": 5,
+          "minutes": 200.94430238341835,
+          "reconstructionMinutes": 209.7988720932335
+        },
+        {
+          "cycle": 14,
+          "gain": 6,
+          "minutes": 212.33567673055612,
+          "reconstructionMinutes": 193.70732456241288
+        },
+        {
+          "cycle": 14,
+          "gain": 7,
+          "minutes": 200.77690626494393,
+          "reconstructionMinutes": 198.71305564558327
+        },
+        {
+          "cycle": 15,
+          "gain": 6,
+          "minutes": 213.9362890977335,
+          "reconstructionMinutes": 206.5
+        },
+        {
+          "cycle": 15,
+          "gain": 6,
+          "minutes": 207.8335451981441,
+          "reconstructionMinutes": 213.48155478079084
+        },
+        {
+          "cycle": 15,
+          "gain": 7,
+          "minutes": 219.3155887333938,
+          "reconstructionMinutes": 195.61059263149411
+        },
+        {
+          "cycle": 16,
+          "gain": 5,
+          "minutes": 206.8508660684621,
+          "reconstructionMinutes": 207.5
+        },
+        {
+          "cycle": 16,
+          "gain": 6,
+          "minutes": 208.09078904889174,
+          "reconstructionMinutes": 207.90921095110826
+        },
+        {
+          "cycle": 16,
+          "gain": 7,
+          "minutes": 211.62243128245464,
+          "reconstructionMinutes": 186.53677966865362
+        },
+        {
+          "cycle": 17,
+          "gain": 6,
+          "minutes": 192.78677966865362,
+          "reconstructionMinutes": 197.5
+        },
+        {
+          "cycle": 17,
+          "gain": 6,
+          "minutes": 197.99824451228682,
+          "reconstructionMinutes": 192.00175548771318
+        },
+        {
+          "cycle": 17,
+          "gain": 7,
+          "minutes": 195.1571880808042,
+          "reconstructionMinutes": null
+        }
+      ],
+      "resetRunHours": 159.67759054321817,
+      "cycles": [
+        {
+          "cycle": 1,
+          "entryMinutes": 1.25,
+          "workshopMinutes": [
+            1.25,
+            4.42767095715761,
+            10.234911696114324,
+            19.61676862216369
+          ],
+          "insideMinutes": 18.36676862216369,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 2,
+          "entryMinutes": 1763.7136015098642,
+          "workshopMinutes": [
+            1763.7136015098642,
+            1772.788154095929,
+            1783.457269916152,
+            1794.3028480158102
+          ],
+          "insideMinutes": 30.589246505946114,
+          "gapMinutes": 1744.0968328877004
+        },
+        {
+          "cycle": 3,
+          "entryMinutes": 1985.3532192539003,
+          "workshopMinutes": [
+            1985.3532192539003,
+            1997.6967384955008,
+            2009.9869512348787,
+            2020.6428201967537
+          ],
+          "insideMinutes": 35.28960094285333,
+          "gapMinutes": 191.05037123809015
+        },
+        {
+          "cycle": 4,
+          "entryMinutes": 2296.746271874116,
+          "workshopMinutes": [
+            2296.746271874116,
+            2306.5118438978593,
+            2317.797168745061,
+            2326.091565973009
+          ],
+          "insideMinutes": 29.34529409889316,
+          "gapMinutes": 276.1034516773621
+        },
+        {
+          "cycle": 5,
+          "entryMinutes": 2667.5,
+          "workshopMinutes": [
+            2667.5,
+            2673.8193063352146,
+            2681.866363649923,
+            2688.0573985005262
+          ],
+          "insideMinutes": 20.557398500526325,
+          "gapMinutes": 341.408434026991
+        },
+        {
+          "cycle": 6,
+          "entryMinutes": 3077.77836977049,
+          "workshopMinutes": [
+            3077.77836977049,
+            3082.880130770437,
+            3088.75,
+            3093.980557865491
+          ],
+          "insideMinutes": 16.202188095000746,
+          "gapMinutes": 389.7209712699638
+        },
+        {
+          "cycle": 7,
+          "entryMinutes": 3509.521168438133,
+          "workshopMinutes": [
+            3509.521168438133,
+            3516.1305372696283,
+            3520.888753496932,
+            3526.6297757152397
+          ],
+          "insideMinutes": 17.108607277106785,
+          "gapMinutes": 415.54061057264187
+        },
+        {
+          "cycle": 8,
+          "entryMinutes": 3941.25,
+          "workshopMinutes": [
+            3941.25,
+            3947.506957176031,
+            3954.089965656033,
+            3958.098667373473
+          ],
+          "insideMinutes": 16.848667373472804,
+          "gapMinutes": 414.62022428476047
+        },
+        {
+          "cycle": 9,
+          "entryMinutes": 4454.603660737682,
+          "workshopMinutes": [
+            4454.603660737682,
+            4460,
+            4464.302457718691,
+            4468.239022995819
+          ],
+          "insideMinutes": 13.63536225813732,
+          "gapMinutes": 496.5049933642086
+        },
+        {
+          "cycle": 10,
+          "entryMinutes": 4992.5,
+          "workshopMinutes": [
+            4992.5,
+            4998.75,
+            5002.5,
+            5007.178142418255
+          ],
+          "insideMinutes": 14.678142418255447,
+          "gapMinutes": 524.2609770041813
+        },
+        {
+          "cycle": 11,
+          "entryMinutes": 5542.738281112627,
+          "workshopMinutes": [
+            5542.738281112627,
+            5550.235519883522,
+            5554.7841319882555,
+            5558.50514234113
+          ],
+          "insideMinutes": 15.76686122850224,
+          "gapMinutes": 535.5601386943715
+        },
+        {
+          "cycle": 12,
+          "entryMinutes": 6098.114327759293,
+          "workshopMinutes": [
+            6098.114327759293,
+            6104.1631531051935,
+            6107.727758345919,
+            6111.291413415404
+          ],
+          "insideMinutes": 13.177085656111982,
+          "gapMinutes": 539.6091854181635
+        },
+        {
+          "cycle": 13,
+          "entryMinutes": 6693.986436344159,
+          "workshopMinutes": [
+            6693.986436344159,
+            6698.75,
+            6702.5,
+            6704.834770047864
+          ],
+          "insideMinutes": 10.848333703705187,
+          "gapMinutes": 582.6950229287545
+        },
+        {
+          "cycle": 14,
+          "entryMinutes": 7303.570473994984,
+          "workshopMinutes": [
+            7303.570473994984,
+            7308.989132708611,
+            7310.8409661964115,
+            7313.9511279067665
+          ],
+          "insideMinutes": 10.380653911782428,
+          "gapMinutes": 598.7357039471195
+        },
+        {
+          "cycle": 15,
+          "entryMinutes": 7932.5,
+          "workshopMinutes": [
+            7932.5,
+            7936.25,
+            7937.25,
+            7941
+          ],
+          "insideMinutes": 8.5,
+          "gapMinutes": 618.5488720932335
+        },
+        {
+          "cycle": 16,
+          "entryMinutes": 8569.589580185619,
+          "workshopMinutes": [
+            8569.589580185619,
+            8572.5,
+            8573.5,
+            8575
+          ],
+          "insideMinutes": 5.410419814381749,
+          "gapMinutes": 628.5895801856183
+        },
+        {
+          "cycle": 17,
+          "entryMinutes": 9183.748380608682,
+          "workshopMinutes": [
+            9183.748380608682,
+            9185,
+            9186,
+            9187.5
+          ],
+          "insideMinutes": 3.751619391317945,
+          "gapMinutes": 608.748380608682
+        }
+      ],
+      "questions": 7664,
+      "correct": 5331,
+      "boosts": 1159,
+      "boostDuty": 0.12021405122077355,
+      "automaticPurchases": 15717,
+      "manualPurchases": 30461,
+      "ineffectiveDebits": 82,
+      "minimumCostFactor": 0.3868904687499999,
+      "maxRewardSeconds": 26.650215069690855,
+      "maximumAward": 7,
+      "sources": {
+        "passive": 6.161327341129278e+46,
+        "manual": 10105813.73052968,
+        "questions": 1.3803217569982105e+46,
+        "offline": 0
+      },
+      "steps": 108259,
+      "executionSeconds": 9.77566775
+    },
+    {
+      "id": "no-automation",
+      "label": "70 %, automatisations désactivées",
+      "completed": true,
+      "stopReason": "finished",
+      "hours": 77.70833333333333,
+      "activeHours": 77.70833333333333,
+      "workshops": 68,
+      "frontier": 17,
+      "invariants": 74,
+      "balance": 1,
+      "protocols": [
+        4,
+        3,
+        2,
+        3,
+        3,
+        3,
+        3,
+        1,
+        0
+      ],
+      "protocolCostPaid": 73,
+      "resets": [
+        {
+          "cycle": 1,
+          "gain": 2,
+          "minutes": 52.258439539257274,
+          "reconstructionMinutes": 11.63293769678274
+        },
+        {
+          "cycle": 2,
+          "gain": 3,
+          "minutes": 58.0810981522953,
+          "reconstructionMinutes": 40.69087057188065
+        },
+        {
+          "cycle": 3,
+          "gain": 4,
+          "minutes": 114.97980022541303,
+          "reconstructionMinutes": 104.22381334216585
+        },
+        {
+          "cycle": 4,
+          "gain": 5,
+          "minutes": 181.44030496530326,
+          "reconstructionMinutes": 133.24035711773115
+        },
+        {
+          "cycle": 5,
+          "gain": 5,
+          "minutes": 190.20419716716268,
+          "reconstructionMinutes": 176.7861599505685
+        },
+        {
+          "cycle": 6,
+          "gain": 5,
+          "minutes": 232.11477064192357,
+          "reconstructionMinutes": 217.54041991135065
+        },
+        {
+          "cycle": 7,
+          "gain": 5,
+          "minutes": 271.6945277635099,
+          "reconstructionMinutes": 199.67851164284414
+        },
+        {
+          "cycle": 8,
+          "gain": 5,
+          "minutes": 247.53844605590444,
+          "reconstructionMinutes": 228.21700527104113
+        },
+        {
+          "cycle": 9,
+          "gain": 5,
+          "minutes": 271.5415584114225,
+          "reconstructionMinutes": 257.27178517974824
+        },
+        {
+          "cycle": 10,
+          "gain": 5,
+          "minutes": 298.56159253486186,
+          "reconstructionMinutes": 288.57205891520476
+        },
+        {
+          "cycle": 11,
+          "gain": 5,
+          "minutes": 331.973308159833,
+          "reconstructionMinutes": 324.6119563831133
+        },
+        {
+          "cycle": 12,
+          "gain": 5,
+          "minutes": 359.03837666247756,
+          "reconstructionMinutes": 344.2576946251725
+        },
+        {
+          "cycle": 13,
+          "gain": 5,
+          "minutes": 380.71986222526124,
+          "reconstructionMinutes": 366.1511555125486
+        },
+        {
+          "cycle": 14,
+          "gain": 5,
+          "minutes": 398.74381955630184,
+          "reconstructionMinutes": 378.67539891530276
+        },
+        {
+          "cycle": 15,
+          "gain": 5,
+          "minutes": 405.39435858913055,
+          "reconstructionMinutes": 415.96885011023744
+        },
+        {
+          "cycle": 16,
+          "gain": 5,
+          "minutes": 436.96553934994205,
+          "reconstructionMinutes": 415.4996803960346
+        }
+      ],
+      "resetRunHours": 70.52083333333333,
+      "cycles": [
+        {
+          "cycle": 1,
+          "entryMinutes": 1.25,
+          "workshopMinutes": [
+            1.25,
+            4.42767095715761,
+            10.234911696114324,
+            19.61676862216369
+          ],
+          "insideMinutes": 18.36676862216369,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 2,
+          "entryMinutes": 72.5,
+          "workshopMinutes": [
+            72.5,
+            84.69784082886864,
+            97.19619499734583,
+            110.33953769155256
+          ],
+          "insideMinutes": 37.839537691552565,
+          "gapMinutes": 52.88323137783631
+        },
+        {
+          "cycle": 3,
+          "entryMinutes": 186.17372864268452,
+          "workshopMinutes": [
+            186.17372864268452,
+            200.90291443594336,
+            213.450581430513,
+            225.3193379169656
+          ],
+          "insideMinutes": 39.14560927428108,
+          "gapMinutes": 75.83419095113194
+        },
+        {
+          "cycle": 4,
+          "entryMinutes": 368.93602199937624,
+          "workshopMinutes": [
+            368.93602199937624,
+            383.5517744038034,
+            394.962008126919,
+            406.75964288226885
+          ],
+          "insideMinutes": 37.823620882892584,
+          "gapMinutes": 143.61668408241067
+        },
+        {
+          "cycle": 5,
+          "entryMinutes": 568.7668186257591,
+          "workshopMinutes": [
+            568.7668186257591,
+            579.6364406951416,
+            587.8038011766031,
+            596.9638400494315
+          ],
+          "insideMinutes": 28.197021423672414,
+          "gapMinutes": 162.00717574349025
+        },
+        {
+          "cycle": 6,
+          "entryMinutes": 801.5467302957767,
+          "workshopMinutes": [
+            801.5467302957767,
+            810.9946519778003,
+            820.2795949996873,
+            829.078610691355
+          ],
+          "insideMinutes": 27.531880395578387,
+          "gapMinutes": 204.58289024634516
+        },
+        {
+          "cycle": 7,
+          "entryMinutes": 1073.973105891582,
+          "workshopMinutes": [
+            1073.973105891582,
+            1084.2417300769857,
+            1092.448333667643,
+            1100.773138454865
+          ],
+          "insideMinutes": 26.80003256328285,
+          "gapMinutes": 244.89449520022706
+        },
+        {
+          "cycle": 8,
+          "entryMinutes": 1324.4372852302627,
+          "workshopMinutes": [
+            1324.4372852302627,
+            1331.861898442884,
+            1339.5010630550328,
+            1348.3115845107693
+          ],
+          "insideMinutes": 23.874299280506722,
+          "gapMinutes": 223.6641467753977
+        },
+        {
+          "cycle": 9,
+          "entryMinutes": 1598.4302934466455,
+          "workshopMinutes": [
+            1598.4302934466455,
+            1605.7900963640402,
+            1613.75,
+            1619.8531429221919
+          ],
+          "insideMinutes": 21.422849475546535,
+          "gapMinutes": 250.11870893587596
+        },
+        {
+          "cycle": 10,
+          "entryMinutes": 1897.5,
+          "workshopMinutes": [
+            1897.5,
+            1905.5633611980693,
+            1912.1024399395794,
+            1918.4147354570537
+          ],
+          "insideMinutes": 20.91473545705376,
+          "gapMinutes": 277.6468570778081
+        },
+        {
+          "cycle": 11,
+          "entryMinutes": 2227.914549915021,
+          "workshopMinutes": [
+            2227.914549915021,
+            2236.811082844027,
+            2244.5654689171947,
+            2250.3880436168865
+          ],
+          "insideMinutes": 22.473493701865664,
+          "gapMinutes": 309.4998144579673
+        },
+        {
+          "cycle": 12,
+          "entryMinutes": 2591.25,
+          "workshopMinutes": [
+            2591.25,
+            2597.4486859534536,
+            2604.1710649825905,
+            2609.4264202793643
+          ],
+          "insideMinutes": 18.176420279364297,
+          "gapMinutes": 340.8619563831133
+        },
+        {
+          "cycle": 13,
+          "entryMinutes": 2973.3074412379497,
+          "workshopMinutes": [
+            2973.3074412379497,
+            2979.902974695774,
+            2985.295504108307,
+            2990.1462825046256
+          ],
+          "insideMinutes": 16.83884126667593,
+          "gapMinutes": 363.88102095858534
+        },
+        {
+          "cycle": 14,
+          "entryMinutes": 3373.1214227908863,
+          "workshopMinutes": [
+            3373.1214227908863,
+            3378.241047645058,
+            3383.270752861511,
+            3388.8901020609273
+          ],
+          "insideMinutes": 15.768679270041078,
+          "gapMinutes": 382.9751402862608
+        },
+        {
+          "cycle": 15,
+          "entryMinutes": 3782.7196674148436,
+          "workshopMinutes": [
+            3782.7196674148436,
+            3787.057460241369,
+            3790.5384409473363,
+            3794.284460650058
+          ],
+          "insideMinutes": 11.564793235214408,
+          "gapMinutes": 393.82956535391617
+        },
+        {
+          "cycle": 16,
+          "entryMinutes": 4222.497877393246,
+          "workshopMinutes": [
+            4222.497877393246,
+            4226.354468498806,
+            4228.318627640028,
+            4231.25
+          ],
+          "insideMinutes": 8.75212260675374,
+          "gapMinutes": 428.2134167431883
+        },
+        {
+          "cycle": 17,
+          "entryMinutes": 4655,
+          "workshopMinutes": [
+            4655,
+            4658.060587231427,
+            4660.146394941111,
+            4662.5
+          ],
+          "insideMinutes": 7.5,
+          "gapMinutes": 423.75
+        }
+      ],
+      "questions": 3730,
+      "correct": 2604,
+      "boosts": 565,
+      "boostDuty": 0.12106148978168495,
+      "automaticPurchases": 0,
+      "manualPurchases": 14466,
+      "ineffectiveDebits": 3,
+      "minimumCostFactor": 0.45125,
+      "maxRewardSeconds": 26.650215069690855,
+      "maximumAward": 5,
+      "sources": {
+        "passive": 3.966320936357271e+45,
+        "manual": 3136658.8868799694,
+        "questions": 7.85196891610475e+44,
+        "offline": 0
+      },
+      "steps": 43162,
+      "executionSeconds": 3.8959705829999947
+    },
+    {
+      "id": "alternative",
+      "label": "Achats permanents orientés clic et exercices",
+      "completed": true,
+      "stopReason": "finished",
+      "hours": 82.9340808890015,
+      "activeHours": 82.9340808890015,
+      "workshops": 68,
+      "frontier": 17,
+      "invariants": 74,
+      "balance": 0,
+      "protocols": [
+        5,
+        3,
+        2,
+        4,
+        3,
+        3,
+        2,
+        0,
+        0
+      ],
+      "protocolCostPaid": 74,
+      "resets": [
+        {
+          "cycle": 1,
+          "gain": 2,
+          "minutes": 52.258439539257274,
+          "reconstructionMinutes": 12.653646373261441
+        },
+        {
+          "cycle": 2,
+          "gain": 3,
+          "minutes": 62.55733568149804,
+          "reconstructionMinutes": 48.93094263183687
+        },
+        {
+          "cycle": 3,
+          "gain": 4,
+          "minutes": 130.78245157091808,
+          "reconstructionMinutes": 128.24308254518112
+        },
+        {
+          "cycle": 4,
+          "gain": 5,
+          "minutes": 214.9375201499492,
+          "reconstructionMinutes": 152.95026996114782
+        },
+        {
+          "cycle": 5,
+          "gain": 5,
+          "minutes": 215.3354157939592,
+          "reconstructionMinutes": 197.062139798366
+        },
+        {
+          "cycle": 6,
+          "gain": 5,
+          "minutes": 257.89975211099215,
+          "reconstructionMinutes": 230.7049186124846
+        },
+        {
+          "cycle": 7,
+          "gain": 5,
+          "minutes": 285.7059390189632,
+          "reconstructionMinutes": 240.50021206116097
+        },
+        {
+          "cycle": 8,
+          "gain": 5,
+          "minutes": 289.2731461344629,
+          "reconstructionMinutes": 278.16020991194745
+        },
+        {
+          "cycle": 9,
+          "gain": 5,
+          "minutes": 328.6016376349044,
+          "reconstructionMinutes": 300.1664783891346
+        },
+        {
+          "cycle": 10,
+          "gain": 5,
+          "minutes": 346.32682388664614,
+          "reconstructionMinutes": 307.62036370411175
+        },
+        {
+          "cycle": 11,
+          "gain": 5,
+          "minutes": 356.1602539993158,
+          "reconstructionMinutes": 321.4112844791336
+        },
+        {
+          "cycle": 12,
+          "gain": 5,
+          "minutes": 360.1612844791336,
+          "reconstructionMinutes": 346.25
+        },
+        {
+          "cycle": 13,
+          "gain": 5,
+          "minutes": 380.49508947711485,
+          "reconstructionMinutes": 366.66396057186404
+        },
+        {
+          "cycle": 14,
+          "gain": 5,
+          "minutes": 399.7153562943839,
+          "reconstructionMinutes": 393.69705946563096
+        },
+        {
+          "cycle": 15,
+          "gain": 5,
+          "minutes": 423.2861058815562,
+          "reconstructionMinutes": 417.1915395472558
+        },
+        {
+          "cycle": 16,
+          "gain": 5,
+          "minutes": 440.7149335724777,
+          "reconstructionMinutes": 417.4831889683381
+        }
+      ],
+      "resetRunHours": 75.73685808709222,
+      "cycles": [
+        {
+          "cycle": 1,
+          "entryMinutes": 1.25,
+          "workshopMinutes": [
+            1.25,
+            4.42767095715761,
+            10.234911696114324,
+            19.61676862216369
+          ],
+          "insideMinutes": 18.36676862216369,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 2,
+          "entryMinutes": 74.29063708724213,
+          "workshopMinutes": [
+            74.29063708724213,
+            87.31359909116438,
+            99.54229945672587,
+            114.81577522075531
+          ],
+          "insideMinutes": 40.52513813351319,
+          "gapMinutes": 54.673868465078435
+        },
+        {
+          "cycle": 3,
+          "entryMinutes": 203.75,
+          "workshopMinutes": [
+            203.75,
+            217.6418914718685,
+            230.30689672186048,
+            245.5982267916734
+          ],
+          "insideMinutes": 41.8482267916734,
+          "gapMinutes": 88.93422477924469
+        },
+        {
+          "cycle": 4,
+          "entryMinutes": 421.16001209971375,
+          "workshopMinutes": [
+            421.16001209971375,
+            435,
+            447.3227994791065,
+            460.53574694162256
+          ],
+          "insideMinutes": 39.37573484190883,
+          "gapMinutes": 175.56178530804036
+        },
+        {
+          "cycle": 5,
+          "entryMinutes": 643.75,
+          "workshopMinutes": [
+            643.75,
+            654.3146466228942,
+            665.4244370515418,
+            675.8711627355818
+          ],
+          "insideMinutes": 32.1211627355818,
+          "gapMinutes": 183.2142530583774
+        },
+        {
+          "cycle": 6,
+          "entryMinutes": 903.8127064192897,
+          "workshopMinutes": [
+            903.8127064192897,
+            915.2477591613184,
+            924.6012711984293,
+            933.770914846574
+          ],
+          "insideMinutes": 29.958208427284262,
+          "gapMinutes": 227.9415436837079
+        },
+        {
+          "cycle": 7,
+          "entryMinutes": 1191.991778876271,
+          "workshopMinutes": [
+            1191.991778876271,
+            1201.5220623307653,
+            1210.9414374336038,
+            1219.4768538655371
+          ],
+          "insideMinutes": 27.485074989266288,
+          "gapMinutes": 258.2208640296969
+        },
+        {
+          "cycle": 8,
+          "entryMinutes": 1484.1191355289097,
+          "workshopMinutes": [
+            1484.1191355289097,
+            1492.2103850237788,
+            1501.4662964503173,
+            1508.75
+          ],
+          "insideMinutes": 24.63086447109017,
+          "gapMinutes": 264.6422816633727
+        },
+        {
+          "cycle": 9,
+          "entryMinutes": 1811.7024169956812,
+          "workshopMinutes": [
+            1811.7024169956812,
+            1821.512812612463,
+            1829.1590837485587,
+            1837.3516376349044
+          ],
+          "insideMinutes": 25.649220639223252,
+          "gapMinutes": 302.9524169956812
+        },
+        {
+          "cycle": 10,
+          "entryMinutes": 2158.3193477747136,
+          "workshopMinutes": [
+            2158.3193477747136,
+            2167.1910935531664,
+            2175.846965049945,
+            2183.6784615215506
+          ],
+          "insideMinutes": 25.359113746836858,
+          "gapMinutes": 320.9677101398093
+        },
+        {
+          "cycle": 11,
+          "entryMinutes": 2514.19537921286,
+          "workshopMinutes": [
+            2514.19537921286,
+            2523.0772308215282,
+            2531.5664207337445,
+            2539.8387155208666
+          ],
+          "insideMinutes": 25.64333630800635,
+          "gapMinutes": 330.51691769130946
+        },
+        {
+          "cycle": 12,
+          "entryMinutes": 2881.074852358839,
+          "workshopMinutes": [
+            2881.074852358839,
+            2888.5709199301664,
+            2894.8209587495676,
+            2900
+          ],
+          "insideMinutes": 18.925147641161068,
+          "gapMinutes": 341.23613683797254
+        },
+        {
+          "cycle": 13,
+          "entryMinutes": 3264.461116119749,
+          "workshopMinutes": [
+            3264.461116119749,
+            3270.6609253425795,
+            3275.6632956650833,
+            3280.495089477115
+          ],
+          "insideMinutes": 16.03397335736566,
+          "gapMinutes": 364.4611161197492
+        },
+        {
+          "cycle": 14,
+          "entryMinutes": 3663.305393452408,
+          "workshopMinutes": [
+            3663.305393452408,
+            3668.6465572639563,
+            3674.872516357129,
+            3680.2104457714986
+          ],
+          "insideMinutes": 16.905052319090466,
+          "gapMinutes": 382.81030397529344
+        },
+        {
+          "cycle": 15,
+          "entryMinutes": 4090.4793759194276,
+          "workshopMinutes": [
+            4090.4793759194276,
+            4094.484321890236,
+            4098.298778661608,
+            4103.496551653055
+          ],
+          "insideMinutes": 13.017175733627422,
+          "gapMinutes": 410.26893014792876
+        },
+        {
+          "cycle": 16,
+          "entryMinutes": 4533.985200145902,
+          "workshopMinutes": [
+            4533.985200145902,
+            4539.219423843492,
+            4540.975146983706,
+            4544.211485225533
+          ],
+          "insideMinutes": 10.226285079630907,
+          "gapMinutes": 430.4886484928468
+        },
+        {
+          "cycle": 17,
+          "entryMinutes": 4968.401143031543,
+          "workshopMinutes": [
+            4968.401143031543,
+            4971.403922555891,
+            4973.458423163664,
+            4976.04485334009
+          ],
+          "insideMinutes": 7.64371030854721,
+          "gapMinutes": 424.1896578060104
+        }
+      ],
+      "questions": 3980,
+      "correct": 2775,
+      "boosts": 604,
+      "boostDuty": 0.12130080105417722,
+      "automaticPurchases": 0,
+      "manualPurchases": 14421,
+      "ineffectiveDebits": 4,
+      "minimumCostFactor": 0.45125,
+      "maxRewardSeconds": 28.78223227526612,
+      "maximumAward": 5,
+      "sources": {
+        "passive": 4.650009730273022e+45,
+        "manual": 4093454.922160447,
+        "questions": 7.865651673628373e+44,
+        "offline": 0
+      },
+      "steps": 43573,
+      "executionSeconds": 3.9002706250000045
+    },
+    {
+      "id": "offline",
+      "label": "Une heure active puis onze heures absentes",
+      "completed": true,
+      "stopReason": "finished",
+      "hours": 720.9580479592257,
+      "activeHours": 60.9580479592293,
+      "workshops": 68,
+      "frontier": 17,
+      "invariants": 74,
+      "balance": 1,
+      "protocols": [
+        4,
+        3,
+        2,
+        3,
+        3,
+        3,
+        3,
+        1,
+        0
+      ],
+      "protocolCostPaid": 73,
+      "resets": [
+        {
+          "cycle": 1,
+          "gain": 2,
+          "minutes": 52.258439539257274,
+          "reconstructionMinutes": 667.7415604607428
+        },
+        {
+          "cycle": 2,
+          "gain": 3,
+          "minutes": 694.0520389503655,
+          "reconstructionMinutes": 693.6895215103773
+        },
+        {
+          "cycle": 3,
+          "gain": 4,
+          "minutes": 751.0563384343207,
+          "reconstructionMinutes": 1382.6498497427233
+        },
+        {
+          "cycle": 4,
+          "gain": 5,
+          "minutes": 2102.6331830760564,
+          "reconstructionMinutes": 772.8910164363284
+        },
+        {
+          "cycle": 5,
+          "gain": 5,
+          "minutes": 1464.2134217627006,
+          "reconstructionMinutes": 1457.2605742843502
+        },
+        {
+          "cycle": 6,
+          "gain": 5,
+          "minutes": 2148.4354300029063,
+          "reconstructionMinutes": 2147.3511482343933
+        },
+        {
+          "cycle": 7,
+          "gain": 5,
+          "minutes": 2185.241202510653,
+          "reconstructionMinutes": 2130.955019513562
+        },
+        {
+          "cycle": 8,
+          "gain": 5,
+          "minutes": 2178.146213049036,
+          "reconstructionMinutes": 2153.925783721796
+        },
+        {
+          "cycle": 9,
+          "gain": 5,
+          "minutes": 2834.486416933864,
+          "reconstructionMinutes": 2185.9519421138802
+        },
+        {
+          "cycle": 10,
+          "gain": 5,
+          "minutes": 2869.5106490741737,
+          "reconstructionMinutes": 2215.3625249127626
+        },
+        {
+          "cycle": 11,
+          "gain": 5,
+          "minutes": 2896.4515511355867,
+          "reconstructionMinutes": 2897.2217620257675
+        },
+        {
+          "cycle": 12,
+          "gain": 5,
+          "minutes": 3583.5484488644133,
+          "reconstructionMinutes": 2919.9666666666667
+        },
+        {
+          "cycle": 13,
+          "gain": 5,
+          "minutes": 3604.1668695458015,
+          "reconstructionMinutes": 3595.8164637875316
+        },
+        {
+          "cycle": 14,
+          "gain": 5,
+          "minutes": 3627.0961519974476,
+          "reconstructionMinutes": 4288.703645123417
+        },
+        {
+          "cycle": 15,
+          "gain": 5,
+          "minutes": 4308.671401785695,
+          "reconstructionMinutes": 3630.5828217286617
+        },
+        {
+          "cycle": 16,
+          "gain": 5,
+          "minutes": 4302.7623820252875,
+          "reconstructionMinutes": 3639.2616125260092
+        }
+      ],
+      "resetRunHours": 660.0455023114594,
+      "cycles": [
+        {
+          "cycle": 1,
+          "entryMinutes": 1.25,
+          "workshopMinutes": [
+            1.25,
+            4.42767095715761,
+            10.234911696114324,
+            19.61676862216369
+          ],
+          "insideMinutes": 18.36676862216369,
+          "gapMinutes": null
+        },
+        {
+          "cycle": 2,
+          "entryMinutes": 720.0166666666667,
+          "workshopMinutes": [
+            720.0166666666667,
+            720.0333333333333,
+            730.7632993671457,
+            746.3104784896227
+          ],
+          "insideMinutes": 26.293811822956073,
+          "gapMinutes": 700.399898044503
+        },
+        {
+          "cycle": 3,
+          "entryMinutes": 1457.0690302851594,
+          "workshopMinutes": [
+            1457.0690302851594,
+            1469.9270898399009,
+            1484.0960531670885,
+            1497.3668169239434
+          ],
+          "insideMinutes": 40.297786638783876,
+          "gapMinutes": 710.7585517955368
+        },
+        {
+          "cycle": 4,
+          "entryMinutes": 2910.0623414766483,
+          "workshopMinutes": [
+            2910.0623414766483,
+            2923.0556944315545,
+            2934.2201758833107,
+            3600
+          ],
+          "insideMinutes": 689.9376585233515,
+          "gapMinutes": 1412.6955245527051
+        },
+        {
+          "cycle": 5,
+          "entryMinutes": 5040,
+          "workshopMinutes": [
+            5040,
+            5042.815201555069,
+            5055.424563399502,
+            5064.213421762701
+          ],
+          "insideMinutes": 24.213421762700698,
+          "gapMinutes": 1440
+        },
+        {
+          "cycle": 6,
+          "entryMinutes": 7200,
+          "workshopMinutes": [
+            7200,
+            7200.016666666666,
+            7201.5489318698865,
+            7212.648851765607
+          ],
+          "insideMinutes": 12.648851765606862,
+          "gapMinutes": 2135.786578237299
+        },
+        {
+          "cycle": 7,
+          "entryMinutes": 9371.281323328782,
+          "workshopMinutes": [
+            9371.281323328782,
+            9381.850217838486,
+            9389.252559928838,
+            9397.89005427626
+          ],
+          "insideMinutes": 26.60873094747852,
+          "gapMinutes": 2158.632471563174
+        },
+        {
+          "cycle": 8,
+          "entryMinutes": 11551.25,
+          "workshopMinutes": [
+            11551.25,
+            11559.640313397884,
+            11567.107317860622,
+            11576.036267325295
+          ],
+          "insideMinutes": 24.78626732529568,
+          "gapMinutes": 2153.3599457237406
+        },
+        {
+          "cycle": 9,
+          "entryMinutes": 14400,
+          "workshopMinutes": [
+            14400,
+            14400.016666666666,
+            14404.51097278985,
+            14410.52268425916
+          ],
+          "insideMinutes": 10.522684259159723,
+          "gapMinutes": 2823.9637326747043
+        },
+        {
+          "cycle": 10,
+          "entryMinutes": 16617.75383595342,
+          "workshopMinutes": [
+            16617.75383595342,
+            17280,
+            17280.016666666666,
+            17280.033333333333
+          ],
+          "insideMinutes": 662.2794973799143,
+          "gapMinutes": 2207.231151694259
+        },
+        {
+          "cycle": 11,
+          "entryMinutes": 20160,
+          "workshopMinutes": [
+            20160,
+            20160.016666666666,
+            20169.236851940546,
+            20176.48488446892
+          ],
+          "insideMinutes": 16.484884468920065,
+          "gapMinutes": 2879.9666666666667
+        },
+        {
+          "cycle": 12,
+          "entryMinutes": 23093.919209155156,
+          "workshopMinutes": [
+            23093.919209155156,
+            23760,
+            23760.016666666666,
+            23760.033333333333
+          ],
+          "insideMinutes": 666.1141241781763,
+          "gapMinutes": 2917.434324686237
+        },
+        {
+          "cycle": 13,
+          "entryMinutes": 27360,
+          "workshopMinutes": [
+            27360,
+            27360.016666666666,
+            27360.033333333333,
+            27364.200202879136
+          ],
+          "insideMinutes": 4.200202879135031,
+          "gapMinutes": 3599.9666666666667
+        },
+        {
+          "cycle": 14,
+          "entryMinutes": 30973.75,
+          "workshopMinutes": [
+            30973.75,
+            30980.19214616658,
+            30985.723431245322,
+            30991.296354876584
+          ],
+          "insideMinutes": 17.54635487658282,
+          "gapMinutes": 3609.549797120865
+        },
+        {
+          "cycle": 15,
+          "entryMinutes": 35285.89172122873,
+          "workshopMinutes": [
+            35285.89172122873,
+            35291.25,
+            35295,
+            35299.96775666228
+          ],
+          "insideMinutes": 14.076035433549745,
+          "gapMinutes": 4294.595366352145
+        },
+        {
+          "cycle": 16,
+          "entryMinutes": 39600,
+          "workshopMinutes": [
+            39600,
+            39600.01666666667,
+            39600.03333333333,
+            39602.73013868756
+          ],
+          "insideMinutes": 2.7301386875643705,
+          "gapMinutes": 4300.032243337723
+        },
+        {
+          "cycle": 17,
+          "entryMinutes": 43249.25096998498,
+          "workshopMinutes": [
+            43249.25096998498,
+            43253.33334311901,
+            43255.08403328304,
+            43257.48287755354
+          ],
+          "insideMinutes": 8.231907568561533,
+          "gapMinutes": 3646.5208312974155
+        }
+      ],
+      "questions": 2865,
+      "correct": 1999,
+      "boosts": 435,
+      "boostDuty": 0.11776651830453587,
+      "automaticPurchases": 18,
+      "manualPurchases": 14190,
+      "ineffectiveDebits": 14,
+      "minimumCostFactor": 0.45125,
+      "maxRewardSeconds": 26.650215069690855,
+      "maximumAward": 5,
+      "sources": {
+        "passive": 4.462846443826344e+45,
+        "manual": 2533044.9657712677,
+        "questions": 5.6535581388302915e+44,
+        "offline": 3.5283833811226673e+42
+      },
+      "steps": 40063,
+      "executionSeconds": 3.832516334
+    }
+  ]
+}

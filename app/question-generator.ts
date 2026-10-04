@@ -3172,22 +3172,29 @@ function supplementalQuestion(familyId: string, mode: number, spaceDimension: nu
     if (mode === 1) {
       const u = randomVector(dimension);
       const v = randomVector(dimension);
-      const w = combineVectors(1, u, 2, v);
+      const k = pick([-4, -3, -2, 2, 3, 4]);
+      const w = combineVectors(1, u, k, v);
+      const relation = formatLinearExpression([[1, "u"], [k, "v"]]);
       return variation(familyId, mode,
-        "Quel est le vecteur v qui vérifie u + 2v = w ?",
+        `Quel est le vecteur v qui vérifie ${relation} = w ?`,
         "u = " + vector(u) + " et w = " + vector(w),
         vector(v), balancedCoordinateDistractors(v, [u, w]).map(vector),
-        "On isole v : v = " + fraction("w − u", 2) + " = " + vector(v) + ".");
+        "On isole v : v = " + fraction(k > 0 ? "w − u" : "u − w", Math.abs(k)) + " = " + vector(v) + ".");
     }
     const alpha = nonZero();
     const beta = nonZero();
-    const u = [1, 1];
-    const v = [1, -1];
+    let u = randomVector(2);
+    let v = randomVector(2);
+    while (determinant2(u, v) === 0 || Math.abs(determinant2(u, v)) > 6) {
+      u = randomVector(2);
+      v = randomVector(2);
+    }
     const w = combineVectors(alpha, u, beta, v);
+    const det = determinant2(u, v);
     return numericVariation(familyId, mode,
       "Quel est le coefficient β dans w = αu + βv ?",
       "u = " + vector(u) + ", v = " + vector(v) + " et w = " + vector(w),
-      beta, "En soustrayant la seconde coordonnée de la première, on obtient 2β = " + (2 * beta) + ".");
+      beta, `u et v sont indépendants : det(u,v) = ${det}. Comme det(u,w) = β det(u,v), on obtient β = ${fraction(String(Math.abs(det) * beta), Math.abs(det))} = ${beta}.`);
   }
   if (familyId === "vector-span") {
     if (mode === 1) {
@@ -3237,13 +3244,19 @@ function supplementalQuestion(familyId: string, mode: number, spaceDimension: nu
          "(" + vector([1, 1]) + ", " + vector([p, p]) + ")"],
         "Le couple (" + vector([1, 0]) + ", " + vector([p, 1]) + ") a pour déterminant 1 ; les trois autres couples sont liés.");
     }
-    const a = nonZero();
-    const b = nonZero();
-    const area = Math.abs(a * b);
+    // Keep the arithmetic small, but require both products of the determinant.
+    // Nonzero coordinates avoid repeating the axis-aligned rectangle shortcut.
+    const u = [nonZero(), nonZero()];
+    let v = [nonZero(), nonZero()];
+    while (determinant2(u, v) === 0) v = [nonZero(), nonZero()];
+    const determinant = determinant2(u, v);
+    const area = Math.abs(determinant);
+    const factor = (n: number) => n < 0 ? `(${n})` : String(n);
+    const calculation = `${factor(u[0])} × ${factor(v[1])} − ${factor(u[1])} × ${factor(v[0])}`;
     return numericVariation(familyId, mode,
       "Quelle est l’aire du parallélogramme construit sur u et v ?",
-      "u = " + vector([a, 0]) + " et v = " + vector([0, b]),
-      area, "L’aire est la valeur absolue du déterminant : |" + (a * b) + "| = " + area + ".");
+      "u = " + vector(u) + " et v = " + vector(v),
+      area, `Dans le plan euclidien usuel, l’aire est |det(u,v)|. Ici, det(u,v) = ${calculation} = ${determinant}, donc l’aire vaut |${determinant}| = ${area}.`);
   }
   if (familyId === "basis-coordinates") {
     const p = pick([-3, -2, 2, 3]);

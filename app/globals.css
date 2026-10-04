@@ -81,6 +81,9 @@ button:focus-visible {
 .lab-question-copy h2,
 .question-modal > h2 {
   padding-top: 0.18em;
+  /* Horizontal scrolling also clips vertically. Reserve room for subscripts
+     below the last line instead of cutting off negative indices. */
+  padding-bottom: 0.35em;
 }
 
 .math-expression.has-lines {
@@ -5425,3 +5428,15 @@ footer {
     width: 100%;
   }
 }
+/* Economic guidance stays compact on the small-screen observatory. */
+.economy-status {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  line-height: 1.45;
+}
+.economy-status span { font-size: 0.9rem; }
+.automation-toggle { display: flex; align-items: center; gap: 0.5rem; margin: 0.75rem 0; font-size: 0.9rem; }

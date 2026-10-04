@@ -47,9 +47,24 @@ export const euclidean: WorkshopTasks = {
     task("real-eigenvalue", "Contraindre les valeurs propres réelles", () => { const a = pick([-1, 1]), norm = int(1, 5); return choice("Quelle contrainte impose l’isométrie sur λ ?", `u(x) = λx, x ≠ 0, λ ∈ ℝ, ‖x‖ = ${norm}. Une valeur admissible est ${a}.`, "λ ∈ {−1 ; 1}", ["λ = 1 uniquement", "λ ≥ 0", "λ ∈ {0 ; 1}"], "‖u(x)‖=|λ|‖x‖=‖x‖ impose |λ|=1."); }, true),
   ],
   "plane-rotation-engine": [
-    task("rotate-vector", "Appliquer une rotation plane", () => { const k = pick([1, 2, 3]), x = vec(), a = quarter(k); return computedVector("Quelle est l’image de x par cette rotation ?", `Angle ${angle(k)}, orientation canonique, x = ${C(x)}.`, "mv", [a, x], mv(a, x), "On utilise la matrice (cos θ,−sin θ;sin θ,cos θ)."); }),
+    task("rotate-vector", "Appliquer une rotation plane", () => { const k = pick([1, 2, 3]), x = [nz(), nz()], a = quarter(k); return computedVector("Quelle est l’image de x par cette rotation ?", `Angle ${angle(k)}, orientation canonique, x = ${C(x)}.`, "mv", [a, x], mv(a, x), "On utilise la matrice (cos θ,−sin θ;sin θ,cos θ)."); }),
     task("compose-angles", "Composer deux rotations", () => { const a = pick([1, 2, 3]), b = pick([1, 2, 3]); return choice("Quel est l’angle de la composée, modulo 2π ?", `r a pour angle ${angle(a)}, s a pour angle ${angle(b)}.`, angle(a + b), [0, 1, 2, 3].filter(k => k !== (a + b) % 4).map(angle), "Les angles des rotations planes s’additionnent modulo 2π."); }),
-    task("classify", "Distinguer rotation et réflexion", () => { const k = int(0, 3), reflection = Math.random() < 0.5, a = reflection ? mul(quarter(k), diag([1, -1])) : quarter(k); return choice("Quelle est la nature de cette isométrie plane ?", `A = ${M(a)}`, reflection ? "Une réflexion." : "Une rotation.", [reflection ? "Une rotation." : "Une réflexion.", "Une projection de rang 1.", "Une homothétie de rapport 2."], "En dimension 2, une matrice orthogonale de déterminant 1 est une rotation ; de déterminant −1, une réflexion."); }),
+    task("classify", "Distinguer rotation et réflexion", () => {
+      // Pythagorean triples give exact orthogonal matrices with no zero entries:
+      // neither identity, half-turn, coordinate reflections nor quarter-turns.
+      const [p, q, h] = pick([[3, 4, 5], [5, 12, 13], [8, 15, 17]]);
+      const swapped = Math.random() < 0.5;
+      const c = (swapped ? q : p) * pick([-1, 1]);
+      const s = (swapped ? p : q) * pick([-1, 1]);
+      const reflection = Math.random() < 0.5;
+      const a = reflection ? [[c, s], [s, -c]] : [[c, -s], [s, c]];
+      const determinant = reflection ? -1 : 1;
+      return choice("Quelle est la nature de cette isométrie plane ?",
+        `Dans la base canonique orthonormée, A = ${frac(1, h)} ${M(a)}.`,
+        reflection ? "Une réflexion." : "Une rotation.",
+        [reflection ? "Une rotation." : "Une réflexion.", "L’identité.", "Une symétrie centrale."],
+        `Les colonnes sont orthonormées et det(A) = ⟬${det(a)}¦${h}^{2}⟭ = ${determinant}. En dimension 2, cela caractérise ${reflection ? "une réflexion orthogonale" : "une rotation"}.`);
+    }),
     task("reflection-axis", "Déterminer l’axe d’une réflexion", () => { const s = pick([-1, 1]); return choice("Quel est l’axe de la réflexion ?", `S = ${M([[0, s], [s, 0]])}`, `Vect((1 ; ${s}))`, [`Vect((1 ; ${-s}))`, "Vect((1 ; 0))", "Vect((0 ; 1))"], "L’axe est l’ensemble des vecteurs fixes, donc Ker(S−I)."); }),
     task("rotation-matrix", "Retrouver une matrice à partir d’un angle", () => { const k = pick([1, 2, 3]); return matrix("Quelle est la matrice de cette rotation dans la base canonique ?", `L’angle orienté est ${angle(k)}.`, quarter(k), "Les colonnes sont les images des vecteurs canoniques par la rotation."); }),
   ],
